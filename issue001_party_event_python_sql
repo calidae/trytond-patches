@@ -1,0 +1,30 @@
+Index: nan/modules/party_event/party_event.py
+===================================================================
+--- nan.orig/modules/party_event/party_event.py	2013-09-16 11:10:06.731335793 +0200
++++ nan/modules/party_event/party_event.py	2013-09-16 12:37:02.919232762 +0200
+@@ -2,7 +2,7 @@
+ #The COPYRIGHT file at the top level of this repository contains
+ #the full copyright notices and license terms.
+ 
+-from trytond.backend import TableHandler
++from trytond import backend
+ from trytond.model import ModelView, ModelSQL, fields
+ from trytond.pool import Pool
+ from trytond.transaction import Transaction
+@@ -48,6 +48,7 @@
+         super(PartyEvent, cls).__register__(module_name)
+         User = Pool().get('res.user')
+         cursor = Transaction().cursor
++        TableHandler = backend.get('TableHandler')
+         table = TableHandler(cursor, cls, module_name)
+         # Migration from 2.8: user to employee
+         if table.column_exist('user'):
+@@ -102,7 +103,7 @@
+         now = datetime.datetime.now()
+         values = {
+             'event_date':values.get('date') or now,
+-            'subject':values.get('subject') or 
++            'subject':values.get('subject') or
+                 self.raise_user_error('no_subject',raise_exception=False),
+             'description':values.get('description',''),
+             'party':party,
