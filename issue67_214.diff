@@ -1,8 +1,8 @@
 Index: stock.py
 ===================================================================
 
---- a/stock.py
-+++ b/stock.py
+--- ./modules/stock_lot/stock.py
++++ ./modules/stock_lot/stock.py
 @@ -80,6 +80,18 @@
          for move in moves:
              move.check_lot()
