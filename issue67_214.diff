@@ -1,0 +1,34 @@
+Index: stock.py
+===================================================================
+
+--- a/stock.py
++++ b/stock.py
+@@ -80,6 +80,18 @@
+         for move in moves:
+             move.check_lot()
+ 
++    @classmethod
++    def assign_try(cls, moves, grouping=('product',)):
++        lot_moves = []
++        product_moves = []
++        for move in moves:
++            if move.lot:
++                lot_moves.append(move)
++            else:
++                product_moves.append(move)
++        return (super(Move, cls).assign_try(product_moves, grouping=grouping)
++            and super(Move, cls).assign_try(lot_moves, grouping=('product', 'lot')))
++
+ 
+ class ShipmentIn:
+     __name__ = 'stock.shipment.in'
+@@ -121,6 +133,8 @@
+                 outgoing_moves = outgoing_by_product[move.product.id]
+                 while outgoing_moves and quantity > 0:
+                     out_move = outgoing_moves.pop()
++                    if out_move.state == 'cancel':
++                        continue
+                     out_quantity = Uom.compute_qty(out_move.uom,
+                         out_move.quantity, out_move.product.default_uom,
+                         round=False)
+
