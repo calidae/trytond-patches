@@ -1,0 +1,55 @@
+Index: trytond/model/model.py
+===================================================================
+
+--- a/trytond/trytond/model/model.py
++++ b/trytond/trytond/model/model.py
+@@ -318,6 +318,14 @@
+                     and hasattr(cls._fields[field], 'field'):
+                 res[field]['relation_field'] = copy.copy(
+                         cls._fields[field].field)
++            if res[field]['type'] == 'many2one':
++                target = cls._fields[field].get_target()
++                for target_name, target_field in target._fields.iteritems():
++                    if (target_field._type == 'one2many'
++                            and target_field.model_name == cls.__name__
++                            and target_field.field == field):
++                        res[field]['relation_field'] = target_name
++                        break
+             if res[field]['type'] in ('datetime', 'time'):
+                 res[field]['format'] = copy.copy(cls._fields[field].format)
+             if res[field]['type'] == 'selection':
+
+Index: trytond/modules/party/party.py
+===================================================================
+
+--- a/trytond/trytond/modules/party/party.py
++++ b/trytond/trytond/modules/party/party.py
+@@ -162,6 +162,7 @@
+                 config = Configuration(1)
+                 values['code'] = Sequence.get_id(config.party_sequence.id)
+             values['code_length'] = len(values['code'])
++            values.setdefault('addresses', None)
+         return super(Party, cls).create(vlist)
+ 
+     @classmethod
+
+Index: trytond/modules/product/product.py
+===================================================================
+
+--- a/trytond/trytond/modules/product/product.py
++++ b/trytond/trytond/modules/product/product.py
+@@ -112,6 +112,13 @@
+     def search_default_uom_category(cls, name, clause):
+         return [('default_uom.category',) + tuple(clause[1:])]
+ 
++    @classmethod
++    def create(cls, vlist):
++        vlist = [v.copy() for v in vlist]
++        for values in vlist:
++            values.setdefault('products', None)
++        return super(Template, cls).create(vlist)
++
+ 
+ class Product(ModelSQL, ModelView):
+     "Product Variant"
+
