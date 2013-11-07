@@ -1,0 +1,15 @@
+Index: invoice.py
+===================================================================
+
+--- a/invoice.py
++++ b/invoice.py
+@@ -391,6 +391,8 @@
+ 
+         if self.party:
+             invoice_address = self.party.address_get(type='invoice')
++            if not invoice_address:
++                return res
+             res['invoice_address'] = invoice_address.id
+             res['invoice_address.rec_name'] = invoice_address.rec_name
+         return res
+
