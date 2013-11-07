@@ -1,8 +1,8 @@
 Index: invoice.py
 ===================================================================
 
---- a/invoice.py
-+++ b/invoice.py
+--- ./modules/account_invoice/invoice.py
++++ ./modules/account_invoice/invoice.py
 @@ -391,6 +391,8 @@
  
          if self.party:
