@@ -1,4 +1,4 @@
-Index: modules/stock/move.py
+Index: move.py
 ===================================================================
 
 --- ./modules/stock/move.py
@@ -477,7 +477,7 @@ Index: modules/stock/move.py
 +
 +        return quantities
 
-Index: modules/stock/product.py
+Index: product.py
 ===================================================================
 
 --- ./modules/stock/product.py
@@ -875,7 +875,7 @@ Index: modules/stock/product.py
  
  class ProductByLocationStart(ModelView):
 
-Index: modules/stock/tests/test_stock.py
+Index: tests/test_stock.py
 ===================================================================
 
 --- ./modules/stock/tests/test_stock.py
