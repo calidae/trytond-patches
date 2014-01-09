@@ -1,4 +1,4 @@
-Index: trytond/trytond/tests/test_transaction.py
+Index: trytond/tests/test_transaction.py
 ===================================================================
 
 --- a/trytond/trytond/tests/test_transaction.py
@@ -6,7 +6,7 @@ Index: trytond/trytond/tests/test_transaction.py
 @@ -56,6 +56,41 @@
              Exception, manipulate_cursor, DB_NAME, USER, context=CONTEXT)
          self.assertTrue(empty_transaction(DB_NAME, USER, context=CONTEXT))
-
+ 
 +    def test0030set_user(self):
 +        '''
 +        Test set_user
@@ -42,18 +42,18 @@ Index: trytond/trytond/tests/test_transaction.py
 +            with Transaction().set_user(2):
 +                self.assertEqual(transaction.user, 2)
 +
-
+ 
  def suite():
      return unittest.TestLoader().loadTestsFromTestCase(TransactionTestCase)
 
-Index: trytond/trytond/transaction.py
+Index: trytond/transaction.py
 ===================================================================
 
 --- a/trytond/trytond/transaction.py
 +++ b/trytond/trytond/transaction.py
 @@ -118,10 +118,16 @@
          return manager
-
+ 
      def set_user(self, user, set_context=False):
 +        if user != 0 and set_context:
 +            raise ValueError('set_context only allowed for root')
@@ -69,5 +69,5 @@ Index: trytond/trytond/transaction.py
 +            self.context.pop('user', None)
          self.user = user
          return manager
-
+ 
 
