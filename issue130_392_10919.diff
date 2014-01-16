@@ -1,0 +1,49 @@
+Index: trytond/protocols/jsonrpc.py
+===================================================================
+
+--- ./trytond/trytond/protocols/jsonrpc.py
++++ ./trytond/trytond/protocols/jsonrpc.py
+@@ -28,6 +28,7 @@
+     import json
+ import base64
+ import encodings
++import logging
+ try:
+     from cStringIO import StringIO
+ except ImportError:
+@@ -109,7 +110,14 @@
+         existing method through subclassing is the prefered means
+         of changing method dispatch behavior.
+         """
+-        rawreq = json.loads(data, object_hook=object_hook)
++        try:
++            rawreq = json.loads(data, object_hook=object_hook)
++        except:
++            exc_type, exc_value = sys.exc_info()[:2]
++            logging.getLogger('jsonrpc').warning(
++                'Exception in JSONRPC dispatcher: %s (%s)\n  %s'
++                % (exc_value, exc_type, traceback.format_exc()))
++            raise
+ 
+         req_id = rawreq.get('id', 0)
+         method = rawreq['method']
+@@ -125,11 +133,18 @@
+                 response['result'] = self._dispatch(method, params)
+         except (UserError, UserWarning, NotLogged,
+                 ConcurrencyException), exception:
++            logging.getLogger('jsonrpc').warning('User Error: %s (%s)'
++                % (method, params))
++            traceback.print_exc()
+             response['error'] = exception.args
+         except Exception:
++            exc_type, exc_value = sys.exc_info()[:2]
+             tb_s = ''.join(traceback.format_exception(*sys.exc_info()))
+             for path in sys.path:
+                 tb_s = tb_s.replace(path, '')
++            logging.getLogger('jsonrpc').warning(
++                'Exception in JSONRPC response generation: %s (%s)\n  %s'
++                % (exc_value, exc_type, tb_s))
+             if CONFIG['debug_mode']:
+                 import pdb
+                 traceb = sys.exc_info()[2]
+
