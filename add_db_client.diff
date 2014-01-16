@@ -1,0 +1,21 @@
+diff -r 5162b30a8b48 tryton/config.py
+--- ./tryton/tryton/config.py	Wed Dec 04 16:57:05 2013 +0100
++++ ./tryton/tryton/config.py	Thu Jan 16 15:15:58 2014 +0100
+@@ -96,6 +96,8 @@
+                 help=_("specify the server port"))
+         parser.add_option("-s", "--server", dest="server",
+                 help=_("specify the server hostname"))
++        parser.add_option("-b", "--database", dest="db",
++                help=_("specify the data base to connect"))
+         opt, self.arguments = parser.parse_args()
+ 
+         if len(self.arguments) > 1:
+@@ -123,7 +125,7 @@
+                 opt.log_level = 'ERROR'
+         logging.getLogger().setLevel(loglevels[opt.log_level.upper()])
+ 
+-        for arg in ('login', 'port', 'server'):
++        for arg in ('login', 'port', 'server', 'db'):
+             if getattr(opt, arg):
+                 self.options['login.' + arg] = getattr(opt, arg)
+ 
