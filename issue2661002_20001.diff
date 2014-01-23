@@ -1,0 +1,165 @@
+Index: bank.py
+===================================================================
+
+--- ./modules/bank/bank.py
++++ ./modules/bank/bank.py
+@@ -1,5 +1,7 @@
+ #This file is part of Tryton.  The COPYRIGHT file at the top level of
+ #this repository contains the full copyright notices and license terms.
++from stdnum import iban
++
+ from trytond.model import ModelView, ModelSQL, fields
+ 
+ 
+@@ -54,13 +56,57 @@
+         super(BankAccountNumber, cls).__setup__()
+         cls._order.insert(0, ('account', 'ASC'))
+         cls._order.insert(1, ('sequence', 'ASC'))
++        cls._error_messages.update({
++                'invalid_iban': 'Invalid IBAN "%s".',
++                })
+ 
+     @staticmethod
+     def order_sequence(tables):
+         table, _ = tables[None]
+         return [table.sequence == None, table.sequence]
+ 
+-    # TODO validate IBAN
++    @property
++    def compact_iban(self):
++        return (iban.compact(self.number) if self.type == 'iban'
++            else self.number)
++
++    @classmethod
++    def create(cls, vlist):
++        vlist = [v.copy() for v in vlist]
++        for values in vlist:
++            if values.get('type') == 'iban' and 'number' in values:
++                values['number'] = iban.format(values['number'])
++        return super(BankAccountNumber, cls).create(vlist)
++
++    @classmethod
++    def write(cls, *args):
++        actions = iter(args)
++        args = []
++        for numbers, values in zip(actions, actions):
++            values = values.copy()
++            if values.get('type') == 'iban' and 'number' in values:
++                values['number'] = iban.format(values['number'])
++            args.extend((numbers, values))
++
++        super(BankAccountNumber, cls).write(*args)
++
++        to_write = []
++        for number in sum(args[::2], []):
++            if number.type == 'iban':
++                formated_number = iban.format(number.number)
++                if formated_number != number.number:
++                    to_write.extend(([number], {
++                                'number': formated_number,
++                                }))
++        if to_write:
++            cls.write(*to_write)
++
++    @classmethod
++    def validate(cls, numbers):
++        super(BankAccountNumber, cls).validate(numbers)
++        for number in numbers:
++            if number.type == 'iban' and not iban.is_valid(number.number):
++                cls.raise_user_error('invalid_iban', number.number)
+ 
+ 
+ class BankAccountParty(ModelSQL):
+
+Index: setup.py
+===================================================================
+
+--- ./modules/bank/setup.py
++++ ./modules/bank/setup.py
+@@ -21,7 +21,7 @@
+ major_version = int(major_version)
+ minor_version = int(minor_version)
+ 
+-requires = []
++requires = ['python-stdnum']
+ for dep in info.get('depends', []):
+     if not re.match(r'(ir|res|webdav)(\W|$)', dep):
+         requires.append('trytond_%s >= %s.%s, < %s.%s' %
+
+Index: tests/test_bank.py
+===================================================================
+
+--- ./modules/bank/tests/test_bank.py
++++ ./modules/bank/tests/test_bank.py
+@@ -10,7 +10,9 @@
+ 
+ import unittest
+ import trytond.tests.test_tryton
+-from trytond.tests.test_tryton import test_view, test_depends
++from trytond.tests.test_tryton import test_view, test_depends, \
++    POOL, DB_NAME, USER, CONTEXT
++from trytond.transaction import Transaction
+ 
+ 
+ class BankTestCase(unittest.TestCase):
+@@ -20,6 +22,10 @@
+ 
+     def setUp(self):
+         trytond.tests.test_tryton.install_module('bank')
++        self.bank = POOL.get('bank')
++        self.party = POOL.get('party.party')
++        self.account = POOL.get('bank.account')
++        self.number = POOL.get('bank.account.number')
+ 
+     def test0005views(self):
+         '''
+@@ -33,6 +39,48 @@
+         '''
+         test_depends()
+ 
++    def test0010iban_format(self):
++        'Test IBAN format'
++        with Transaction().start(DB_NAME, USER, context=CONTEXT):
++            party = self.party(name='Test')
++            party.save()
++            bank = self.bank(party=party)
++            bank.save()
++            account, = self.account.create([{
++                        'bank': bank.id,
++                        'numbers': [('create', [{
++                                        'type': 'iban',
++                                        'number': 'BE82068896274468',
++                                        }, {
++                                        'type': 'other',
++                                        'number': 'not IBAN',
++                                        }])],
++                        }])
++
++            iban_number, other_number = account.numbers
++            self.assertEqual(iban_number.type, 'iban')
++            self.assertEqual(other_number.type, 'other')
++
++            # Test format on create
++            self.assertEqual(iban_number.number, 'BE82 0688 9627 4468')
++            self.assertEqual(other_number.number, 'not IBAN')
++
++            # Test format on write
++            iban_number.number = 'BE82068896274468'
++            iban_number.type = 'iban'
++            iban_number.save()
++            self.assertEqual(iban_number.number, 'BE82 0688 9627 4468')
++
++            other_number.number = 'still not IBAN'
++            other_number.save()
++            self.assertEqual(other_number.number, 'still not IBAN')
++
++            self.number.write([iban_number, other_number], {
++                    'number': 'BE82068896274468',
++                    })
++            self.assertEqual(iban_number.number, 'BE82 0688 9627 4468')
++            self.assertEqual(other_number.number, 'BE82068896274468')
++
+ 
+ def suite():
+     suite = trytond.tests.test_tryton.suite()
+
