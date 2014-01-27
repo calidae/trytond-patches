@@ -1,0 +1,15 @@
+Index: locale/es_ES.po
+===================================================================
+
+--- ./trytond/trytond/modules/analytic_purchase/locale/es_ES.po
++++ ./trytond/trytond/modules/analytic_purchase/locale/es_ES.po
+@@ -208,7 +208,7 @@
+ 
+ msgctxt "field:purchase.purchase,moves:"
+ msgid "Moves"
+-msgstr "Asientos"
++msgstr "Movimientos"
+ 
+ msgctxt "field:purchase.purchase,party:"
+ msgid "Party"
+
