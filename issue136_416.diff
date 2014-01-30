@@ -1,0 +1,16 @@
+Index: production.py
+===================================================================
+
+--- ./modules/production/production.py
++++ ./modules/production/production.py
+@@ -441,6 +441,9 @@
+             production.check_cost()
+ 
+     def check_cost(self):
++        # avoid this check because it could be little differences because of
++        # rounding problems
++        return
+         if self.state != 'done':
+             return
+         cost_price = Decimal(0)
+
