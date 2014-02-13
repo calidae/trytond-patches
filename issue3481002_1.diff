@@ -1,0 +1,11 @@
+diff -r 166951a7f36f fiscalyear.py
+--- ./modules/account/fiscalyear.py	Wed Dec 04 17:07:11 2013 +0100
++++ ./modules/account/fiscalyear.py	Thu Feb 13 10:13:38 2014 +0100
+@@ -391,6 +391,7 @@
+             accounts = Account.search([
+                     ('company', '=', self.start.fiscalyear.company.id),
+                     ('deferral', '=', False),
++                    ('kind', '!=', 'view'),
+                     ])
+         lines = []
+         for account in accounts:
