@@ -1,0 +1,14 @@
+Index: account.py
+===================================================================
+
+--- a/trytond/trytond/modules/account/account.py
++++ b/trytond/trytond/moduels/account/account.py
+@@ -814,6 +814,7 @@
+             default = {}
+         default['left'] = 0
+         default['right'] = 0
++        default['template'] = None
+         default.setdefault('deferrals', [])
+         new_accounts = super(Account, cls).copy(accounts, default=default)
+         cls._rebuild_tree('parent', None, 0)
+
