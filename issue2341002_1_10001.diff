@@ -102,7 +102,7 @@ Index: shipment.py
 +                Bool(Eval('moves', [0]))),
              },
          domain=[
-             ('type', 'in', ['storage']),
+             ('type', 'in', ['storage', 'lost_found']),
 -            ], depends=['state', 'moves'])
 +            ], depends=['state'])
      to_location = fields.Many2One('stock.location', "To Location",
@@ -111,7 +111,7 @@ Index: shipment.py
 -                Bool(Eval('moves'))),
 +                Bool(Eval('moves', [0]))),
              }, domain=[
-             ('type', 'in', ['storage']),
+             ('type', 'in', ['storage', 'lost_found']),
 -            ], depends=['state', 'moves'])
 +            ], depends=['state'])
      moves = fields.One2Many('stock.move', 'shipment', 'Moves',

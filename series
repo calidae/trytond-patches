@@ -2,8 +2,6 @@ issue3901002_1.diff
 issue1371002_130001.diff
 issue136_416.diff
 issue971002_217001.diff
-#issue2341002_1_10001.diff
-issue2311002_40001.diff
 issue10739.diff
 issue10467.diff
 issue1961002_60001.diff
@@ -12,8 +10,8 @@ add_db_client.diff
 issue2661002_20001.diff
 issue101_226.diff
 issue3781003_1_10001.diff
+issue2311002_40001.diff
+issue2341002_1_10001.diff
 issue3111002_1.diff
-issue3481002_1.diff
-issue2731002_20001.diff
 issue134_399.diff
-issue2961002_20001_30001.diff
+issue237_627.diff
