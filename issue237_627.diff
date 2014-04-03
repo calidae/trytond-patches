@@ -11,8 +11,8 @@ Index: invoice.py
 -            total_currency += line['amount_second_currency']
 +            debit_credit = line['debit'] - line['credit']
 +            total += debit_credit
-+            total_currency += (abs(line['amount_second_currency']) *
-+                abs(debit_credit) / debit_credit)
++            total_currency += line['amount_second_currency'].copy_sign(
++                 debit_credit)
 
          term_lines = self.payment_term.compute(total, self.company.currency,
              self.invoice_date)
