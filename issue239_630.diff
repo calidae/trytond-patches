@@ -1,0 +1,33 @@
+Index: location.py
+===================================================================
+
+--- ./modules/stock/location.py
++++ ./modules/stock/location.py
+@@ -160,6 +160,11 @@
+         return [(cls._rec_name,) + tuple(clause[1:])]
+ 
+     @classmethod
++    def _quantity_grouping_and_key(cls):
++        product_id = Transaction().context['product']
++        return ('product', ), (product_id,)
++
++    @classmethod
+     def get_quantity(cls, locations, name):
+         pool = Pool()
+         Product = pool.get('product.product')
+@@ -189,11 +194,12 @@
+ 
+         location_ids = [l.id for l in locations]
+         product_id = Transaction().context['product']
++        grouping, key = cls._quantity_grouping_and_key()
+         with Transaction().set_context(context):
+             pbl = Product.products_by_location(location_ids=location_ids,
+-                product_ids=[product_id], with_childs=True)
++                product_ids=[product_id], with_childs=True, grouping=grouping)
+ 
+-        return dict((loc, pbl.get((loc, product_id), 0))
++        return dict((loc, pbl.get((loc,) + key, 0))
+             for loc in location_ids)
+ 
+     @classmethod
+
