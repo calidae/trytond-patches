@@ -1,0 +1,287 @@
+Index: trytond/modules/purchase/CHANGELOG
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/CHANGELOG
++++ b/trytond/trytond/modules/purchase/CHANGELOG
+@@ -1,3 +1,6 @@
++Backport Version 3.1.0
++* Add link between stock moves and invoice lines
++
+ Version 3.0.0 - 2013-10-21
+ * Bug fixes (see mercurial logs for details)
+ * Replace reference copying by relate
+
+Index: trytond/modules/purchase/purchase.py
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/purchase.py
++++ b/trytond/trytond/modules/purchase/purchase.py
+@@ -1172,16 +1172,21 @@
+         if (invoice_type == 'in_invoice') != (self.quantity >= 0):
+             return []
+ 
++        stock_moves = []
+         if (self.purchase.invoice_method == 'order'
+                 or not self.product
+                 or self.product.type == 'service'):
+             quantity = abs(self.quantity)
++            stock_moves = self.moves
+         else:
+             quantity = 0.0
+             for move in self.moves:
+                 if move.state == 'done':
+                     quantity += Uom.compute_qty(move.uom, move.quantity,
+                         self.unit)
++                    if move.invoiced_quantity < move.quantity:
++                        stock_moves.append(move)
++        invoice_line.stock_moves = stock_moves
+ 
+         skip_ids = set(l.id for i in self.purchase.invoices_recreated
+             for l in i.lines)
+@@ -1267,6 +1272,8 @@
+         move.unit_price = self.unit_price
+         move.currency = self.purchase.currency
+         move.planned_date = self.delivery_date
++        move.invoice_lines = [l for l in self.invoice_lines
++            if not l.stock_moves]
+         move.origin = self
+         return move
+ 
+
+Index: trytond/modules/purchase/tests/scenario_purchase.rst
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/tests/scenario_purchase.rst
++++ b/trytond/trytond/modules/purchase/tests/scenario_purchase.rst
+@@ -231,6 +231,21 @@
+     >>> invoice.origins == purchase.rec_name
+     True
+ 
++Invoice line must be linked to stock move::
++
++    >>> _, invoice_line1, invoice_line2 = sorted(invoice.lines,
++    ...     key=lambda l: l.quantity)
++    >>> stock_move1, stock_move2 = sorted(purchase.moves,
++    ...     key=lambda m: m.quantity)
++    >>> invoice_line1.stock_moves == [stock_move1]
++    True
++    >>> stock_move1.invoice_lines == [invoice_line1]
++    True
++    >>> invoice_line2.stock_moves == [stock_move2]
++    True
++    >>> stock_move2.invoice_lines == [invoice_line2]
++    True
++
+ Post invoice and check no new invoices::
+ 
+     >>> config.user = account_user.id
+@@ -271,6 +286,15 @@
+     >>> len(purchase.moves), len(purchase.shipment_returns), len(purchase.invoices)
+     (2, 0, 0)
+ 
++Not yet linked to invoice lines::
++
++    >>> stock_move1, stock_move2 = sorted(purchase.moves,
++    ...     key=lambda m: m.quantity)
++    >>> len(stock_move1.invoice_lines)
++    0
++    >>> len(stock_move2.invoice_lines)
++    0
++
+ Validate Shipments::
+ 
+     >>> config.user = stock_user.id
+@@ -297,8 +321,8 @@
+     >>> config.user = account_user.id
+     >>> invoice.type
+     u'in_invoice'
+-    >>> len(invoice.lines)
+-    2
++    >>> invoice_line1, invoice_line2 = sorted(invoice.lines,
++    ...     key=lambda l: l.quantity)
+     >>> for line in invoice.lines:
+     ...     line.quantity = 1
+     ...     line.save()
+@@ -306,6 +330,13 @@
+     >>> invoice.save()
+     >>> Invoice.post([invoice.id], config.context)
+ 
++Invoice lines must be linked to each stock moves::
++
++    >>> invoice_line1.stock_moves == [stock_move1]
++    True
++    >>> invoice_line2.stock_moves == [stock_move2]
++    True
++
+ Check second invoices::
+ 
+     >>> config.user = purchase_user.id
+
+Index: trytond/modules/purchase/tryton.cfg
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/tryton.cfg
++++ b/trytond/trytond/modules/purchase/tryton.cfg
+@@ -3,6 +3,7 @@
+ depends:
+     account
+     account_invoice
++    account_invoice_stock
+     account_product
+     company
+     currency
+
+Index: trytond/modules/sale/CHANGELOG
+===================================================================
+
+--- a/trytond/trytond/modules/sale/CHANGELOG
++++ b/trytond/trytond/modules/sale/CHANGELOG
+@@ -1,3 +1,6 @@
++Backport Version 3.1.0
++* Add link between stock moves and invoice lines
++
+ Version 3.0.0 - 2013-10-21
+ * Bug fixes (see mercurial logs for details)
+ * Replace reference copying by relate
+
+Index: trytond/modules/sale/sale.py
+===================================================================
+
+--- a/trytond/trytond/modules/sale/sale.py
++++ b/trytond/trytond/modules/sale/sale.py
+@@ -1282,16 +1282,21 @@
+         if (invoice_type == 'out_invoice') != (self.quantity >= 0):
+             return []
+ 
++        stock_moves = []
+         if (self.sale.invoice_method == 'order'
+                 or not self.product
+                 or self.product.type == 'service'):
+             quantity = abs(self.quantity)
++            stock_moves = self.moves
+         else:
+             quantity = 0.0
+             for move in self.moves:
+                 if move.state == 'done':
+                     quantity += Uom.compute_qty(move.uom, move.quantity,
+                         self.unit)
++                    if move.invoiced_quantity < move.quantity:
++                        stock_moves.append(move)
++        invoice_line.stock_moves = stock_moves
+ 
+         skip_ids = set(l.id for i in self.sale.invoices_recreated
+             for l in i.lines)
+@@ -1356,14 +1361,18 @@
+         if (shipment_type == 'out') != (self.quantity >= 0):
+             return
+ 
++        invoice_lines = []
+         if self.sale.shipment_method == 'order':
+             quantity = abs(self.quantity)
++            invoice_lines = self.invoice_lines
+         else:
+             quantity = 0.0
+             for invoice_line in self.invoice_lines:
+                 if invoice_line.invoice.state == 'paid':
+                     quantity += Uom.compute_qty(invoice_line.unit,
+                         invoice_line.quantity, self.unit)
++                    if invoice_line.moved_quantity < invoice_line.quantity:
++                        invoice_lines.append(invoice_line)
+ 
+         skip_ids = set(x.id for x in self.moves_recreated)
+         for move in self.moves:
+@@ -1389,6 +1398,7 @@
+         move.unit_price = self.unit_price
+         move.currency = self.sale.currency
+         move.planned_date = self.delivery_date
++        move.invoice_lines = invoice_lines
+         move.origin = self
+         return move
+ 
+
+Index: trytond/modules/sale/tests/scenario_sale.rst
+===================================================================
+
+--- a/trytond/trytond/modules/sale/tests/scenario_sale.rst
++++ b/trytond/trytond/modules/sale/tests/scenario_sale.rst
+@@ -242,6 +242,21 @@
+     >>> shipment.origins == sale.rec_name
+     True
+ 
++Invoice line must be linked to stock move::
++
++    >>> _, invoice_line1, invoice_line2 = sorted(invoice.lines,
++    ...     key=lambda l: l.quantity)
++    >>> stock_move1, stock_move2 = sorted(shipment.outgoing_moves,
++    ...     key=lambda m: m.quantity)
++    >>> invoice_line1.stock_moves == [stock_move1]
++    True
++    >>> stock_move1.invoice_lines == [invoice_line1]
++    True
++    >>> invoice_line2.stock_moves == [stock_move2]
++    True
++    >>> stock_move2.invoice_lines == [invoice_line2]
++    True
++
+ Post invoice and check no new invoices::
+ 
+ 
+@@ -284,10 +299,19 @@
+     >>> len(sale.shipments), len(sale.shipment_returns), len(sale.invoices)
+     (1, 0, 0)
+ 
+-Validate Shipments::
++Not yet linked to invoice lines::
+ 
+     >>> shipment, = sale.shipments
+     >>> config.user = stock_user.id
++    >>> stock_move1, stock_move2 = sorted(shipment.outgoing_moves,
++    ...     key=lambda m: m.quantity)
++    >>> len(stock_move1.invoice_lines)
++    0
++    >>> len(stock_move2.invoice_lines)
++    0
++
++Validate Shipments::
++
+     >>> ShipmentOut = Model.get('stock.shipment.out')
+     >>> ShipmentOut.assign_try([shipment.id], config.context)
+     True
+@@ -303,13 +327,20 @@
+     >>> config.user = account_user.id
+     >>> invoice.type
+     u'out_invoice'
+-    >>> len(invoice.lines)
+-    2
++    >>> invoice_line1, invoice_line2 = sorted(invoice.lines,
++    ...     key=lambda l: l.quantity)
+     >>> for line in invoice.lines:
+     ...     line.quantity = 1
+     ...     line.save()
+     >>> Invoice.post([invoice.id], config.context)
+ 
++Invoice lines must be linked to each stock moves::
++
++    >>> invoice_line1.stock_moves == [stock_move1]
++    True
++    >>> invoice_line2.stock_moves == [stock_move2]
++    True
++
+ Check second invoices::
+ 
+     >>> config.user = sale_user.id
+
+Index: trytond/modules/sale/tryton.cfg
+===================================================================
+
+--- a/trytond/trytond/modules/sale/tryton.cfg
++++ b/trytond/trytond/modules/sale/tryton.cfg
+@@ -3,6 +3,7 @@
+ depends:
+     account
+     account_invoice
++    account_invoice_stock
+     account_product
+     company
+     currency
+
