@@ -108,7 +108,7 @@ Index: move.py
          return [('id', 'in', record_ids)]
  
  
-@@ -796,3 +808,367 @@
+@@ -789,3 +801,367 @@
                  pbl[from_key] = pbl.get(from_key, 0.0) - qty_default_uom
                  pbl[to_key] = pbl.get(to_key, 0.0) + qty_default_uom
          return success
@@ -502,7 +502,7 @@ Index: product.py
  from trytond.pool import Pool, PoolMeta
  
  from .move import StockMixin
-@@ -121,346 +119,50 @@
+@@ -122,348 +120,52 @@
          uom of the product.
  
          The context with keys:
@@ -858,6 +858,8 @@ Index: product.py
 +            grouping=grouping, grouping_filter=grouping_filter)
  
          if wh_to_add:
+             if product_ids is None:
+                 product_ids = set((p for s, p in res))
              for wh, storage in wh_to_add.iteritems():
                  for product in product_ids:
 -                    if (storage, product) in res:
