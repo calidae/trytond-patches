@@ -6,14 +6,14 @@ Index: line.xml
 @@ -44,6 +44,15 @@
              <field name="perm_delete" eval="True"/>
          </record>
- 
-+        <record model="ir.rule.group" id="rule_group_line">
+
++        <record model="ir.rule.group" id="rule_group_analytic_line">
 +            <field name="model" search="[('model', '=', 'analytic_account.line')]"/>
 +            <field name="global_p" eval="True"/>
 +        </record>
-+        <record model="ir.rule" id="rule_line1">
++        <record model="ir.rule" id="rule_analytic_line1">
 +            <field name="domain">[('account.company', 'in', [c.id for c in user.companies])]</field>
-+            <field name="rule_group" ref="rule_group_line"/>
++            <field name="rule_group" ref="rule_group_analytic_line"/>
 +        </record>
 +
          <record model="ir.action.wizard" id="act_open_account">
