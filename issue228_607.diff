@@ -3,13 +3,12 @@ Index: trytond/modules/purchase/CHANGELOG
 
 --- a/trytond/trytond/modules/purchase/CHANGELOG
 +++ b/trytond/trytond/modules/purchase/CHANGELOG
-@@ -1,3 +1,6 @@
+@@ -1,2 +1,5 @@
 +Backport Version 3.1.0
 +* Add link between stock moves and invoice lines
 +
- Version 3.0.0 - 2013-10-21
+ Version 3.0.1 - 2014-05-06
  * Bug fixes (see mercurial logs for details)
- * Replace reference copying by relate
 
 Index: trytond/modules/purchase/purchase.py
 ===================================================================
