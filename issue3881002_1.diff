@@ -1,0 +1,18 @@
+Index: trytond/trytond/modules/analytic_account/line.xml
+===================================================================
+
+--- a/trytond/trytond/modules/analytic_account/line.xml
++++ b/trytond/trytond/modules/analytic_account/line.xml
+@@ -61,5 +61,11 @@
+             <field name="name">move_line_form</field>
+         </record>
+
++        <record model="ir.ui.view" id="move_line_view_form_move">
++            <field name="model">account.move.line</field>
++            <field name="inherit" ref="account.move_line_view_form_move"/>
++            <field name="name">move_line_form</field>
++        </record>
++
+     </data>
+ </tryton>
+
