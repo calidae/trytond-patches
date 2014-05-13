@@ -30,7 +30,7 @@ Index: trytond/trytond/modules/stock_supply/purchase_request.py
 -        warehouses = Location.search([
 -                ('type', '=', 'warehouse'),
 -                ])
-+        if not warehouses:
++        if warehouses is None:
 +            # fetch warehouses:
 +            warehouses = Location.search([
 +                    ('type', '=', 'warehouse'),
@@ -38,39 +38,26 @@ Index: trytond/trytond/modules/stock_supply/purchase_request.py
          warehouse_ids = [w.id for w in warehouses]
          # fetch order points
          order_points = OrderPoint.search([
-@@ -465,6 +472,11 @@
-     'Create Purchase Request'
-     __name__ = 'purchase.request.create.start'
+@@ -483,6 +490,10 @@
+                 'late_supplier_moves': 'There are some late supplier moves.',
+                 })
 
-+    warehouses = fields.Many2Many('stock.location', None, None, 'Warehouses',
-+        domain=[
-+            ('type', '=', 'warehouse'),
-+            ])
++    @property
++    def _requests_parameters(self):
++        return {}
 +
-
- class CreatePurchaseRequest(Wizard):
-     'Create Purchase Requests'
-@@ -497,7 +509,7 @@
+     def do_create_(self, action):
+         pool = Pool()
+         PurchaseRequest = pool.get('purchase.request')
+@@ -497,7 +508,7 @@
                      ], order=[]):
              self.raise_user_warning('%s@%s' % (self.__name__, today),
                  'late_supplier_moves')
 -        PurchaseRequest.generate_requests()
-+        PurchaseRequest.generate_requests(warehouses=self.start.warehouses)
++        PurchaseRequest.generate_requests(**self._requests_parameters)
          return action, {}
 
      def transition_create_(self):
-
-Index: trytond/trytond/modules/stock_supply/view/purchase_request_create_start_form.xml
-===================================================================
-
---- a/trytond/trytond/modules/stock_supply/view/purchase_request_create_start_form.xml
-+++ b/trytond/trytond/modules/stock_supply/view/purchase_request_create_start_form.xml
-@@ -5,4 +5,5 @@
-     <image name="tryton-dialog-information" xexpand="0" xfill="0"/>
-     <label string="Create Purchase Requests?" id="create"
-         yalign="0.0" xalign="0.0" xexpand="1"/>
-+    <field colspan="2" name="warehouses"/>
- </form>
 
 Index: trytond/trytond/modules/stock_supply_production/production.py
 ===================================================================
@@ -102,7 +89,7 @@ Index: trytond/trytond/modules/stock_supply_production/production.py
 -        warehouses = Location.search([
 -                ('type', '=', 'warehouse'),
 -                ])
-+        if not warehouses:
++        if warehouses is None:
 +            # fetch warehouse
 +            warehouses = Location.search([
 +                    ('type', '=', 'warehouse'),
@@ -110,37 +97,29 @@ Index: trytond/trytond/modules/stock_supply_production/production.py
          warehouse_ids = [w.id for w in warehouses]
          # fetch order points
          order_points = OrderPoint.search([
-@@ -195,6 +199,11 @@
-     'Create Production Request'
-     __name__ = 'production.create_request.start'
+@@ -99,7 +103,7 @@
+                         req.set_moves()
+                         requests.append(req)
+         if requests:
+-            cls.generate_requests(clean=False)
++            cls.generate_requests(False, warehouses)
+         return requests
 
-+    warehouses = fields.Many2Many('stock.location', None, None, 'Warehouses',
-+        domain=[
-+            ('type', '=', 'warehouse'),
-+            ])
+     @classmethod
+@@ -206,10 +210,14 @@
+             ])
+     create_ = StateAction('stock_supply_production.act_production_request')
+
++    @property
++    def _requests_parameters(self):
++        return {}
 +
-
- class CreateProductionRequest(Wizard):
-     'Create Production Requests'
-@@ -209,7 +218,7 @@
      def do_create_(self, action):
          pool = Pool()
          Production = pool.get('production')
 -        Production.generate_requests()
-+        Production.generate_requests(warehouses=self.start.warehouses)
++        Production.generate_requests(**self._requests_parameters)
          return action, {}
 
      def transition_create_(self):
-
-Index: trytond/trytond/modules/stock_supply_production/view/production_create_request_start_form.xml
-===================================================================
-
---- a/trytond/trytond/modules/stock_supply_production/view/production_create_request_start_form.xml
-+++ b/trytond/trytond/modules/stock_supply_production/view/production_create_request_start_form.xml
-@@ -5,4 +5,5 @@
-     <image name="tryton-dialog-information" xexpand="0" xfill="0"/>
-     <label string="Create Production Requests?" id="create"
-         yalign="0.0" xalign="0.0" xexpand="1"/>
-+    <field colspan="2" name="warehouses"/>
- </form>
 
