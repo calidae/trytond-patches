@@ -1,0 +1,62 @@
+diff -r 798032271015 modules/analytic_account/account.xml
+--- a/modules/analytic_account/account.xml	Sun Mar 02 19:06:04 2014 +0100
++++ b/modules/analytic_account/account.xml	Tue May 13 17:51:04 2014 +0200
+@@ -104,15 +104,6 @@
+             <field name="perm_delete" eval="True"/>
+         </record>
+
+-        <record model="ir.rule.group" id="rule_group_account">
+-            <field name="model" search="[('model', '=', 'analytic_account.account')]"/>
+-            <field name="global_p" eval="True"/>
+-        </record>
+-        <record model="ir.rule" id="rule_account1">
+-            <field name="domain">[('company', 'in', [c.id for c in user.companies])]</field>
+-            <field name="rule_group" ref="rule_group_account"/>
+-        </record>
+-
+         <record model="ir.ui.view" id="open_chart_start_view_form">
+             <field name="model">analytic_account.open_chart.start</field>
+             <field name="type">form</field>
+diff -r 798032271015 modules/analytic_account/line.py
+--- a/modules/analytic_account/line.py	Sun Mar 02 19:06:04 2014 +0100
++++ b/modules/analytic_account/line.py	Tue May 13 17:51:04 2014 +0200
+@@ -4,7 +4,7 @@
+ from trytond.model import ModelView, ModelSQL, fields
+ from trytond.wizard import Wizard, StateAction
+ from trytond import backend
+-from trytond.pyson import Eval, PYSONEncoder
++from trytond.pyson import Eval, PYSONEncoder, If, Bool
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool
+
+@@ -23,10 +23,17 @@
+         on_change_with=['move_line']), 'on_change_with_currency')
+     currency_digits = fields.Function(fields.Integer('Currency Digits',
+         on_change_with=['move_line']), 'on_change_with_currency_digits')
++    company = fields.Function(fields.Many2One('company.company', 'Company',
++        on_change_with=['company']), 'on_change_with_company')
+     account = fields.Many2One('analytic_account.account', 'Account',
+-            required=True, select=True, domain=[('type', '!=', 'view')])
++            required=True, select=True, domain=[
++            ('type', '!=', 'view'),
++            ['OR',
++                [('company', '=', None)],
++                [('company', '=', Eval('company', -1))],
++                ]])
+     move_line = fields.Many2One('account.move.line', 'Account Move Line',
+-            ondelete='CASCADE', required=True)
++        ondelete='CASCADE', required=True)
+     journal = fields.Many2One('account.journal', 'Journal', required=True,
+             select=True)
+     date = fields.Date('Date', required=True)
+@@ -87,6 +94,10 @@
+             return self.move_line.account.company.currency.digits
+         return 2
+
++    def on_change_with_company(self, name=None):
++        if self.move_line:
++            return self.move_line.account.company.id
++
+     @staticmethod
+     def query_get(table):
+         '''
