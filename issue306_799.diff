@@ -1,0 +1,217 @@
+Index: trytond/trytond/modules/account_invoice/invoice.py
+===================================================================
+
+--- a/trytond/trytond/modules/account_invoice/invoice.py
++++ b/trytond/trytond/modules/account_invoice/invoice.py
+@@ -19,6 +19,8 @@
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool
+ from trytond.rpc import RPC
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['Invoice', 'InvoicePaymentLine', 'InvoiceLine',
+     'InvoiceLineTax', 'InvoiceTax',
+@@ -1541,7 +1543,7 @@
+             'required': Eval('type') == 'line',
+             },
+         depends=['type', 'invoice_type'])
+-    unit_price = fields.Numeric('Unit Price', digits=(16, 4),
++    unit_price = fields.Numeric('Unit Price', digits=(16, DIGITS),
+         states={
+             'invisible': Eval('type') != 'line',
+             'required': Eval('type') == 'line',
+
+Index: trytond/trytond/modules/product/product.py
+===================================================================
+
+--- a/trytond/trytond/modules/product/product.py
++++ b/trytond/trytond/modules/product/product.py
+@@ -6,6 +6,8 @@
+ from trytond.pool import Pool
+ from trytond import backend
+ from trytond.const import OPERATORS
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['Template', 'Product']
+
+@@ -36,9 +38,9 @@
+     category = fields.Many2One('product.category', 'Category',
+         states=STATES, depends=DEPENDS)
+     list_price = fields.Property(fields.Numeric('List Price', states=STATES,
+-            digits=(16, 4), depends=DEPENDS, required=True))
++            digits=(16, DIGITS), depends=DEPENDS, required=True))
+     cost_price = fields.Property(fields.Numeric('Cost Price',
+-            states=STATES, digits=(16, 4), depends=DEPENDS, required=True))
++            states=STATES, digits=(16, DIGITS), depends=DEPENDS, required=True))
+     cost_price_method = fields.Property(fields.Selection([
+                 ("fixed", "Fixed"),
+                 ("average", "Average")
+@@ -131,9 +133,9 @@
+             on_change_with=['template']),
+         'on_change_with_type', searcher='search_type')
+     list_price_uom = fields.Function(fields.Numeric('List Price',
+-        digits=(16, 4)), 'get_price_uom')
++        digits=(16, DIGITS)), 'get_price_uom')
+     cost_price_uom = fields.Function(fields.Numeric('Cost Price',
+-        digits=(16, 4)), 'get_price_uom')
++        digits=(16, DIGITS)), 'get_price_uom')
+
+     @classmethod
+     def order_rec_name(cls, tables):
+
+Index: trytond/trytond/modules/production/production.py
+===================================================================
+
+--- a/trytond/trytond/modules/production/production.py
++++ b/trytond/trytond/modules/production/production.py
+@@ -7,6 +7,8 @@
+ from trytond.pyson import Eval, Bool, If, Id
+ from trytond.pool import Pool
+ from trytond.transaction import Transaction
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['Production', 'AssignFailed', 'Assign']
+
+@@ -98,7 +100,7 @@
+             },
+         on_change=BOM_CHANGES,
+         depends=['unit_digits'])
+-    cost = fields.Function(fields.Numeric('Cost', digits=(16, 4),
++    cost = fields.Function(fields.Numeric('Cost', digits=(16, DIGITS),
+             readonly=True, on_change_with=['inputs']), 'get_cost')
+     inputs = fields.One2Many('stock.move', 'production_input', 'Inputs',
+         domain=[
+
+Index: trytond/trytond/modules/purchase/product.py
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/product.py
++++ b/trytond/trytond/modules/purchase/product.py
+@@ -9,6 +9,8 @@
+ from trytond.pool import Pool, PoolMeta
+ from trytond.transaction import Transaction
+ from trytond import backend
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['Template', 'Product', 'ProductSupplier', 'ProductSupplierPrice']
+ __metaclass__ = PoolMeta
+@@ -264,7 +266,8 @@
+     product_supplier = fields.Many2One('purchase.product_supplier',
+             'Supplier', required=True, ondelete='CASCADE')
+     quantity = fields.Float('Quantity', required=True, help='Minimal quantity')
+-    unit_price = fields.Numeric('Unit Price', required=True, digits=(16, 4))
++    unit_price = fields.Numeric('Unit Price', required=True, digits=(16,
++            DIGITS))
+
+     @classmethod
+     def __setup__(cls):
+
+Index: trytond/trytond/modules/purchase/purchase.py
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/purchase.py
++++ b/trytond/trytond/modules/purchase/purchase.py
+@@ -15,6 +15,8 @@
+ from trytond.pyson import Eval, Bool, If, PYSONEncoder, Id
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['Purchase', 'PurchaseInvoice', 'PurchaseIgnoredInvoice',
+     'PurchaseRecreadtedInvoice', 'PurchaseLine', 'PurchaseLineTax',
+@@ -870,7 +872,7 @@
+         fields.Many2One('product.uom.category', 'Product Uom Category',
+             on_change_with=['product']),
+         'on_change_with_product_uom_category')
+-    unit_price = fields.Numeric('Unit Price', digits=(16, 4),
++    unit_price = fields.Numeric('Unit Price', digits=(16, DIGITS),
+         states={
+             'invisible': Eval('type') != 'line',
+             'required': Eval('type') == 'line',
+
+Index: trytond/trytond/modules/purchase/stock.py
+===================================================================
+
+--- a/trytond/trytond/modules/purchase/stock.py
++++ b/trytond/trytond/modules/purchase/stock.py
+@@ -10,6 +10,8 @@
+ from trytond.transaction import Transaction
+ from trytond.pyson import PYSONDecoder, PYSONEncoder
+ from trytond import backend
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['ShipmentIn', 'ShipmentInReturn', 'Move',
+     'OpenProductQuantitiesByWarehouse']
+@@ -152,7 +154,7 @@
+     purchase_unit_digits = fields.Function(fields.Integer(
+         'Purchase Unit Digits'), 'get_purchase_fields')
+     purchase_unit_price = fields.Function(fields.Numeric('Purchase Unit Price',
+-            digits=(16, 4), states={
++            digits=(16, DIGITS), states={
+                 'invisible': ~Eval('purchase_visible', False),
+                 }, depends=['purchase_visible']), 'get_purchase_fields')
+     purchase_currency = fields.Function(fields.Many2One('currency.currency',
+
+Index: trytond/trytond/modules/sale/sale.py
+===================================================================
+
+--- a/trytond/trytond/modules/sale/sale.py
++++ b/trytond/trytond/modules/sale/sale.py
+@@ -15,6 +15,8 @@
+ from trytond.pyson import If, Eval, Bool, PYSONEncoder, Id
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['Sale', 'SaleInvoice', 'SaleIgnoredInvoice', 'SaleRecreatedInvoice',
+     'SaleLine', 'SaleLineTax', 'SaleLineIgnoredMove',
+@@ -979,7 +981,7 @@
+         fields.Many2One('product.uom.category', 'Product Uom Category',
+             on_change_with=['product']),
+         'on_change_with_product_uom_category')
+-    unit_price = fields.Numeric('Unit Price', digits=(16, 4),
++    unit_price = fields.Numeric('Unit Price', digits=(16, DIGITS),
+         states={
+             'invisible': Eval('type') != 'line',
+             'required': Eval('type') == 'line',
+
+Index: trytond/trytond/modules/stock/move.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock/move.py
++++ b/trytond/trytond/modules/stock/move.py
+@@ -12,6 +12,8 @@
+ from trytond.pyson import In, Eval, Not, Equal, If, Get, Bool
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool
++from trytond.config import CONFIG
++DIGITS = int(CONFIG.get('unit_price_digits', 4))
+
+ __all__ = ['StockMixin', 'Move']
+
+@@ -197,14 +199,15 @@
+                 Eval('context', {}).get('company', -1)),
+             ],
+         depends=['state'])
+-    unit_price = fields.Numeric('Unit Price', digits=(16, 4),
++    unit_price = fields.Numeric('Unit Price', digits=(16, DIGITS),
+         states={
+             'invisible': Not(Bool(Eval('unit_price_required'))),
+             'required': Bool(Eval('unit_price_required')),
+             'readonly': Not(Equal(Eval('state'), 'draft')),
+             },
+         depends=['unit_price_required', 'state'])
+-    cost_price = fields.Numeric('Cost Price', digits=(16, 4), readonly=True)
++    cost_price = fields.Numeric('Cost Price', digits=(16, DIGITS),
++        readonly=True)
+     currency = fields.Many2One('currency.currency', 'Currency',
+         states={
+             'invisible': Not(Bool(Eval('unit_price_required'))),
+
