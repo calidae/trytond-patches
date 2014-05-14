@@ -1,0 +1,15 @@
+diff -r b064a68aa440 tryton/gui/window/view_form/view/list_gtk/editabletree.py
+--- ./tryton/tryton/gui/window/view_form/view/list_gtk/editabletree.py	Tue May 06 18:26:15 2014 +0200
++++ ./tryton/tryton/gui/window/view_form/view/list_gtk/editabletree.py	Wed May 14 18:19:17 2014 +0200
+@@ -112,7 +112,10 @@
+         model = self.get_model()
+         if not path or not column or not column.name:
+             return True
+-        record = model.get_value(model.get_iter(path), 0)
++        try:
++            record = model.get_value(model.get_iter(path), 0)
++        except:
++            return True
+         field = record[column.name]
+         if hasattr(field, 'editabletree_entry'):
+             entry = field.editabletree_entry
