@@ -1,0 +1,41 @@
+Index: trytond/trytond/model/modelsql.py
+===================================================================
+
+--- a/trytond/trytond/model/modelsql.py
++++ b/trytond/trytond/model/modelsql.py
+@@ -1031,6 +1031,7 @@
+         columns = [main_table.id.as_('id')]
+         if (cls._history and transaction.context.get('_datetime')
+                 and not query):
++            columns.append(Column(main_table, '__id'))
+             columns.append(Coalesce(
+                     main_table.write_date,
+                     main_table.create_date).as_('_datetime'))
+@@ -1065,7 +1066,7 @@
+             if keys is None:
+                 keys = data.keys()
+                 for k in keys[:]:
+-                    if k in ('_timestamp', '_datetime'):
++                    if k in ('_timestamp', '_datetime', '__id'):
+                         keys.remove(k)
+                         continue
+                     field = cls._fields[k]
+@@ -1093,12 +1094,15 @@
+             ids_date = {}
+             for data in rows:
+                 if data['id'] in ids_date:
+-                    if data['_datetime'] <= ids_date[data['id']]:
++                    if data['_datetime'] < ids_date[data['id']][0]:
++                        continue
++                    elif (data['_datetime'] == ids_date[data['id']][0]
++                            and data['__id'] < ids_date[data['id']][1]):
+                         continue
+                 if data['id'] in ids:
+                     ids.remove(data['id'])
+                 ids.append(data['id'])
+-                ids_date[data['id']] = data['_datetime']
++                ids_date[data['id']] = (data['_datetime'], data['__id'])
+             to_delete = set()
+             history = cls.__table_history__()
+             for i in range(0, len(ids), in_max):
+
