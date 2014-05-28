@@ -11,7 +11,15 @@ Index: trytond/trytond/model/modelsql.py
              columns.append(Coalesce(
                      main_table.write_date,
                      main_table.create_date).as_('_datetime'))
-@@ -1065,7 +1066,7 @@
+@@ -1059,13 +1060,15 @@
+         delete_records = transaction.delete_records.setdefault(cls.__name__,
+             set())
+         keys = None
++        ids = []
++        ids_history = {}
+         for data in islice(rows, 0, cache.size_limit):
+             if data['id'] in delete_records:
+                 continue
              if keys is None:
                  keys = data.keys()
                  for k in keys[:]:
@@ -20,22 +28,51 @@ Index: trytond/trytond/model/modelsql.py
                          keys.remove(k)
                          continue
                      field = cls._fields[k]
-@@ -1093,12 +1094,15 @@
-             ids_date = {}
-             for data in rows:
-                 if data['id'] in ids_date:
--                    if data['_datetime'] <= ids_date[data['id']]:
-+                    if data['_datetime'] < ids_date[data['id']][0]:
-+                        continue
-+                    elif (data['_datetime'] == ids_date[data['id']][0]
-+                            and data['__id'] < ids_date[data['id']][1]):
+@@ -1074,6 +1077,16 @@
                          continue
-                 if data['id'] in ids:
-                     ids.remove(data['id'])
-                 ids.append(data['id'])
+             for k in keys:
+                 del data[k]
++            #If historized ensure that the correct version is saved on cache
++            if cls._history and transaction.context.get('_datetime'):
++                if data['id'] in ids_history:
++                    if ((data['_datetime'], data['__id']) <
++                            ids_history[data['id']]):
++                        continue
++                if data['id'] in ids:
++                    ids.remove(data['id'])
++                ids.append(data['id'])
++                ids_history[data['id']] = (data['_datetime'], data['__id'])
+             cache[cls.__name__].setdefault(data['id'], {}).update(data)
+
+         if len(rows) >= cursor.IN_MAX:
+@@ -1089,16 +1102,6 @@
+             rows = cursor.dictfetchall()
+
+         if cls._history and transaction.context.get('_datetime'):
+-            ids = []
+-            ids_date = {}
+-            for data in rows:
+-                if data['id'] in ids_date:
+-                    if data['_datetime'] <= ids_date[data['id']]:
+-                        continue
+-                if data['id'] in ids:
+-                    ids.remove(data['id'])
+-                ids.append(data['id'])
 -                ids_date[data['id']] = data['_datetime']
-+                ids_date[data['id']] = (data['_datetime'], data['__id'])
              to_delete = set()
              history = cls.__table_history__()
              for i in range(0, len(ids), in_max):
-
+@@ -1111,7 +1114,13 @@
+                         & (history.write_date
+                             <= transaction.context['_datetime'])))
+                 for deleted_id, delete_date in cursor.fetchall():
+-                    if ids_date[deleted_id] < delete_date:
++                    history_date, _ = ids_history[deleted_id]
++                    # SQLite uses char for COALESCE
++                    if isinstance(history_date, basestring):
++                        strptime = datetime.datetime.strptime
++                        format_ = '%Y-%m-%d %H:%M:%S.%f'
++                        history_date = strptime(history_date, format_)
++                    if history_date <= delete_date:
+                         to_delete.add(deleted_id)
+             return cls.browse(filter(lambda x: x not in to_delete, ids))
