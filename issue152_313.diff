@@ -1,8 +1,8 @@
 Index: invoice.py
 ===================================================================
 
---- ./modules/project_invoice_discount/invoice.py
-+++ ./modules/project_invoice_discount/invoice.py
+--- ./modules/account_invoice_discount/invoice.py
++++ ./modules/account_invoice_discount/invoice.py
 @@ -78,8 +78,11 @@
          for vals in vlist:
              if not 'gross_unit_price' in vals:
