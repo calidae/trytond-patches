@@ -1,0 +1,20 @@
+Index: invoice.py
+===================================================================
+
+--- ./modules/project_invoice_discount/invoice.py
++++ ./modules/project_invoice_discount/invoice.py
+@@ -78,8 +78,11 @@
+         for vals in vlist:
+             if not 'gross_unit_price' in vals:
+                 unit_price = vals.get('unit_price')
+-                if 'discount' in vals:
+-                    unit_price = unit_price * (1 + vals.get('discount'))
++                if 'discount' in vals and (1 - vals['discount']) != 0:
++                    unit_price = unit_price / (1 - vals['discount'])
++
++                    digits = cls.unit_price.digits[1]
++                    unit_price = unit_price.quantize(Decimal(str(10.0 ** -digits)))
+                 vals['gross_unit_price'] = unit_price
+             if not 'discount' in vals:
+                 vals['discount'] = Decimal(0)
+
