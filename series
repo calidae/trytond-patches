@@ -29,5 +29,4 @@ disable_tests.diff
 issue11281003_1.diff
 client-open_url.diff
 fix_wizard_copy.diff
-issue151_312.diff
 issue152_313.diff
