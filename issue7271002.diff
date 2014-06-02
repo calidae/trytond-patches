@@ -30,9 +30,9 @@ diff -r 798032271015 modules/analytic_account/line.py
  from trytond.pool import Pool
 
 @@ -23,10 +23,17 @@
-         on_change_with=['move_line']), 'on_change_with_currency')
+            'Currency'), 'on_change_with_currency')
      currency_digits = fields.Function(fields.Integer('Currency Digits',
-         on_change_with=['move_line']), 'on_change_with_currency_digits')
+         'on_change_with_currency_digits')
 +    company = fields.Function(fields.Many2One('company.company', 'Company',
 +        on_change_with=['company']), 'on_change_with_company')
      account = fields.Many2One('analytic_account.account', 'Account',

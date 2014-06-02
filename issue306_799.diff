@@ -76,12 +76,12 @@ Index: trytond/trytond/modules/production/production.py
  __all__ = ['Production', 'AssignFailed', 'Assign']
 
 @@ -98,7 +100,7 @@
+             'invisible': ~Eval('product'),
              },
-         on_change=BOM_CHANGES,
          depends=['unit_digits'])
 -    cost = fields.Function(fields.Numeric('Cost', digits=(16, 4),
 +    cost = fields.Function(fields.Numeric('Cost', digits=(16, DIGITS),
-             readonly=True, on_change_with=['inputs']), 'get_cost')
+             readonly=True), 'get_cost')
      inputs = fields.One2Many('stock.move', 'production_input', 'Inputs',
          domain=[
 
