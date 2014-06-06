@@ -1,0 +1,12 @@
+diff -r 70d2adcc4bfa trytond/ir/locale/ca_ES.po
+--- a/trytond/trytond/ir/locale/ca_ES.po	Fri May 09 14:52:30 2014 +0200
++++ b/trytond/trytond/ir/locale/ca_ES.po	Fri Jun 06 19:28:38 2014 +0200
+@@ -34,7 +34,7 @@
+ msgid ""
+ "The value of the field \"%(field)s\" on \"%(model)s\" is not valid according"
+ " to its domain."
+-msgstr "El valor del camp \"%s\" de \"%s\" no és correcte segons aquest domini."
++msgstr "El valor del camp \"%(field)s\" de \"%(model)s\" no és correcte segons aquest domini."
+ 
+ msgctxt "error:foreign_model_exist:"
+ msgid ""
