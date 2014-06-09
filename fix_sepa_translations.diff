@@ -1,0 +1,12 @@
+diff --git a/locale/ca_ES.po b/locale/ca_ES.po
+--- a/trytond/trytond/modules/account_payment_sepa/locale/ca_ES.po
++++ b/trytond/trytond/modules/account_payment_sepa/locale/ca_ES.po
+@@ -177,7 +177,7 @@
+
+ msgctxt "selection:account.payment.journal,sepa_receivable_flavor:"
+ msgid "pain.008.001.02"
+-msgstr "pain.001.001.03"
++msgstr "pain.008.001.02"
+
+ msgctxt "selection:account.payment.journal,sepa_receivable_flavor:"
+ msgid "pain.008.001.04"
