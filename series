@@ -1,4 +1,3 @@
-issue12341002_1.diff
 issue136_416.diff
 issue10739.diff
 issue10467.diff
@@ -13,7 +12,6 @@ disable_tests.diff
 issue11281003_1.diff
 client-open_url.diff
 fix_wizard_copy.diff
-issue8411002_1_10001.diff
 issue6341003_1.diff
 domain_validation_ca.diff
 fix_sepa_translations.diff
