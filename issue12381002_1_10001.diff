@@ -3,28 +3,18 @@ Index: trytond/trytond/modules/stock_supply/purchase_request.py
 
 --- a/trytond/trytond/modules/stock_supply/purchase_request.py
 +++ b/trytond/trytond/modules/stock_supply/purchase_request.py
-@@ -59,6 +59,9 @@
-             ])
-     origin = fields.Reference('Origin', selection='origin_get', readonly=True,
-             required=True)
-+    currency = fields.Function(fields.Many2One('currency.currency',
-+            'Currency'),
-+        'get_currency')
-     state = fields.Function(fields.Selection([
-         ('purchased', 'Purchased'),
-         ('done', 'Done'),
-@@ -116,6 +119,10 @@
+@@ -116,6 +116,10 @@
          if self.purchase_line:
              return self.purchase_line.purchase.id
 
-+    def get_currency(self, name):
-+        if self.company:
-+            return self.company.currency.id
++    @property
++    def currency(self):
++        return self.company.currency
 +
      def get_state(self, name):
          if self.purchase_line:
              if self.purchase_line.purchase.state == 'cancel':
-@@ -599,8 +606,7 @@
+@@ -599,8 +603,7 @@
              ('party', request.party),
              ('payment_term', request.party.supplier_payment_term),
              ('warehouse', request.warehouse),
@@ -34,7 +24,7 @@ Index: trytond/trytond/modules/stock_supply/purchase_request.py
              ('invoice_address', request.party.address_get(type='invoice')),
              )
 
-@@ -705,7 +711,7 @@
+@@ -705,7 +708,7 @@
          # XXX purchase with several lines of the same product
          with Transaction().set_context(uom=request.uom.id,
                  supplier=request.party.id,
