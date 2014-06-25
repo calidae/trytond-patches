@@ -1,0 +1,28 @@
+Index: purchase_request.py
+===================================================================
+
+--- ./modules/stock_supply/purchase_request.py
++++ ./modules/stock_supply/purchase_request.py
+@@ -676,13 +676,14 @@
+                 for f, v in key:
+                     setattr(purchase, f, v)
+                 purchase.save()
+-                for request in grouped_requests:
+-                    line = self.compute_purchase_line(request)
+-                    line.purchase = purchase
+-                    line.save()
+-                    Request.write([request], {
+-                            'purchase_line': line.id,
+-                            })
++                with Transaction().set_context(purchase_date=purchase_date):
++                    for request in grouped_requests:
++                        line = self.compute_purchase_line(request)
++                        line.purchase = purchase
++                        line.save()
++                        Request.write([request], {
++                                'purchase_line': line.id,
++                                })
+         return 'end'
+ 
+     @staticmethod
+
