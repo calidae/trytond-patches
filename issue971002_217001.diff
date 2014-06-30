@@ -1,8 +1,6 @@
-Index: move.py
-===================================================================
-
---- ./modules/stock/move.py
-+++ ./modules/stock/move.py
+diff --git a/modules/stock/move.py b/modules/stock/move.py
+--- a/modules/stock/move.py
++++ b/modules/stock/move.py
 @@ -4,12 +4,15 @@
  import operator
  from decimal import Decimal
@@ -12,7 +10,7 @@ Index: move.py
 +from sql.aggregate import Sum
 +from sql.conditionals import Coalesce
  from sql.operators import Concat
- 
+
  from trytond.model import Workflow, Model, ModelView, ModelSQL, fields
  from trytond import backend
 -from trytond.pyson import In, Eval, Not, Equal, If, Get, Bool
@@ -20,11 +18,11 @@ Index: move.py
 +from trytond.tools import reduce_ids
  from trytond.transaction import Transaction
  from trytond.pool import Pool
- 
+
 @@ -88,6 +91,10 @@
          Compute the domain to filter records which validates the domain over
          quantity field.
- 
+
 +        The context with keys:
 +            stock_skip_warehouse: if set, quantities on a warehouse are no more
 +                quantities of all child locations but quantities of the storage
@@ -39,10 +37,10 @@ Index: move.py
 -        Product = pool.get('product.product')
 +        Location = pool.get('stock.location')
 +        Move = pool.get('stock.move')
- 
+
          if not location_ids or not domain:
              return []
- 
+
 -        def _search_quantity_eval_domain(line, domain):
 -            operator_funcs = {
 -                '=': operator.eq,
@@ -68,7 +66,7 @@ Index: move.py
 +                    location_ids.remove(location.id)
 +                    location_ids.add(location.storage_location.id)
 +            location_ids = list(location_ids)
- 
+
          with Transaction().set_context(cls._quantity_context(name)):
 -            pbl = Product.products_by_location(
 -                location_ids=location_ids,
@@ -90,7 +88,7 @@ Index: move.py
 +            quantities = Move.compute_quantities(query, location_ids,
 +                with_childs=True, grouping=grouping,
 +                grouping_filter=None)
- 
+
 -        processed_lines = []
 -        for key, quantity in pbl.iteritems():
 +        record_ids = []
@@ -102,12 +100,12 @@ Index: move.py
 -                        name: quantity,
 -                        })
 +                record_ids.append(key[position])
- 
+
 -        record_ids = [line['record_id'] for line in processed_lines
 -            if _search_quantity_eval_domain(line, domain)]
          return [('id', 'in', record_ids)]
- 
- 
+
+
 @@ -789,3 +801,367 @@
                  pbl[from_key] = pbl.get(from_key, 0.0) - qty_default_uom
                  pbl[to_key] = pbl.get(to_key, 0.0) + qty_default_uom
@@ -476,12 +474,9 @@ Index: move.py
 +            quantities[key] = Uom.round(quantity, uom.rounding)
 +
 +        return quantities
-
-Index: product.py
-===================================================================
-
---- ./modules/stock/product.py
-+++ ./modules/stock/product.py
+diff --git a/modules/stock/product.py b/modules/stock/product.py
+--- a/modules/stock/product.py
++++ b/modules/stock/product.py
 @@ -2,9 +2,8 @@
  #this repository contains the full copyright notices and license terms.
  import datetime
@@ -493,37 +488,23 @@ Index: product.py
 +from sql.aggregate import Max
  from sql.functions import Now
  from sql.conditionals import Coalesce
- 
+
 @@ -12,7 +11,6 @@
  from trytond.wizard import Wizard, StateView, StateAction, Button
  from trytond.pyson import PYSONEncoder, Eval, Or
  from trytond.transaction import Transaction
 -from trytond.tools import reduce_ids
  from trytond.pool import Pool, PoolMeta
- 
+
  from .move import StockMixin
-@@ -122,348 +120,52 @@
-         uom of the product.
- 
-         The context with keys:
--                stock_date_end: if set the date of the stock computation.
--                stock_date_start: if set return the delta of the stock
--                    between the two dates, (ignored if stock_date_end is
--                    missing).
--                stock_assign: if set compute also the assigned moves as done.
--                forecast: if set compute the forecast quantity.
--                stock_destinations: A list of location ids. If set, restrict
--                    the computation to moves from and to those locations.
--                stock_skip_warehouse: if set, quantities on a warehouse are no
--                    more quantities of all child locations but quantities of
--                    the storage zone.
--        If product_ids is None all products are used.
--        If with_childs, it computes also for child locations.
--        grouping defines how stock moves are grouped.
+@@ -136,322 +134,40 @@
+         If product_ids is None all products are used.
+         If with_childs, it computes also for child locations.
+         grouping defines how stock moves are grouped.
 +            stock_skip_warehouse: if set, quantities on a warehouse are no more
 +                quantities of all child locations but quantities of the storage
 +                zone.
- 
+
          Return a dictionary with location id and grouping as key
                  and quantity as value.
          """
@@ -552,7 +533,7 @@ Index: product.py
 -            if field not in Move._fields:
 -                raise ValueError('"%s" has no field "%s"' % (Move, field))
 -        assert 'product' in grouping
- 
+
          # Skip warehouse location in favor of their storage location
          # to compute quantities. Keep track of which ids to remove
          # and to add after the query.
@@ -578,7 +559,7 @@ Index: product.py
 +                    location_ids.add(location.storage_location.id)
 +                    wh_to_add[location.id] = location.storage_location.id
 +            location_ids = list(location_ids)
- 
+
 -        move_rule_query = Rule.domain_get('stock.move')
 -        if move_rule_query is None:
 -            move_rule_query = Literal(True)
@@ -854,38 +835,18 @@ Index: product.py
 +            grouping=grouping, grouping_filter=grouping_filter)
 +        if query is None:
 +            return {}
-+        quantities = Move.compute_quantities(query, location_ids, with_childs,
++        res = Move.compute_quantities(query, location_ids, with_childs,
 +            grouping=grouping, grouping_filter=grouping_filter)
- 
+
          if wh_to_add:
-             if product_ids is None:
-                 product_ids = set((p for s, p in res))
              for wh, storage in wh_to_add.iteritems():
-                 for product in product_ids:
--                    if (storage, product) in res:
--                        res[(wh, product)] = res[(storage, product)]
-+                    if (storage, product) in quantities:
-+                        quantities[(wh, product)] = quantities[
-+                            (storage, product)]
-                         if storage in storage_to_remove:
--                            del res[(storage, product)]
--
--        return res
-+                            del quantities[(storage, product)]
-+        return quantities
- 
- 
- class ProductByLocationStart(ModelView):
-
-Index: tests/test_stock.py
-===================================================================
-
---- ./modules/stock/tests/test_stock.py
-+++ ./modules/stock/tests/test_stock.py
+diff --git a/modules/stock/tests/test_stock.py b/modules/stock/tests/test_stock.py
+--- a/modules/stock/tests/test_stock.py
++++ b/modules/stock/tests/test_stock.py
 @@ -280,6 +280,68 @@
                      else:
                          self.assertEqual(product_reloaded.quantity, quantity)
- 
+
 +            # Python 2.6 compatibility (assertIn and assertNotIn added in 2.7)
 +            assertIn = getattr(self, 'assertIn',
 +                lambda a, b: self.assertTrue(a in b))
@@ -956,7 +917,6 @@ Index: tests/test_stock.py
                                      {(storage.id, product.id): quantity})
                              tests_product_quantity(context, quantity)
 +                            tests_product_search_quantity(context, quantity)
- 
+
              test_products_by_location()
- 
 
