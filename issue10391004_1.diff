@@ -1,0 +1,15 @@
+Index: line.py
+===================================================================
+
+--- ./trytond/trytond/modules/analytic_account/line.py
++++ ./trytond/trytond/modules/analytic_account/line.py
+@@ -27,7 +27,7 @@
+         'on_change_with_company')
+     account = fields.Many2One('analytic_account.account', 'Account',
+             required=True, select=True, domain=[
+-            ('type', '!=', 'view'),
++            ('type', 'not in', ['view', 'root']),
+             ['OR',
+                 ('company', '=', None),
+                 ('company', '=', Eval('company', -1)),
+
