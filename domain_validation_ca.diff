@@ -1,6 +1,6 @@
-diff -r 5052bcaba02b trytond/ir/locale/ca_ES.po
---- ./trytond/trytond/ir/locale/ca_ES.po	Fri Jun 06 19:15:03 2014 +0200
-+++ ./trytond/trytond/ir/locale/ca_ES.po    Jul 01 19:10:14 2014 +0200
+diff -r 3f5aa86ffab6 trytond/ir/locale/ca_ES.po
+--- ./trytond/trytond/ir/locale/ca_ES.po	Tue Jul 01 23:49:38 2014 +0200
++++ ./trytond/trytond/ir/locale/ca_ES.po	Thu Jul 03 19:24:35 2014 +0200
 @@ -27,14 +27,14 @@
  "The number of digits \"%(digits)s\" of field \"%(field)s\" on \"%(value)s\" "
  "exceeds it's limit."
@@ -18,3 +18,12 @@ diff -r 5052bcaba02b trytond/ir/locale/ca_ES.po
  
  msgctxt "error:foreign_model_exist:"
  msgid ""
+@@ -42,7 +42,7 @@
+ " \"%(model)s\"."
+ msgstr ""
+ "No es poden eliminar els registres perquè es fan servir al camp "
+-"\"%(field)s\" de \"%(models)\"."
++"\"%(field)s\" de \"%(model)s\"."
+ 
+ msgctxt "error:foreign_model_missing:"
+ msgid "The value \"%(value)s\" of field \"%(field)s\" on \"%(model)s\" doesn't exist."
