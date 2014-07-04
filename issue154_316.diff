@@ -3,7 +3,7 @@ Index: product.py
 
 --- ./modules/purchase/product.py
 +++ ./modules/purchase/product.py
-@@ -125,12 +125,12 @@
+@@ -125,12 +125,14 @@
                  supplier_id = Transaction().context['supplier']
                  for product_supplier in product.product_suppliers:
                      if product_supplier.party.id == supplier_id:
@@ -19,20 +19,25 @@ Index: product.py
 +                            res[product.id] = price
 +                            default_uom = product.purchase_uom
 +                            default_currency = product_supplier.currency
++                        else:
++                            price = product.cost_price
                          break
              res[product.id] = Uom.compute_price(default_uom, res[product.id],
                  uom)
-@@ -141,6 +141,14 @@
+@@ -141,6 +143,17 @@
                          res[product.id], currency, round=False)
          return res
  
 +    def get_supplier_price(self, product_supplier, quantity, to_uom):
 +        pool = Pool()
 +        Uom = pool.get('product.uom')
++
++        res = None
 +        for price in product_supplier.prices:
 +            if Uom.compute_qty(self.purchase_uom,
 +                    price.quantity, to_uom) <= quantity:
-+                return price.unit_price
++                res = price.unit_price
++        return res
 +
  
  class ProductSupplier(ModelSQL, ModelView):
