@@ -3,12 +3,12 @@ Index: stock.py
 
 --- ./modules/stock_lot/stock.py
 +++ ./modules/stock_lot/stock.py
-@@ -80,6 +80,19 @@
+@@ -80,6 +80,20 @@
          for move in moves:
              move.check_lot()
  
 +    @classmethod
-+    def assign_try(cls, moves, grouping=('product',)):
++    def assign_try(cls, moves, with_childs=True, grouping=('product',)):
 +        lot_moves = []
 +        product_moves = []
 +        for move in moves:
@@ -17,13 +17,14 @@ Index: stock.py
 +            else:
 +                product_moves.append(move)
 +        return (super(Move, cls).assign_try(lot_moves,
-+                grouping=('product', 'lot')) and super(Move, cls).assign_try(
-+                product_moves, grouping=grouping))
++                with_childs=with_childs, grouping=('product', 'lot')) and
++            super(Move, cls).assign_try(product_moves,
++                with_childs=with_childs, grouping=grouping))
 +
  
  class ShipmentIn:
      __name__ = 'stock.shipment.in'
-@@ -121,6 +134,8 @@
+@@ -121,6 +135,8 @@
                  outgoing_moves = outgoing_by_product[move.product.id]
                  while outgoing_moves and quantity > 0:
                      out_move = outgoing_moves.pop()
