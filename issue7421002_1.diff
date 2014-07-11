@@ -1,0 +1,16 @@
+Index: trytond/trytond/modules/stock/product.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock/product.py
++++ b/trytond/trytond/modules/stock/product.py
+@@ -299,7 +299,8 @@
+ class ProductQuantitiesByWarehouseStart(ModelView):
+     'Product Quantities By Warehouse'
+     __name__ = 'stock.product_quantities_warehouse.start'
+-    warehouse = fields.Many2One('stock.location', 'Warehouse', domain=[
++    warehouse = fields.Many2One('stock.location', 'Warehouse', required=True,
++        domain=[
+             ('type', '=', 'warehouse'),
+             ])
+
+
