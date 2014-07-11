@@ -1,25 +1,73 @@
-Index: trytond/trytond/model/modelsql.py
+Index: tryton/trytond/model/modelsql.py
 ===================================================================
 
 --- a/trytond/trytond/model/modelsql.py
 +++ b/trytond/trytond/model/modelsql.py
-@@ -1031,6 +1031,7 @@
-         columns = [main_table.id.as_('id')]
-         if (cls._history and transaction.context.get('_datetime')
-                 and not query):
-+            columns.append(Column(main_table, '__id'))
+@@ -3,7 +3,7 @@
+ import re
+ import datetime
+ from functools import reduce
+-from itertools import islice, izip, chain
++from itertools import islice, izip, chain, ifilter
+
+ from sql import Table, Column, Literal, Desc, Asc, Expression, Flavor
+ from sql.functions import Now, Extract
+@@ -1033,6 +1033,7 @@
              columns.append(Coalesce(
                      main_table.write_date,
                      main_table.create_date).as_('_datetime'))
-@@ -1059,13 +1060,15 @@
++            columns.append(Column(main_table, '__id'))
+         if not query:
+             columns += [Column(main_table, name).as_(name)
+                 for name, field in cls._fields.iteritems()
+@@ -1057,6 +1058,46 @@
+             cache[cls.__name__] = LRUDict(RECORD_CACHE_SIZE)
          delete_records = transaction.delete_records.setdefault(cls.__name__,
              set())
++
++        def filter_history(rows):
++            if not (cls._history and transaction.context.get('_datetime')):
++                return rows
++
++            def history_key(row):
++                return row['_datetime'], row['__id']
++
++            ids_history = {}
++            for row in rows:
++                key = history_key(row)
++                if row['id'] in ids_history:
++                    if key < ids_history[row['id']]:
++                        continue
++                ids_history[row['id']] = key
++
++            to_delete = set()
++            history = cls.__table_history__()
++            for i in range(0, len(rows), in_max):
++                sub_ids = [r['id'] for r in rows[i:i + in_max]]
++                where = reduce_ids(history.id, sub_ids)
++                cursor.execute(*history.select(history.id, history.write_date,
++                        where=where
++                        & (history.write_date != None)
++                        & (history.create_date == None)
++                        & (history.write_date
++                            <= transaction.context['_datetime'])))
++                for deleted_id, delete_date in cursor.fetchall():
++                    history_date, _ = ids_history[deleted_id]
++                    if isinstance(history_date, basestring):
++                        strptime = datetime.datetime.strptime
++                        format_ = '%Y-%m-%d %H:%M:%S.%f'
++                        history_date = strptime(history_date, format_)
++                    if history_date <= delete_date:
++                        to_delete.add(deleted_id)
++
++            return ifilter(lambda r: history_key(r) == ids_history[r['id']]
++                and r['id'] not in to_delete, rows)
++
++        rows = list(filter_history(rows))
          keys = None
-+        ids = []
-+        ids_history = {}
          for data in islice(rows, 0, cache.size_limit):
              if data['id'] in delete_records:
-                 continue
+@@ -1064,7 +1105,7 @@
              if keys is None:
                  keys = data.keys()
                  for k in keys[:]:
@@ -28,27 +76,13 @@ Index: trytond/trytond/model/modelsql.py
                          keys.remove(k)
                          continue
                      field = cls._fields[k]
-@@ -1074,6 +1077,16 @@
-                         continue
-             for k in keys:
-                 del data[k]
-+            #If historized ensure that the correct version is saved on cache
-+            if cls._history and transaction.context.get('_datetime'):
-+                if data['id'] in ids_history:
-+                    if ((data['_datetime'], data['__id']) <
-+                            ids_history[data['id']]):
-+                        continue
-+                if data['id'] in ids:
-+                    ids.remove(data['id'])
-+                ids.append(data['id'])
-+                ids_history[data['id']] = (data['_datetime'], data['__id'])
-             cache[cls.__name__].setdefault(data['id'], {}).update(data)
-
-         if len(rows) >= cursor.IN_MAX:
-@@ -1089,16 +1102,6 @@
-             rows = cursor.dictfetchall()
-
-         if cls._history and transaction.context.get('_datetime'):
+@@ -1085,34 +1126,7 @@
+             cursor.execute(*table.select(*columns,
+                     where=expression, order_by=order_by,
+                     limit=limit, offset=offset))
+-            rows = cursor.dictfetchall()
+-
+-        if cls._history and transaction.context.get('_datetime'):
 -            ids = []
 -            ids_date = {}
 -            for data in rows:
@@ -59,20 +93,157 @@ Index: trytond/trytond/model/modelsql.py
 -                    ids.remove(data['id'])
 -                ids.append(data['id'])
 -                ids_date[data['id']] = data['_datetime']
-             to_delete = set()
-             history = cls.__table_history__()
-             for i in range(0, len(ids), in_max):
-@@ -1111,7 +1114,13 @@
-                         & (history.write_date
-                             <= transaction.context['_datetime'])))
-                 for deleted_id, delete_date in cursor.fetchall():
+-            to_delete = set()
+-            history = cls.__table_history__()
+-            for i in range(0, len(ids), in_max):
+-                sub_ids = ids[i:i + in_max]
+-                where = reduce_ids(history.id, sub_ids)
+-                cursor.execute(*history.select(history.id, history.write_date,
+-                        where=where
+-                        & (history.write_date != None)
+-                        & (history.create_date == None)
+-                        & (history.write_date
+-                            <= transaction.context['_datetime'])))
+-                for deleted_id, delete_date in cursor.fetchall():
 -                    if ids_date[deleted_id] < delete_date:
-+                    history_date, _ = ids_history[deleted_id]
-+                    # SQLite uses char for COALESCE
-+                    if isinstance(history_date, basestring):
-+                        strptime = datetime.datetime.strptime
-+                        format_ = '%Y-%m-%d %H:%M:%S.%f'
-+                        history_date = strptime(history_date, format_)
-+                    if history_date <= delete_date:
-                         to_delete.add(deleted_id)
-             return cls.browse(filter(lambda x: x not in to_delete, ids))
+-                        to_delete.add(deleted_id)
+-            return cls.browse(filter(lambda x: x not in to_delete, ids))
++            rows = filter_history(cursor.dictfetchall())
+
+         return cls.browse([x['id'] for x in rows])
+
+
+Index: trytond/trytond/tests/test_history.py
+===================================================================
+
+--- a/trytond/trytond/tests/test_history.py
++++ b/trytond/trytond/tests/test_history.py
+@@ -16,6 +16,17 @@
+     def setUp(self):
+         install_module('tests')
+
++    def tearDown(self):
++        History = POOL.get('test.history')
++        with Transaction().start(DB_NAME, USER,
++                context=CONTEXT) as transaction:
++            cursor = transaction.cursor
++            table = History.__table__()
++            history_table = History.__table_history__()
++            cursor.execute(*table.delete())
++            cursor.execute(*history_table.delete())
++            cursor.commit()
++
+     def test0010read(self):
+         'Test read history'
+         History = POOL.get('test.history')
+@@ -173,6 +184,109 @@
+             History.restore_history([history_id], datetime.datetime.min)
+             self.assertRaises(UserError, History.read, [history_id])
+
++    def test0050ordered_search(self):
++        'Test ordered search of history models'
++        History = POOL.get('test.history')
++        order = [('value', 'ASC')]
++
++        with Transaction().start(DB_NAME, USER,
++                context=CONTEXT) as transaction:
++            history = History(value=1)
++            history.save()
++            first_id = history.id
++            first_stamp = history.create_date
++            transaction.cursor.commit()
++
++        with Transaction().start(DB_NAME, USER,
++                context=CONTEXT) as transaction:
++            history = History(value=2)
++            history.save()
++            second_id = history.id
++            second_stamp = history.create_date
++
++            transaction.cursor.commit()
++
++        with Transaction().start(DB_NAME, USER,
++                context=CONTEXT) as transaction:
++            first, second = History.search([], order=order)
++
++            self.assertEqual(first.id, first_id)
++            self.assertEqual(second.id, second_id)
++
++            first.value = 3
++            first.save()
++            third_stamp = first.write_date
++            transaction.cursor.commit()
++
++        results = [
++            (first_stamp, [first]),
++            (second_stamp, [first, second]),
++            (third_stamp, [second, first]),
++            (datetime.datetime.now(), [second, first]),
++            (datetime.datetime.max, [second, first]),
++            ]
++        with Transaction().start(DB_NAME, USER, context=CONTEXT):
++            for timestamp, instances in results:
++                with Transaction().set_context(_datetime=timestamp):
++                    records = History.search([], order=order)
++                    self.assertEqual(records, instances)
++
++        with Transaction().start(DB_NAME, USER,
++                context=CONTEXT) as transaction:
++            to_delete, _ = History.search([], order=order)
++
++            self.assertEqual(to_delete.id, second.id)
++
++            History.delete([to_delete])
++            transaction.cursor.commit()
++
++        results = [
++            (first_stamp, [first]),
++            (second_stamp, [first, second]),
++            (third_stamp, [second, first]),
++            (datetime.datetime.now(), [first]),
++            (datetime.datetime.max, [first]),
++            ]
++        with Transaction().start(DB_NAME, USER, context=CONTEXT):
++            for timestamp, instances in results:
++                with Transaction().set_context(_datetime=timestamp,
++                        from_test=True):
++                    records = History.search([], order=order)
++                    self.assertEqual(records, instances)
++
++    @unittest.skipIf(CONFIG['db_type'] in ('sqlite', 'mysql'),
++        'now() is not the start of the transaction')
++    def test0060_ordered_search_same_timestamp(self):
++        'Test ordered search  with same timestamp'
++        History = POOL.get('test.history')
++        order = [('value', 'ASC')]
++
++        with Transaction().start(DB_NAME, USER,
++                context=CONTEXT) as transaction:
++            history = History(value=1)
++            history.save()
++            first_stamp = history.create_date
++            history.value = 4
++            history.save()
++            second_stamp = history.write_date
++
++            self.assertEqual(first_stamp, second_stamp)
++            transaction.cursor.commit()
++
++        results = [
++            (second_stamp, [history], [4]),
++            (datetime.datetime.now(), [history], [4]),
++            (datetime.datetime.max, [history], [4]),
++            ]
++
++        with Transaction().start(DB_NAME, USER, context=CONTEXT):
++            for timestamp, instances, values in results:
++                with Transaction().set_context(_datetime=timestamp,
++                        last_test=True):
++                    records = History.search([], order=order)
++                    self.assertEqual(records, instances)
++                    self.assertEqual([x.value for x in records], values)
++
+
+ def suite():
+     return unittest.TestLoader().loadTestsFromTestCase(HistoryTestCase)
+
