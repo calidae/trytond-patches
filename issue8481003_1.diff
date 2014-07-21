@@ -1,0 +1,326 @@
+Index: trytond/trytond/modules/stock/tests/test_stock.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock/tests/test_stock.py
++++ b/trytond/trytond/modules/stock/tests/test_stock.py
+@@ -57,7 +57,7 @@
+             product, = self.product.create([{
+                         'template': template.id,
+                         }])
+-            supplier, = self.location.search([('code', '=', 'SUP')])
++            lost_found, = self.location.search([('type', '=', 'lost_found')])
+             storage, = self.location.search([('code', '=', 'STO')])
+             company, = self.company.search([
+                     ('rec_name', '=', 'Dunder Mifflin'),
+@@ -79,7 +79,7 @@
+                             'product': product.id,
+                             'uom': uom.id,
+                             'quantity': quantity,
+-                            'from_location': supplier.id,
++                            'from_location': lost_found.id,
+                             'to_location': storage.id,
+                             'company': company.id,
+                             'unit_price': Decimal('1'),
+@@ -117,8 +117,7 @@
+             product, = self.product.create([{
+                         'template': template.id,
+                         }])
+-            supplier, = self.location.search([('code', '=', 'SUP')])
+-            customer, = self.location.search([('code', '=', 'CUS')])
++            lost_found, = self.location.search([('type', '=', 'lost_found')])
+             storage, = self.location.search([('code', '=', 'STO')])
+             company, = self.company.search([
+                     ('rec_name', '=', 'Dunder Mifflin'),
+@@ -135,7 +134,7 @@
+                         'product': product.id,
+                         'uom': kg.id,
+                         'quantity': 5,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=-5),
+                         'effective_date': today + relativedelta(days=-5),
+@@ -146,7 +145,7 @@
+                         'product': product.id,
+                         'uom': kg.id,
+                         'quantity': 1,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=-4),
+                         'company': company.id,
+@@ -157,7 +156,7 @@
+                         'uom': kg.id,
+                         'quantity': 1,
+                         'from_location': storage.id,
+-                        'to_location': customer.id,
++                        'to_location': lost_found.id,
+                         'planned_date': today,
+                         'effective_date': today,
+                         'company': company.id,
+@@ -168,7 +167,7 @@
+                         'uom': kg.id,
+                         'quantity': 1,
+                         'from_location': storage.id,
+-                        'to_location': customer.id,
++                        'to_location': lost_found.id,
+                         'planned_date': today,
+                         'company': company.id,
+                         'unit_price': Decimal('1'),
+@@ -178,7 +177,7 @@
+                         'uom': kg.id,
+                         'quantity': 2,
+                         'from_location': storage.id,
+-                        'to_location': customer.id,
++                        'to_location': lost_found.id,
+                         'planned_date': today + relativedelta(days=5),
+                         'company': company.id,
+                         'unit_price': Decimal('1'),
+@@ -187,7 +186,7 @@
+                         'product': product.id,
+                         'uom': kg.id,
+                         'quantity': 5,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=7),
+                         'company': company.id,
+@@ -346,7 +345,7 @@
+                         'product': product.id,
+                         'uom': g.id,
+                         'quantity': 1,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=-5),
+                         'effective_date': (today
+@@ -467,8 +466,7 @@
+             product, = self.product.create([{
+                         'template': template.id,
+                         }])
+-            supplier, = self.location.search([('code', '=', 'SUP')])
+-            customer, = self.location.search([('code', '=', 'CUS')])
++            lost_found, = self.location.search([('type', '=', 'lost_found')])
+             storage, = self.location.search([('code', '=', 'STO')])
+             company, = self.company.search([
+                     ('rec_name', '=', 'Dunder Mifflin'),
+@@ -485,7 +483,7 @@
+                         'product': product.id,
+                         'uom': unit.id,
+                         'quantity': 10,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=-5),
+                         'effective_date': today + relativedelta(days=-5),
+@@ -496,7 +494,7 @@
+                         'product': product.id,
+                         'uom': unit.id,
+                         'quantity': 15,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=-4),
+                         'effective_date': today + relativedelta(days=-4),
+@@ -508,7 +506,7 @@
+                         'uom': unit.id,
+                         'quantity': 5,
+                         'from_location': storage.id,
+-                        'to_location': customer.id,
++                        'to_location': lost_found.id,
+                         'planned_date': today + relativedelta(days=-3),
+                         'effective_date': today + relativedelta(days=-3),
+                         'company': company.id,
+@@ -520,7 +518,7 @@
+                         'product': product.id,
+                         'uom': unit.id,
+                         'quantity': 3,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': None,
+                         'effective_date': None,
+@@ -531,13 +529,12 @@
+
+             tests = [
+                 (-5, {
+-                    supplier.id: -10,
++                    lost_found.id: -10,
+                     storage.id: 10,
+                 }),
+                 (-3, {
+-                    supplier.id: -25,
++                    lost_found.id: -20,
+                     storage.id: 20,
+-                    customer.id: 5,
+                 })
+             ]
+
+@@ -586,7 +583,7 @@
+                         'product': product.id,
+                         'uom': unit.id,
+                         'quantity': 10,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today,
+                         'effective_date': today,
+@@ -600,7 +597,7 @@
+                         'product': product.id,
+                         'uom': unit.id,
+                         'quantity': 10,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today + relativedelta(days=-5),
+                         'effective_date': today + relativedelta(days=-5),
+
+Index: trytond/trytond/modules/stock_forecast/tests/test_stock_forecast.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock_forecast/tests/test_stock_forecast.py
++++ b/trytond/trytond/modules/stock_forecast/tests/test_stock_forecast.py
+@@ -66,7 +66,11 @@
+             product, = self.product.create([{
+                         'template': template.id,
+                         }])
+-            customer, = self.location.search([('code', '=', 'CUS')])
++            production, = self.location.create([{
++                        'code': 'PROD',
++                        'name': 'Production',
++                        'type': 'production',
++                        }])
+             warehouse, = self.location.search([('code', '=', 'WH')])
+             storage, = self.location.search([('code', '=', 'STO')])
+             company, = self.company.search([
+@@ -81,7 +85,7 @@
+
+             forecast, = self.forecast.create([{
+                         'warehouse': warehouse.id,
+-                        'destination': customer.id,
++                        'destination': production.id,
+                         'from_date': today + relativedelta(months=1, day=1),
+                         'to_date': today + relativedelta(months=1, day=20),
+                         'company': company.id,
+@@ -109,7 +113,7 @@
+
+             self.move.create([{
+                         'from_location': storage.id,
+-                        'to_location': customer.id,
++                        'to_location': production.id,
+                         'product': product.id,
+                         'uom': unit.id,
+                         'quantity': 2,
+
+Index: trytond/trytond/modules/stock_lot/tests/test_stock_lot.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock_lot/tests/test_stock_lot.py
++++ b/trytond/trytond/modules/stock_lot/tests/test_stock_lot.py
+@@ -52,8 +52,7 @@
+             product, = self.product.create([{
+                         'template': template.id,
+                         }])
+-            supplier, = self.location.search([('code', '=', 'SUP')])
+-            customer, = self.location.search([('code', '=', 'CUS')])
++            lost_found, = self.location.search([('type', '=', 'lost_found')])
+             storage, = self.location.search([('code', '=', 'STO')])
+             company, = self.company.search([
+                     ('rec_name', '=', 'Dunder Mifflin'),
+@@ -77,7 +76,7 @@
+                         'lot': lot1.id,
+                         'uom': kg.id,
+                         'quantity': 5,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'company': company.id,
+                         'unit_price': Decimal('1'),
+@@ -87,7 +86,7 @@
+                         'lot': lot2.id,
+                         'uom': kg.id,
+                         'quantity': 10,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'company': company.id,
+                         'unit_price': Decimal('1'),
+@@ -98,7 +97,7 @@
+                         'uom': kg.id,
+                         'quantity': 2,
+                         'from_location': storage.id,
+-                        'to_location': customer.id,
++                        'to_location': lost_found.id,
+                         'company': company.id,
+                         'unit_price': Decimal('1'),
+                         'currency': currency.id,
+@@ -107,7 +106,7 @@
+                         'lot': None,
+                         'uom': kg.id,
+                         'quantity': 3,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'company': company.id,
+                         'unit_price': Decimal('1'),
+@@ -144,7 +143,7 @@
+             product, = self.product.create([{
+                         'template': template.id,
+                         }])
+-            supplier, = self.location.search([('code', '=', 'SUP')])
++            lost_found, = self.location.search([('type', '=', 'lost_found')])
+             storage, = self.location.search([('code', '=', 'STO')])
+             company, = self.company.search([
+                     ('rec_name', '=', 'Dunder Mifflin'),
+@@ -170,7 +169,7 @@
+                         'lot': lot1.id,
+                         'uom': unit.id,
+                         'quantity': 5,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today - relativedelta(days=1),
+                         'effective_date': today - relativedelta(days=1),
+@@ -182,7 +181,7 @@
+                         'lot': lot2.id,
+                         'uom': unit.id,
+                         'quantity': 10,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today - relativedelta(days=1),
+                         'effective_date': today - relativedelta(days=1),
+@@ -194,7 +193,7 @@
+                         'lot': None,
+                         'uom': unit.id,
+                         'quantity': 3,
+-                        'from_location': supplier.id,
++                        'from_location': lost_found.id,
+                         'to_location': storage.id,
+                         'planned_date': today - relativedelta(days=1),
+                         'effective_date': today - relativedelta(days=1),
+@@ -212,7 +211,7 @@
+             self.assertEqual(period.state, 'closed')
+
+             quantities = {
+-                supplier: -18,
++                lost_found: -18,
+                 storage: 18,
+                 }
+             for cache in period.caches:
+@@ -221,11 +220,11 @@
+                     quantities[cache.location])
+
+             quantities = {
+-                (supplier, lot1): -5,
++                (lost_found, lot1): -5,
+                 (storage, lot1): 5,
+-                (supplier, lot2): -10,
++                (lost_found, lot2): -10,
+                 (storage, lot2): 10,
+-                (supplier, None): -3,
++                (lost_found, None): -3,
+                 (storage, None): 3,
+                 }
+             for lot_cache in period.lot_caches:
+
