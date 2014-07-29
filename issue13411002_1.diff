@@ -34,7 +34,7 @@ Index: trytond/trytond/modules/production/tests/scenario_production.rst
 +
 +Make a production with a bom of zero quantity::
 +
-+    >>> zero_bom, = BOM.duplicate([bom])
++    >>> zero_bom, = BOM.copy([bom.id], config.context)
 +    >>> for input_ in bom.inputs:
 +    ...     input_.quantity = 0.0
 +    >>> bom_output, = bom.outputs
