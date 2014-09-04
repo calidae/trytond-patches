@@ -1,0 +1,16 @@
+Index: trytond/trytond/modules/sale/sale.py
+===================================================================
+
+--- a/trytond/trytond/modules/sale/sale.py
++++ b/trytond/trytond/modules/sale/sale.py
+@@ -1404,7 +1404,8 @@
+         invoice_lines = []
+         if self.sale.shipment_method == 'order':
+             quantity = abs(self.quantity)
+-            invoice_lines = self.invoice_lines
++            if self.sale.invoice_method == 'order':
++                invoice_lines = self.invoice_lines
+         else:
+             quantity = 0.0
+             for invoice_line in self.invoice_lines:
+
