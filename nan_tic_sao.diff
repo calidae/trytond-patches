@@ -1,6 +1,170 @@
-diff --git a/src/view.js b/src/view.js
---- a/public_data/sao/src/view.js
-+++ b/public_data/sao/src/view.js
+diff -r c87833138b4d Gruntfile.js
+--- a/public_data/sao/Gruntfile.js	Tue Sep 16 10:10:20 2014 +0200
++++ b/public_data/sao/Gruntfile.js	Tue Sep 16 15:44:21 2014 +0200
+@@ -3,6 +3,23 @@
+   // Project configuration.
+   grunt.initConfig({
+     pkg: grunt.file.readJSON('package.json'),
++    downloadfile: {
++        files: ['http://jqueryui.com/resources/download/jquery-ui-themes-1.11.1.zip']
++    },
++    'unzip': {
++        catalog: {
++            src: 'jquery-ui-themes-1.11.1.zip',
++            dest: 'themes'
++        }
++    },
++    copy: {
++        theme: {
++            files: [
++                {expand:true, cwd:'themes/jquery-ui-themes-1.11.1/', src: ['**'], dest: 'dist/'},
++                {expand:true, cwd:'nan-tic-theme', src: ['**'], dest: 'dist/themes/nan-tic'}
++            ]
++        }
++    },
+     concat: {
+         dist: {
+             src: [
+@@ -79,19 +96,27 @@
+         styles: {
+             files: ['src/*.less'],
+             tasks: 'less:dev'
++        },
++        theme_styles: {
++            files: ['themes/*/*.js', 'themes/*/*.css', 'themes/*/images'],
++            tasks: 'copy:theme'
+         }
+-    }
++    },
++
+   });
+ 
+   // Load the plugin that provides the "uglify" task.
++  grunt.loadNpmTasks('grunt-contrib-copy');
+   grunt.loadNpmTasks('grunt-contrib-concat');
+   grunt.loadNpmTasks('grunt-contrib-jshint');
+   grunt.loadNpmTasks('grunt-contrib-uglify');
+   grunt.loadNpmTasks('grunt-contrib-less');
+   grunt.loadNpmTasks('grunt-contrib-watch');
++  grunt.loadNpmTasks('grunt-downloadfile');
++  grunt.loadNpmTasks('grunt-zip');
+ 
+   // Default task(s).
+-  grunt.registerTask('default', ['concat', 'jshint', 'uglify', 'less:default']);
+-  grunt.registerTask('dev', ['concat', 'jshint', 'less:dev']);
++  grunt.registerTask('default', ['downloadfile', 'unzip', 'copy', 'concat', 'jshint', 'uglify', 'less:default']);
++  grunt.registerTask('dev', ['copy', 'concat', 'jshint', 'less:dev']);
+ 
+ };
+diff -r c87833138b4d index.html
+--- a/public_data/sao/index.html	Tue Sep 16 10:10:20 2014 +0200
++++ b/public_data/sao/index.html	Tue Sep 16 15:44:21 2014 +0200
+@@ -21,6 +21,26 @@
+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" media="screen"/%3E'));
+             }
+         </SCRIPT>
++        <!-- ComboBox from http://www.benknowscode.com/2013/03/finishing-jquery-ui-autocomplete_4743.html -->
++         <SCRIPT type="text/javascript" src="external/jquery.ui.combobox.js"></SCRIPT>
++         <LINK rel="stylesheet" type="text/css" href="external/jquery.ui.combobox.css"
++             media="screen"/>
++         <SCRIPT type="text/javascript">
++             if (typeof $.combobox == 'undefined') {
++                 document.write(unescape('%3CSCRIPT type="text/javascript" src="http://bseth99.github.io/jquery-ui-extensions/ui/jquery.ui.combobox.js"%3E%3C/SCRIPT%3E'));
++                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="http://bseth99.github.io/jquery-ui-extensions/themes/base/jquery.ui.combobox.css" media="screen"/%3E'));
++             }
++        </SCRIPT>
++        <!-- ComboBox from http://www.benknowscode.com/2013/03/finishing-jquery-ui-autocomplete_4743.html -->
++        <SCRIPT type="text/javascript" src="external/jquery.ui.combobox.js"></SCRIPT>
++        <LINK rel="stylesheet" type="text/css" href="external/jquery.ui.combobox.css"
++        media="screen"/>
++        <SCRIPT type="text/javascript">
++            if (typeof $.combobox == 'undefined') {
++                document.write(unescape('%3CSCRIPT type="text/javascript" src="http://bseth99.github.io/jquery-ui-extensions/ui/jquery.ui.combobox.js"%3E%3C/SCRIPT%3E'));
++                document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="http://bseth99.github.io/jquery-ui-extensions/themes/base/jquery.ui.combobox.css" media="screen"/%3E'));
++            }
++        </SCRIPT>
+         <SCRIPT type="text/javascript" src="dist/sao.min.js"></SCRIPT>
+         <LINK rel="stylesheet" type="text/css" href="dist/sao.min.css"
+         media="screen"/>
+@@ -30,6 +50,12 @@
+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/sao.css" media="screen"/%3E'));
+             }
+         </SCRIPT>
++         <SCRIPT type="text/javascript">
++                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/nan-tic/sao-fixes.css" media="screen"/%3E'));
++                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/redmond/jquery-ui.css" media="screen"/%3E'));
++                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/redmond/theme.css" media="screen"/%3E'));
++                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/nan-tic/custom.css" media="screen"/%3E'));
++         </SCRIPT>
+     </HEAD>
+     <BODY>
+         <DIV style="overflow: auto;">
+diff -r c87833138b4d package.json
+--- a/public_data/sao/package.json	Tue Sep 16 10:10:20 2014 +0200
++++ b/public_data/sao/package.json	Tue Sep 16 15:44:21 2014 +0200
+@@ -25,11 +25,14 @@
+     "grunt": "~0.4.5",
+     "grunt-contrib-jshint": "~0.10.0",
+     "grunt-contrib-nodeunit": "~0.4.0",
++    "grunt-contrib-copy": "~0.4.0",
+     "grunt-contrib-concat": "~0.4.0",
+     "grunt-contrib-uglify": "~0.4.0",
+     "grunt-contrib-watch": "~0.6.1",
+     "grunt-contrib-less": "~0.11.0",
+-    "grunt-cli": "~0.1.13"
++    "grunt-cli": "~0.1.13",
++    "grunt-downloadfile": "~0.3.2",
++    "grunt-zip": "0.16.0"
+   },
+   "keywords": [
+     "tryton"
+diff -r c87833138b4d src/screen.js
+--- a/public_data/sao/src/screen.js	Tue Sep 16 10:10:20 2014 +0200
++++ b/public_data/sao/src/screen.js	Tue Sep 16 15:44:21 2014 +0200
+@@ -24,7 +24,9 @@
+                 'label': 'Filters' // TODO translation
+             });
+             tr.append(jQuery('<td/>').append(this.filter_button));
+-            this.search_entry = jQuery('<input/>');
++            this.search_entry = jQuery('<input/>', {
++                'class': 'ui-widget ui-widget-content ui-corner-all'
++            });
+             this.search_entry.keypress(function(e) {
+                 if (e.which == 13) {
+                     this.do_search();
+diff -r c87833138b4d src/tab.js
+--- a/public_data/sao/src/tab.js	Tue Sep 16 10:10:20 2014 +0200
++++ b/public_data/sao/src/tab.js	Tue Sep 16 15:44:21 2014 +0200
+@@ -85,7 +85,7 @@
+         },
+         create_toolbar: function() {
+             var toolbar = jQuery('<div/>', {
+-                'class': 'ui-widget-header ui-corner-all'
++                'class': 'tab-toolbar'
+             });
+             var add_button = function(tool) {
+                 var click_func = function() {
+@@ -93,7 +93,7 @@
+                 };
+                 var button = jQuery('<button/>').button({
+                     id: tool[0],
+-                    text: tool[2],
++                    text: true,
+                     icons: {
+                         primary: tool[1]
+                     },
+@@ -282,7 +282,7 @@
+                 ].forEach(function(menu_action) {
+                     var button = jQuery('<button/>').button({
+                         id: menu_action[0],
+-                        text: true,
++                        text: false,
+                         icons: {
+                             primary: menu_action[1],
+                             secondary: 'ui-icon-triangle-1-s'
+diff -r c87833138b4d src/view.js
+--- a/public_data/sao/src/view.js	Tue Sep 16 10:10:20 2014 +0200
++++ b/public_data/sao/src/view.js	Tue Sep 16 15:44:21 2014 +0200
 @@ -1621,7 +1621,7 @@
                  'class': 'form-separator'
              });
@@ -154,17 +318,7 @@ diff --git a/src/view.js b/src/view.js
              });
              this.but_open.click(this.edit.bind(this));
              this.el.prepend(this.but_open);
-@@ -2169,7 +2189,8 @@
-                 'icons': {
-                     'primary': 'ui-icon-document'
-                 },
--                'text': false
-+                'text': false,
-+                'label': 'Create a new record'    // Translate
-             });
-             this.but_new.click(this.new_.bind(this));
-             this.el.prepend(this.but_new);
-@@ -2211,12 +2232,16 @@
+@@ -2205,12 +2225,16 @@
                  this.but_open.button({
                      'icons': {
                          'primary': 'ui-icon-folder-open'
@@ -183,7 +337,7 @@ diff --git a/src/view.js b/src/view.js
              }
          },
          set_readonly: function(readonly) {
-@@ -2445,7 +2470,9 @@
+@@ -2441,7 +2465,9 @@
          init: function(field_name, model, attributes) {
              Sao.View.Form.Reference._super.init.call(this, field_name, model,
                  attributes);
@@ -194,9 +348,9 @@ diff --git a/src/view.js b/src/view.js
              this.el.prepend(jQuery('<span/>').text('-'));
              this.el.prepend(this.select);
              this.select.change(this.select_changed.bind(this));
-@@ -2576,10 +2603,10 @@
+@@ -2572,10 +2598,10 @@
              this._readonly = true;
-
+ 
              this.el = jQuery('<div/>', {
 -                'class': this.class_
 +                'class': this.class_ + ' ui-widget'
@@ -206,19 +360,19 @@ diff --git a/src/view.js b/src/view.js
 +                'class': this.class_ + '-menu ui-widget-header'
              });
              this.el.append(this.menu);
-
-@@ -2699,7 +2726,7 @@
+ 
+@@ -2695,7 +2721,7 @@
              toolbar.append(this.but_switch);
-
+ 
              this.content = jQuery('<div/>', {
 -                'class': this.class_ + '-content'
 +                'class': this.class_ + '-content ui-widget-content'
              });
              this.el.append(this.content);
-
-@@ -2898,10 +2925,10 @@
+ 
+@@ -2894,10 +2920,10 @@
              this._readonly = true;
-
+ 
              this.el = jQuery('<div/>', {
 -                'class': this.class_
 +                'class': this.class_ + ' ui-widget'
@@ -228,10 +382,10 @@ diff --git a/src/view.js b/src/view.js
 +                'class': this.class_ + '-menu ui-widget-header'
              });
              this.el.append(this.menu);
-
-@@ -2917,7 +2944,8 @@
+ 
+@@ -2913,7 +2939,8 @@
              this.menu.append(toolbar);
-
+ 
              this.entry = jQuery('<input/>', {
 -                type: 'input'
 +                type: 'input',
@@ -239,23 +393,23 @@ diff --git a/src/view.js b/src/view.js
              });
              this.entry.on('keyup', this.key_press.bind(this));
              toolbar.append(this.entry);
-@@ -2945,7 +2973,7 @@
+@@ -2941,7 +2968,7 @@
              toolbar.append(this.but_remove);
-
+ 
              this.content = jQuery('<div/>', {
 -                'class': this.class_ + '-content'
 +                'class': this.class_ + '-content ui-widget-content'
              });
              this.el.append(this.content);
-
-@@ -3111,21 +3139,23 @@
+ 
+@@ -3107,21 +3134,23 @@
              this.filename = attributes.filename || null;
-
+ 
              this.el = jQuery('<div/>', {
 -                'class': this.class_
 +                'class': this.class_ + ' ui-widget'
              });
-
+ 
              var inputs = jQuery('<div/>');
              this.el.append(inputs);
              if (this.filename && attributes.filename_visible) {
@@ -274,8 +428,8 @@ diff --git a/src/view.js b/src/view.js
 +                'class': 'ui-widget-content  ui-corner-all'
              });
              inputs.append(this.size);
-
-@@ -3133,7 +3163,8 @@
+ 
+@@ -3129,7 +3158,8 @@
                  icons: {
                      primary: 'ui-icon-document'
                  },
@@ -285,7 +439,7 @@ diff --git a/src/view.js b/src/view.js
              });
              this.but_new.click(this.new_.bind(this));
              this.el.prepend(this.but_new);
-@@ -3143,7 +3174,8 @@
+@@ -3139,7 +3169,8 @@
                      icons: {
                          primary: 'ui-icon-folder-open'
                      },
@@ -295,7 +449,7 @@ diff --git a/src/view.js b/src/view.js
                  });
                  this.but_open.click(this.open.bind(this));
                  this.el.prepend(this.but_open);
-@@ -3153,7 +3185,8 @@
+@@ -3149,7 +3180,8 @@
                  icons: {
                      primary: 'ui-icon-disk'
                  },
@@ -305,7 +459,7 @@ diff --git a/src/view.js b/src/view.js
              });
              this.but_save_as.click(this.save_as.bind(this));
              this.el.prepend(this.but_save_as);
-@@ -3162,7 +3195,8 @@
+@@ -3158,7 +3190,8 @@
                  icons: {
                      primary: 'ui-icon-trash'
                  },
@@ -315,438 +469,3 @@ diff --git a/src/view.js b/src/view.js
              });
              this.but_remove.click(this.remove.bind(this));
              this.el.prepend(this.but_remove);
-diff --git a/src/tab.js b/src/tab.js
---- a/public_data/sao/src/tab.js
-+++ b/public_data/sao/src/tab.js
-@@ -85,7 +85,7 @@
-         },
-         create_toolbar: function() {
-             var toolbar = jQuery('<div/>', {
--                'class': 'ui-widget-header ui-corner-all'
-+                'class': 'tab-toolbar'
-             });
-             var add_button = function(tool) {
-                 var click_func = function() {
-@@ -93,7 +93,7 @@
-                 };
-                 var button = jQuery('<button/>').button({
-                     id: tool[0],
--                    text: tool[2],
-+                    text: true,
-                     icons: {
-                         primary: tool[1]
-                     },
-@@ -282,7 +282,7 @@
-                 ].forEach(function(menu_action) {
-                     var button = jQuery('<button/>').button({
-                         id: menu_action[0],
--                        text: true,
-+                        text: false,
-                         icons: {
-                             primary: menu_action[1],
-                             secondary: 'ui-icon-triangle-1-s'
-diff --git a/src/screen.js b/src/screen.js
---- a/public_data/sao/src/screen.js
-+++ b/public_data/sao/src/screen.js
-@@ -24,7 +24,9 @@
-                 'label': 'Filters' // TODO translation
-             });
-             tr.append(jQuery('<td/>').append(this.filter_button));
--            this.search_entry = jQuery('<input/>');
-+            this.search_entry = jQuery('<input/>', {
-+                'class': 'ui-widget ui-widget-content ui-corner-all'
-+            });
-             this.search_entry.keypress(function(e) {
-                 if (e.which == 13) {
-                     this.do_search();
-diff --git a/package.json b/package.json
---- a/public_data/sao/package.json
-+++ b/public_data/sao/package.json
-@@ -25,11 +25,14 @@
-     "grunt": "~0.4.5",
-     "grunt-contrib-jshint": "~0.10.0",
-     "grunt-contrib-nodeunit": "~0.4.0",
-+    "grunt-contrib-copy": "~0.4.0",
-     "grunt-contrib-concat": "~0.4.0",
-     "grunt-contrib-uglify": "~0.4.0",
-     "grunt-contrib-watch": "~0.6.1",
-     "grunt-contrib-less": "~0.11.0",
--    "grunt-cli": "~0.1.13"
-+    "grunt-cli": "~0.1.13",
-+    "grunt-downloadfile": "~0.3.2",
-+    "grunt-zip": "0.16.0"
-   },
-   "keywords": [
-     "tryton"
-diff --git a/nan-tic-theme/sao-fixes.css b/nan-tic-theme/sao-fixes.css
-new file mode 100644
---- /dev/null
-+++ b/public_data/sao/nan-tic-theme/sao-fixes.css
-@@ -0,0 +1,216 @@
-+body {
-+    font-family: Arial,Helvetica,sans-serif;
-+    font-size: 9pt;
-+}
-+/* Top bar */
-+body > div:first-child {
-+    padding: 0.5em 1em;
-+    background: #000;
-+    color: #fff;
-+}
-+body > div:first-child a {
-+    color: #fff;
-+    text-decoration: none;
-+    cursor: pointer;
-+}
-+/* Tree view */
-+/*.tab-form > .screen-container > .content-box > .treeview > table.tree*/
-+.treeview > table.tree {
-+    table-layout: auto;
-+    border-collapse: collapse;
-+    border-spacing: 0;
-+    margin-top: 10px;
-+    margin-bottom: 20px;
-+    /*border: 1px solid #dddddd; /* bordered */
-+    border-bottom: 2px solid #aaaaaa;
-+}
-+
-+.treeview > table.tree > thead > tr > th,
-+.treeview > table.tree > tbody > tr > td {
-+    padding: 3px;
-+    line-height: 1.428571429;
-+    vertical-align: top;
-+    border-top: 1px solid #aaaaaa;
-+    /*border: 1px solid #dddddd; /* bordered */
-+    /*border-bottom-width: 2px; /* bordered */
-+}
-+.treeview > table.tree > thead > tr > th {
-+    vertical-align: bottom;
-+    border-top: none;
-+    border-bottom: 2px solid #aaaaaa;
-+}
-+
-+.treeview > table.tree > thead > tr > th td,
-+.treeview > table.tree > tbody > tr > td td {
-+    line-height: inherit;
-+}
-+
-+/* Tree view: menu */
-+.treeview > table.tree img.column-affix {
-+    margin-right: 0.5em;
-+}
-+/* Dialogs */
-+.ui-dialog {
-+    /*min-width: 70%;*/
-+    max-width: 90%;
-+    width: auto !important;
-+}
-+.ui-dialog-content > label {
-+    display: inline-block;
-+    float: left;
-+    clear: left;
-+    width: 80px;
-+    padding: 3px 1em 3px 0;
-+}
-+.ui-dialog-content > label + select,
-+.ui-dialog-content > label + input {
-+    display: inline-block;
-+    float: left;
-+}
-+/* Main Tabs */
-+#tabs > .ui-tabs {
-+    border: none;
-+}
-+.tab-title-bar {
-+    padding: 0.1em;
-+}
-+.tab-title .ui-button-text {
-+    /*font-size: 1.3em; commented because font-size in body */
-+    font-size: 1.5em;
-+    padding: .2em 1em .2em 2.1em;
-+}
-+/* Toolbar & filter */
-+.filter-box tr td:nth-child(2) input {
-+    font-size: 1.4em;
-+}
-+.tab-toolbar .ui-button .ui-button-text,
-+.filter-box .ui-button .ui-button-text {
-+    /*font-size: .9em;  commented because font-size in body */
-+    padding: .3em .4em;
-+}
-+.tab-toolbar .ui-button-text-icon-primary .ui-button-icon-primary,
-+.tab-toolbar .ui-button-text-icons .ui-button-icon-primary,
-+.tab-toolbar .ui-button-icons-only .ui-button-icon-primary {
-+    left: .3em;
-+}
-+.tab-toolbar .ui-button-text-icon-primary .ui-button-text {
-+    padding-left: 1.8em;
-+    padding-right: .7em;
-+}
-+.tab-toolbar .ui-button-text-icons .ui-button-text {
-+    padding-left: 1.8em;
-+    padding-right: 1.8em;
-+}
-+
-+/* Form View */
-+.form-notebook > .ui-widget-header {
-+    background: none!important;
-+    border: none;
-+    border-collapse: collapse;
-+    border-bottom: 1px solid #aaaaaa;
-+    /* next lines could be fixed removing the ui-corner-all class from widget */
-+    border-bottom-left-radius: 0px;
-+    border-bottom-right-radius: 0px;
-+}
-+
-+.form td.form-label {
-+    padding-left: .5em;
-+}
-+.form td.form-label+td {
-+    padding-right: .5em;
-+}
-+.form input.ui-widget {
-+    padding-left: .3em;
-+    padding-right: .3em;
-+    line-height: 1.4em;
-+}
-+
-+/*.form .form-many2one div input, .form .form-date div input, .form .form-binary div input, .form .form-reference div input*/
-+.form .form-many2one div input, .form .form-date div input, .form .form-binary div input, .form .form-reference div input {
-+    width: 97%;
-+    line-height: 1.4em;
-+}
-+.form .form-reference div span,
-+.form .form-reference div select {
-+    line-height: 1.4em;
-+    padding: .1em;
-+}
-+
-+.form .form-many2one .ui-button-icon-only .ui-button-text,
-+.form .form-date .ui-button-icon-only .ui-button-text,
-+.form .form-binary .ui-button-icon-only .ui-button-text,
-+.form .form-reference .ui-button-icon-only .ui-button-text {
-+    padding: .1em;
-+}
-+
-+/* one2many, many2many widget */
-+.form .form-one2many-menu,
-+.form .form-many2many-menu {
-+    border-bottom-left-radius: 0;
-+    border-bottom-right-radius: 0;
-+}
-+
-+.form .form-one2many-menu .form-one2many-string,
-+.form .form-many2many-menu .form-many2many-string {
-+    margin: 5px;
-+}
-+
-+.form .form-one2many-toolbar button.ui-button-icon-only,
-+.form .form-many2many-toolbar button.ui-button-icon-only {
-+    width: 1.6em;
-+}
-+.form .form-one2many-toolbar .ui-button-icon-only .ui-button-text,
-+.form .form-one2many-toolbar .ui-button-icons-only .ui-button-text,
-+.form .form-many2many-toolbar .ui-button-icon-only .ui-button-text,
-+.form .form-many2many-toolbar .ui-button-icons-only .ui-button-text {
-+    padding: 0;
-+}
-+.form .form-one2many-toolbar .form-one2many-label,
-+.form .form-many2many-toolbar .form-one2many-label {
-+    padding: 0 .4em;
-+}
-+
-+.form .form-one2many-content,
-+.form .form-many2many-content {
-+    border-top: none;
-+    border-top-left-radius: 0;
-+    border-top-right-radius: 0;
-+}
-+
-+.form .form-one2many-content .treeview table.tree,
-+.form .form-many2many-content .treeview table.tree {
-+    margin-top: 0;
-+}
-+
-+/* Separator */
-+.form-separator hr {
-+    border: 0;
-+    height: 1px;
-+    position: relative;
-+    margin: 0.5em 0; /* Keep other elements away from pseudo elements*/
-+}
-+.form-separator hr:before {
-+    top: -0.5em;
-+    height: 1em;
-+}
-+.form-separator hr:after {
-+    content:'';
-+    height: 0.5em;   /* half the height of :before */
-+    top: 1px;        /* height of hr*/
-+}
-+.form-separator hr:before, .form-separator hr:after {
-+    content: '';
-+    position: absolute;
-+    width: 100%;
-+}
-+.form-separator hr, .form-separator hr:before {
-+    background: -moz-radial-gradient(center, ellipse cover, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 75%);
-+    background: -webkit-gradient(radial, center center, 0px, center center, 75%, color-stop(0%,rgba(0,0,0,0.1)), color-stop(75%,rgba(0,0,0,0)));
-+    background: -webkit-radial-gradient(center, ellipse cover, rgba(0,0,0,0.1) 0%,rgba(0,0,0,0) 75%);
-+    background: -o-radial-gradient(center, ellipse cover, rgba(0,0,0,0.1) 0%,rgba(0,0,0,0) 75%);
-+    background: -ms-radial-gradient(center, ellipse cover, rgba(0,0,0,0.1) 0%,rgba(0,0,0,0) 75%);
-+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.1) 0%,rgba(0,0,0,0) 75%);
-+}
-+.form-separator span {
-+    font-weight: bold;
-+}
-\ No newline at end of file
-diff --git a/nan-tic-theme/custom.css b/nan-tic-theme/custom.css
-new file mode 100644
---- /dev/null
-+++ b/public_data/sao/nan-tic-theme/custom.css
-@@ -0,0 +1,43 @@
-+/* Tree View */
-+.treeview > table.tree > tbody > tr:nth-child(odd) {
-+    background: #f5f8f9 url(images/ui-bg_glass_85_dfeffc_1x400.png) 50% 50% repeat-x;
-+}
-+
-+.treeview > table.tree > tbody > tr:hover {
-+    background: #d0e5f5 url(images/ui-bg_glass_75_d0e5f5_1x400.png) 50% 50% repeat-x;
-+}
-+
-+.treeview > table.tree > tbody > tr > td {
-+    border-color: #a6c9e2;
-+}
-+
-+/* Form View */
-+.form .ui-widget-header {
-+    background: #dfeffc url(images/ui-bg_glass_85_dfeffc_1x400.png) 50% 50% repeat-x;
-+}
-+
-+.form .form-one2many-menu, .form .form-one2many-content, .form .form-many2many-menu, .form .form-many2many-content {
-+    border-color: #a6c9e2;
-+}
-+
-+/* Dropdown menu text */
-+.ui-widget-header a {
-+    color: #c5dbec;
-+}
-+
-+/* From sao-fixes.css */
-+.treeview > table.tree {
-+    border-color: #a6c9e2;
-+}
-+.screen-container > .content-box > .treeview > table.tree > thead > tr > th {
-+    border-color: #a6c9e2;
-+}
-+
-+.form-notebook .ui-widget-header {
-+    border-color: #a6c9e2;
-+}
-+
-+.form .form-one2many-menu,
-+.form .form-many2many-menu {
-+    color: #2e6e9e;
-+}
-\ No newline at end of file
-diff --git a/index.html b/index.html
---- a/public_data/sao/index.html
-+++ b/public_data/sao/index.html
-@@ -21,6 +21,26 @@
-                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" media="screen"/%3E'));
-             }
-         </SCRIPT>
-+        <!-- ComboBox from http://www.benknowscode.com/2013/03/finishing-jquery-ui-autocomplete_4743.html -->
-+         <SCRIPT type="text/javascript" src="external/jquery.ui.combobox.js"></SCRIPT>
-+         <LINK rel="stylesheet" type="text/css" href="external/jquery.ui.combobox.css"
-+             media="screen"/>
-+         <SCRIPT type="text/javascript">
-+             if (typeof $.combobox == 'undefined') {
-+                 document.write(unescape('%3CSCRIPT type="text/javascript" src="http://bseth99.github.io/jquery-ui-extensions/ui/jquery.ui.combobox.js"%3E%3C/SCRIPT%3E'));
-+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="http://bseth99.github.io/jquery-ui-extensions/themes/base/jquery.ui.combobox.css" media="screen"/%3E'));
-+             }
-+        </SCRIPT>
-+        <!-- ComboBox from http://www.benknowscode.com/2013/03/finishing-jquery-ui-autocomplete_4743.html -->
-+        <SCRIPT type="text/javascript" src="external/jquery.ui.combobox.js"></SCRIPT>
-+        <LINK rel="stylesheet" type="text/css" href="external/jquery.ui.combobox.css"
-+        media="screen"/>
-+        <SCRIPT type="text/javascript">
-+            if (typeof $.combobox == 'undefined') {
-+                document.write(unescape('%3CSCRIPT type="text/javascript" src="http://bseth99.github.io/jquery-ui-extensions/ui/jquery.ui.combobox.js"%3E%3C/SCRIPT%3E'));
-+                document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="http://bseth99.github.io/jquery-ui-extensions/themes/base/jquery.ui.combobox.css" media="screen"/%3E'));
-+            }
-+        </SCRIPT>
-         <SCRIPT type="text/javascript" src="dist/sao.min.js"></SCRIPT>
-         <LINK rel="stylesheet" type="text/css" href="dist/sao.min.css"
-         media="screen"/>
-@@ -30,6 +50,12 @@
-                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/sao.css" media="screen"/%3E'));
-             }
-         </SCRIPT>
-+         <SCRIPT type="text/javascript">
-+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/nan-tic/sao-fixes.css" media="screen"/%3E'));
-+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/redmond/jquery-ui.css" media="screen"/%3E'));
-+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/redmond/theme.css" media="screen"/%3E'));
-+                 document.write(unescape('%3CLINK rel="stylesheet" type="text/css" href="dist/themes/nan-tic/custom.css" media="screen"/%3E'));
-+         </SCRIPT>
-     </HEAD>
-     <BODY>
-         <DIV style="overflow: auto;">
-diff --git a/Gruntfile.js b/Gruntfile.js
---- a/public_data/sao/Gruntfile.js
-+++ b/public_data/sao/Gruntfile.js
-@@ -3,6 +3,23 @@
-   // Project configuration.
-   grunt.initConfig({
-     pkg: grunt.file.readJSON('package.json'),
-+    downloadfile: {
-+        files: ['http://jqueryui.com/resources/download/jquery-ui-themes-1.11.1.zip']
-+    },
-+    'unzip': {
-+        catalog: {
-+            src: 'jquery-ui-themes-1.11.1.zip',
-+            dest: 'themes'
-+        }
-+    },
-+    copy: {
-+        theme: {
-+            files: [
-+                {expand:true, cwd:'themes/jquery-ui-themes-1.11.1/', src: ['**'], dest: 'dist/'},
-+                {expand:true, cwd:'nan-tic-theme', src: ['**'], dest: 'dist/themes/nan-tic'}
-+            ]
-+        }
-+    },
-     concat: {
-         dist: {
-             src: [
-@@ -79,19 +96,27 @@
-         styles: {
-             files: ['src/*.less'],
-             tasks: 'less:dev'
-+        },
-+        theme_styles: {
-+            files: ['themes/*/*.js', 'themes/*/*.css', 'themes/*/images'],
-+            tasks: 'copy:theme'
-         }
--    }
-+    },
-+
-   });
-
-   // Load the plugin that provides the "uglify" task.
-+  grunt.loadNpmTasks('grunt-contrib-copy');
-   grunt.loadNpmTasks('grunt-contrib-concat');
-   grunt.loadNpmTasks('grunt-contrib-jshint');
-   grunt.loadNpmTasks('grunt-contrib-uglify');
-   grunt.loadNpmTasks('grunt-contrib-less');
-   grunt.loadNpmTasks('grunt-contrib-watch');
-+  grunt.loadNpmTasks('grunt-downloadfile');
-+  grunt.loadNpmTasks('grunt-zip');
-
-   // Default task(s).
--  grunt.registerTask('default', ['concat', 'jshint', 'uglify', 'less:default']);
--  grunt.registerTask('dev', ['concat', 'jshint', 'less:dev']);
-+  grunt.registerTask('default', ['downloadfile', 'unzip', 'copy', 'concat', 'jshint', 'uglify', 'less:default']);
-+  grunt.registerTask('dev', ['copy', 'concat', 'jshint', 'less:dev']);
-
- };
