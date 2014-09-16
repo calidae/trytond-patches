@@ -3,15 +3,6 @@ Index: trytond/trytond/modules/production/bom.py
 
 --- a/trytond/trytond/modules/production/bom.py
 +++ b/trytond/trytond/modules/production/bom.py
-@@ -33,6 +33,8 @@
-         Uom = Pool().get('product.uom')
-         for output in self.outputs:
-             if output.product == product:
-+                if not output.quantity:
-+                    return 0.0
-                 quantity = Uom.compute_qty(uom, quantity,
-                     output.uom, round=False)
-                 return quantity / output.quantity
 @@ -67,6 +69,7 @@
      unit_digits = fields.Function(fields.Integer('Unit Digits'),
          'on_change_with_unit_digits')
