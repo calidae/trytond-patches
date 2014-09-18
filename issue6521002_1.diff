@@ -1,0 +1,14 @@
+Index: trytond/trytond/modules/stock_split/stock.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock_split/stock.py
++++ b/trytond/trytond/modules/stock_split/stock.py
+@@ -59,6 +59,7 @@
+                         'uom': uom.id,
+                         }))
+             remainder -= quantity
++            remainder = Uom.round(remainder, uom.rounding)
+             if count:
+                 count -= 1
+         assert remainder >= 0
+
