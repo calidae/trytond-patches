@@ -36,7 +36,7 @@ Index: tryton/tryton/common/common.py
 
 --- a/tryton/tryton/common/common.py
 +++ b/tryton/tryton/common/common.py
-@@ -1534,3 +1534,25 @@
+@@ -1534,3 +1534,26 @@
          if size < 1000:
              return '%3.1f%s' % (size, x)
          size /= 1000.0
@@ -44,16 +44,17 @@ Index: tryton/tryton/common/common.py
 +
 +def raw_data2pixbuf(data):
 +    pixbuf = None
-+    for ftype in ('jpeg', 'gif', 'png', 'bmp', 'svg'):
-+        try:
-+            loader = gtk.gdk.PixbufLoader(ftype)
-+            loader.write(data, len(data))
-+            loader.close()
-+            pixbuf = loader.get_pixbuf()
-+        except glib.GError:
-+            continue
-+        if pixbuf:
-+            break
++    if data:
++        for ftype in ('jpeg', 'gif', 'png', 'bmp', 'svg'):
++            try:
++                loader = gtk.gdk.PixbufLoader(ftype)
++                loader.write(data, len(data))
++                loader.close()
++                pixbuf = loader.get_pixbuf()
++            except glib.GError:
++                continue
++            if pixbuf:
++                break
 +    if not pixbuf:
 +        no_image = open(os.path.join(PIXMAPS_DIR, 'tryton-noimage.png'),
 +            'rb').read()
