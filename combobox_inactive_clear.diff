@@ -1,0 +1,11 @@
+diff -r 558a89377a75 tryton/common/selection.py
+--- a/tryton/tryton/common/selection.py	Sat Oct 18 09:15:22 2014 +0200
++++ b/tryton/tryton/common/selection.py	Wed Oct 29 11:36:16 2014 +0100
+@@ -189,4 +189,7 @@
+             if value:
+                 return False
+         entry.set_active(active)
++        if active == -1:
++            # When setting no item GTK doesn't clear the entry
++            entry.child.set_text('')
+         return True
