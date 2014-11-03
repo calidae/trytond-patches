@@ -6,7 +6,7 @@ Index: stock.py
 @@ -80,6 +80,20 @@
          for move in moves:
              move.check_lot()
- 
+
 +    @classmethod
 +    def assign_try(cls, moves, with_childs=True, grouping=('product',)):
 +        lot_moves = []
@@ -21,15 +21,3 @@ Index: stock.py
 +            super(Move, cls).assign_try(product_moves,
 +                with_childs=with_childs, grouping=grouping))
 +
- 
- class ShipmentIn:
-     __name__ = 'stock.shipment.in'
-@@ -121,6 +135,8 @@
-                 outgoing_moves = outgoing_by_product[move.product.id]
-                 while outgoing_moves and quantity > 0:
-                     out_move = outgoing_moves.pop()
-+                    if out_move.state == 'cancel':
-+                        continue
-                     out_quantity = Uom.compute_qty(out_move.uom,
-                         out_move.quantity, out_move.product.default_uom,
-                         round=False)

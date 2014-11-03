@@ -7,8 +7,8 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
  from trytond.transaction import Transaction
  from trytond.pool import Pool
  from trytond.rpc import RPC
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['Invoice', 'InvoicePaymentLine', 'InvoiceLine',
      'InvoiceLineTax', 'InvoiceTax',
@@ -31,8 +31,8 @@ Index: trytond/trytond/modules/product/product.py
  from trytond.pool import Pool
  from trytond import backend
  from trytond.const import OPERATORS
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['Template', 'Product']
 
@@ -70,8 +70,8 @@ Index: trytond/trytond/modules/production/production.py
  from trytond.pyson import Eval, Bool, If, Id
  from trytond.pool import Pool
  from trytond.transaction import Transaction
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['Production', 'AssignFailed', 'Assign']
 
@@ -94,8 +94,8 @@ Index: trytond/trytond/modules/purchase/product.py
  from trytond.pool import Pool, PoolMeta
  from trytond.transaction import Transaction
  from trytond import backend
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['Template', 'Product', 'ProductSupplier', 'ProductSupplierPrice']
  __metaclass__ = PoolMeta
@@ -106,9 +106,9 @@ Index: trytond/trytond/modules/purchase/product.py
 -    unit_price = fields.Numeric('Unit Price', required=True, digits=(16, 4))
 +    unit_price = fields.Numeric('Unit Price', required=True, digits=(16,
 +            DIGITS))
+     sequence = fields.Integer('Sequence')
 
      @classmethod
-     def __setup__(cls):
 
 Index: trytond/trytond/modules/purchase/purchase.py
 ===================================================================
@@ -119,8 +119,8 @@ Index: trytond/trytond/modules/purchase/purchase.py
  from trytond.pyson import Eval, Bool, If, PYSONEncoder, Id
  from trytond.transaction import Transaction
  from trytond.pool import Pool, PoolMeta
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['Purchase', 'PurchaseInvoice', 'PurchaseIgnoredInvoice',
      'PurchaseRecreadtedInvoice', 'PurchaseLine', 'PurchaseLineTax',
@@ -143,8 +143,8 @@ Index: trytond/trytond/modules/purchase/stock.py
  from trytond.transaction import Transaction
  from trytond.pyson import PYSONDecoder, PYSONEncoder
  from trytond import backend
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['ShipmentIn', 'ShipmentInReturn', 'Move',
      'OpenProductQuantitiesByWarehouse']
@@ -167,8 +167,8 @@ Index: trytond/trytond/modules/sale/sale.py
  from trytond.pyson import If, Eval, Bool, PYSONEncoder, Id
  from trytond.transaction import Transaction
  from trytond.pool import Pool, PoolMeta
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['Sale', 'SaleInvoice', 'SaleIgnoredInvoice', 'SaleRecreatedInvoice',
      'SaleLine', 'SaleLineTax', 'SaleLineIgnoredMove',
@@ -191,8 +191,8 @@ Index: trytond/trytond/modules/stock/move.py
  from trytond.pyson import In, Eval, Not, Equal, If, Get, Bool
  from trytond.transaction import Transaction
  from trytond.pool import Pool
-+from trytond.config import CONFIG
-+DIGITS = int(CONFIG.get('unit_price_digits', 4))
++from trytond.config import config
++DIGITS = int(config.get('unit_price_digits', 4))
 
  __all__ = ['StockMixin', 'Move']
 
