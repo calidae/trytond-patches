@@ -8,7 +8,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
  from trytond.pool import Pool
  from trytond.rpc import RPC
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['Invoice', 'InvoicePaymentLine', 'InvoiceLine',
      'InvoiceLineTax', 'InvoiceTax',
@@ -32,7 +32,7 @@ Index: trytond/trytond/modules/product/product.py
  from trytond import backend
  from trytond.const import OPERATORS
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['Template', 'Product']
 
@@ -71,7 +71,7 @@ Index: trytond/trytond/modules/production/production.py
  from trytond.pool import Pool
  from trytond.transaction import Transaction
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['Production', 'AssignFailed', 'Assign']
 
@@ -95,7 +95,7 @@ Index: trytond/trytond/modules/purchase/product.py
  from trytond.transaction import Transaction
  from trytond import backend
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['Template', 'Product', 'ProductSupplier', 'ProductSupplierPrice']
  __metaclass__ = PoolMeta
@@ -120,7 +120,7 @@ Index: trytond/trytond/modules/purchase/purchase.py
  from trytond.transaction import Transaction
  from trytond.pool import Pool, PoolMeta
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['Purchase', 'PurchaseInvoice', 'PurchaseIgnoredInvoice',
      'PurchaseRecreadtedInvoice', 'PurchaseLine', 'PurchaseLineTax',
@@ -144,7 +144,7 @@ Index: trytond/trytond/modules/purchase/stock.py
  from trytond.pyson import PYSONDecoder, PYSONEncoder
  from trytond import backend
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['ShipmentIn', 'ShipmentInReturn', 'Move',
      'OpenProductQuantitiesByWarehouse']
@@ -168,7 +168,7 @@ Index: trytond/trytond/modules/sale/sale.py
  from trytond.transaction import Transaction
  from trytond.pool import Pool, PoolMeta
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['Sale', 'SaleInvoice', 'SaleIgnoredInvoice', 'SaleRecreatedInvoice',
      'SaleLine', 'SaleLineTax', 'SaleLineIgnoredMove',
@@ -192,7 +192,7 @@ Index: trytond/trytond/modules/stock/move.py
  from trytond.transaction import Transaction
  from trytond.pool import Pool
 +from trytond.config import config
-+DIGITS = config.getint('digits', 'unit_price_digits', 4))
++DIGITS = config.getint('digits', 'unit_price_digits', 4)
 
  __all__ = ['StockMixin', 'Move']
 
