@@ -1,6 +1,104 @@
+diff -r 4f3d2a123b76 locale/ca_ES.po
+--- a/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue Nov 18 17:40:02 2014 +0100
+@@ -235,6 +235,10 @@
+ msgid "Residual Amount"
+ msgstr "Pendent"
+ 
++msgctxt "field:sale.sale,sale_device:"
++msgid "Sale Device"
++msgstr "Terminal de venda"
++
+ msgctxt "field:sale.sale,self_pick_up:"
+ msgid "Self Pick Up"
+ msgstr "Auto-recollida"
+@@ -267,34 +271,10 @@
+ msgid "ID"
+ msgstr "ID"
+ 
+-msgctxt "field:sale_pos.add_product_form,product:"
+-msgid "Product"
+-msgstr "Producte"
+-
+-msgctxt "field:sale_pos.add_product_form,product_uom_category:"
+-msgid "Product Uom Category"
+-msgstr "Categoria UdM del producte"
+-
+-msgctxt "field:sale_pos.add_product_form,quantity:"
+-msgid "Quantity"
+-msgstr "Quantitat"
+-
+ msgctxt "field:sale_pos.add_product_form,sale:"
+ msgid "Sale"
+ msgstr "Venda"
+ 
+-msgctxt "field:sale_pos.add_product_form,unit:"
+-msgid "Unit"
+-msgstr "Unitat"
+-
+-msgctxt "field:sale_pos.add_product_form,unit_digits:"
+-msgid "Unit Digits"
+-msgstr "Dígits unitat"
+-
+-msgctxt "field:sale_pos.add_product_form,unit_price:"
+-msgid "Unit price"
+-msgstr "Preu unitat"
+-
+ msgctxt "help:sale.sale,self_pick_up:"
+ msgid ""
+ "The goods are picked up by the customer before the sale, so no shipment is "
+diff -r 4f3d2a123b76 locale/es_ES.po
+--- a/trytond/trytond/modules/sale_payment/locale/es_ES.po	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/locale/es_ES.po	Tue Nov 18 17:40:02 2014 +0100
+@@ -235,6 +235,10 @@
+ msgid "Residual Amount"
+ msgstr "Pendiente"
+ 
++msgctxt "field:sale.sale,sale_device:"
++msgid "Sale Device"
++msgstr "Terminal de venta"
++
+ msgctxt "field:sale.sale,self_pick_up:"
+ msgid "Self Pick Up"
+ msgstr "Autorecogida"
+@@ -267,34 +291,10 @@
+ msgid "ID"
+ msgstr "ID"
+ 
+-msgctxt "field:sale_pos.add_product_form,product:"
+-msgid "Product"
+-msgstr "Producto"
+-
+-msgctxt "field:sale_pos.add_product_form,product_uom_category:"
+-msgid "Product Uom Category"
+-msgstr "Categoría UdM del producto"
+-
+-msgctxt "field:sale_pos.add_product_form,quantity:"
+-msgid "Quantity"
+-msgstr "Cantidad"
+-
+ msgctxt "field:sale_pos.add_product_form,sale:"
+ msgid "Sale"
+ msgstr "Venta"
+ 
+-msgctxt "field:sale_pos.add_product_form,unit:"
+-msgid "Unit"
+-msgstr "Unidad"
+-
+-msgctxt "field:sale_pos.add_product_form,unit_digits:"
+-msgid "Unit Digits"
+-msgstr "Dígitos unidad"
+-
+-msgctxt "field:sale_pos.add_product_form,unit_price:"
+-msgid "Unit price"
+-msgstr "Precio unidad"
+-
+ msgctxt "help:sale.sale,self_pick_up:"
+ msgid ""
+ "The goods are picked up by the customer before the sale, so no shipment is "
 diff -r 4f3d2a123b76 sale.py
 --- a/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 18 16:58:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 18 17:40:02 2014 +0100
 @@ -21,6 +21,10 @@
          'get_paid_amount')
      residual_amount = fields.Function(fields.Numeric('Residual Amount',
@@ -32,7 +130,7 @@ diff -r 4f3d2a123b76 sale.py
              'currency_digits': sale.currency_digits,
 diff -r 4f3d2a123b76 tryton.cfg
 --- a/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 18 16:58:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 18 17:40:02 2014 +0100
 @@ -4,7 +4,7 @@
      account_statement
      sale_shop
@@ -45,7 +143,7 @@ diff -r 4f3d2a123b76 tryton.cfg
 -    statement.xml
 diff -r 4f3d2a123b76 view/sale_form.xml
 --- a/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 18 16:58:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 18 17:40:02 2014 +0100
 @@ -25,4 +25,11 @@
              <field name="residual_amount"/>
          </page>
@@ -60,7 +158,7 @@ diff -r 4f3d2a123b76 view/sale_form.xml
  </data>
 diff -r 4f3d2a123b76 view/user_form.xml
 --- a/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 18 16:58:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 18 17:40:02 2014 +0100
 @@ -7,6 +7,6 @@
          expr="/form/notebook/page[@id=&quot;preferences&quot;]/field[@name=&quot;shop&quot;]"
          position="after">
