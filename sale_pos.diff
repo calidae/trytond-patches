@@ -1,0 +1,14 @@
+diff -r cdfca3a3ab7e view/sale_pos_form.xml
+--- a/trytond/trytond/modules/sale_pos/view/sale_pos_form.xml	Wed Nov 12 12:14:19 2014 +0100
++++ b/trytond/trytond/modules/sale_pos/view/sale_pos_form.xml	Tue Nov 18 16:58:13 2014 +0100
+@@ -7,7 +7,9 @@
+     <notebook colspan="2">
+         <page string="Sale" col="2" id="sale">
+             <label name="shop"/>
+-            <field name="shop" widget="selection"/>
++            <field name="shop"/>
++            <label name="sale_device"/>
++            <field name="sale_device"/>
+             <label name="reference"/>
+             <field name="reference"/>
+             <label name="ticket_number"/>

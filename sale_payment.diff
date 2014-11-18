@@ -1,0 +1,71 @@
+diff -r 4f3d2a123b76 sale.py
+--- a/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 18 16:58:02 2014 +0100
+@@ -21,6 +21,10 @@
+         'get_paid_amount')
+     residual_amount = fields.Function(fields.Numeric('Residual Amount',
+             readonly=True), 'get_residual_amount')
++    sale_device = fields.Many2One('sale.device', 'Sale Device',
++            domain=[('shop', '=', Eval('shop'))],
++            depends=['shop']
++    )
+ 
+     @classmethod
+     def __setup__(cls):
+@@ -109,12 +113,13 @@
+         User = pool.get('res.user')
+         sale = Sale(Transaction().context['active_id'])
+         user = User(Transaction().user)
+-        if user.id != 0 and not user.sale_device:
++        sale_device = sale.sale_device or user.sale_device or False
++        if user.id != 0 and not sale_device:
+             self.raise_user_error('not_sale_device')
+         return {
+-            'journal': user.sale_device.journal.id
+-                if user.sale_device.journal else None,
+-            'journals': [j.id for j in user.sale_device.journals],
++            'journal': sale_device.journal.id
++                if sale_device.journal else None,
++            'journals': [j.id for j in sale_device.journals],
+             'payment_amount': sale.total_amount - sale.paid_amount
+                 if sale.paid_amount else sale.total_amount,
+             'currency_digits': sale.currency_digits,
+diff -r 4f3d2a123b76 tryton.cfg
+--- a/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 18 16:58:02 2014 +0100
+@@ -4,7 +4,7 @@
+     account_statement
+     sale_shop
+ xml:
++    device.xml
+     sale.xml
+-    device.xml
++    statement.xml
+     user.xml
+-    statement.xml
+diff -r 4f3d2a123b76 view/sale_form.xml
+--- a/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 18 16:58:02 2014 +0100
+@@ -25,4 +25,11 @@
+             <field name="residual_amount"/>
+         </page>
+     </xpath>
++
++    <xpath
++        expr="/form/notebook/page[@id='other']/field[@name='shop']"
++        position="after">
++        <label name="sale_device"/>
++        <field name="sale_device"/>
++    </xpath>
+ </data>
+diff -r 4f3d2a123b76 view/user_form.xml
+--- a/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 18 16:58:02 2014 +0100
+@@ -7,6 +7,6 @@
+         expr="/form/notebook/page[@id=&quot;preferences&quot;]/field[@name=&quot;shop&quot;]"
+         position="after">
+         <label name="sale_device"/>
+-        <field name="sale_device" widget="selection"/>
++        <field name="sale_device"/>
+     </xpath>
+ </data>
