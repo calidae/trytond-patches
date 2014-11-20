@@ -1,0 +1,9 @@
+diff -r 2403149090fa trytond/pyson.py
+--- a/trytond/trytond/pyson.py	Thu Nov 06 19:24:23 2014 +0100
++++ b/trytond/trytond/pyson.py	Thu Nov 20 13:39:58 2014 +0100
+@@ -594,4 +594,5 @@
+     'Date': Date,
+     'DateTime': DateTime,
+     'Len': Len,
++    'Id': Id,
+ }
