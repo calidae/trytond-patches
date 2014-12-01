@@ -1,0 +1,47 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+bindname must be a string not a list
+
+issue4383
+review8791002
+
+Index: trytond/trytond/modules/ldap_authentication/res.py
+===================================================================
+
+--- a/trytond/trytond/modules/ldap_authentication/res.py
++++ b/trytond/trytond/modules/ldap_authentication/res.py
+@@ -23,9 +23,11 @@
+         uri.query.split('?') + [''] * 4)[:4]
+     if not scope:
+         scope = 'base'
+-    extensions = urlparse.parse_qs(extensions)
++    fixed_extensions = {}
++    for key, value in urlparse.parse_qs(extensions).iteritems():
++        fixed_extensions[key] = value[0]
+     return (uri, dn, unquote(attributes), unquote(scope), unquote(filter_),
+-        extensions)
++        fixed_extensions)
+
+
+ def ldap_connection():
+
+Index: trytond/trytond/modules/ldap_authentication/tests/test_ldap_authentication.py
+===================================================================
+
+--- a/trytond/trytond/modules/ldap_authentication/tests/test_ldap_authentication.py
++++ b/trytond/trytond/modules/ldap_authentication/tests/test_ldap_authentication.py
+@@ -85,11 +85,11 @@
+         self.assertEqual(
+             parse_ldap_url(
+                 'ldap:///??sub??bindname=cn=Manager%2co=Foo')[5],
+-            {'bindname': ['cn=Manager,o=Foo']})
++            {'bindname': 'cn=Manager,o=Foo'})
+         self.assertEqual(
+             parse_ldap_url(
+                 'ldap:///??sub??!bindname=cn=Manager%2co=Foo')[5],
+-            {'!bindname': ['cn=Manager,o=Foo']})
++            {'!bindname': 'cn=Manager,o=Foo'})
+
+
+ def suite():
+
