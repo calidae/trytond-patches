@@ -1,0 +1,42 @@
+diff -r 05f736458b5e account.py
+--- a/modules/account_payment_sepa/account.py	Thu Dec 04 23:35:03 2014 +0100
++++ b/modules/account_payment_sepa/account.py	Tue Dec 09 18:39:58 2014 +0100
+@@ -2,6 +2,7 @@
+ #this repository contains the full copyright notices and license terms.
+ from trytond.pool import PoolMeta
+ from trytond.model import fields
++from trytond.pyson import Eval
+
+ __all__ = ['Configuration']
+ __metaclass__ = PoolMeta
+@@ -12,4 +13,6 @@
+     sepa_mandate_sequence = fields.Property(fields.Many2One('ir.sequence',
+             'SEPA Mandate Sequence', domain=[
+                 ('code', '=', 'account.payment.sepa.mandate'),
++                ('company', 'in', [Eval('context', {}).get('company', -1),
++                        None]),
+                 ]))
+diff -r 05f736458b5e payment.py
+--- a/modules/account_payment_sepa/payment.py	Thu Dec 04 23:35:03 2014 +0100
++++ b/modules/account_payment_sepa/payment.py	Tue Dec 09 18:39:58 2014 +0100
+@@ -157,7 +157,8 @@
+             self.sepa_messages = ()
+         message = tmpl.generate(group=self,
+             datetime=datetime).filter(remove_comment).render()
+-        message = Message(message=message, type='out', state='waiting')
++        message = Message(message=message, type='out', state='waiting',
++            company=group.company)
+         self.sepa_messages += (message,)
+
+     @property
+@@ -192,8 +193,9 @@
+         ondelete='RESTRICT',
+         domain=[
+             ('party', '=', Eval('party', -1)),
++            ('company', '=', Eval('company', -1)),
+             ],
+-        depends=['party'])
++        depends=['party', 'company'])
+     sepa_mandate_sequence_type = fields.Char('Mandate Sequence Type',
+         readonly=True)
+     sepa_return_reason_code = fields.Char('Return Reason Code', readonly=True,

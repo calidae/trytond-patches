@@ -1,0 +1,24 @@
+# exporting patch:
+# HG changeset patch
+# User Cédric Krier <ced@b2ck.com>
+# Date 1417619645 -3600
+#      Wed Dec 03 16:14:05 2014 +0100
+# Node ID 23d0b5a3ceb170f5b2e4d67ec42db93f3e98e5b3
+# Parent  fde9b7af345d6ea9dccf77b5ea2201ac5d506fc7
+# Add missing company domain/field
+
+# issue4311
+# review7691002
+
+diff -r fde9b7af345d -r 23d0b5a3ceb1 sale.py
+--- a/modules/sale/sale.py	Tue Dec 02 12:55:52 2014 +0100
++++ b/modules/sale/sale.py	Wed Dec 03 16:14:05 2014 +0100
+@@ -1023,6 +1023,8 @@
+         domain=[('parent', '=', None), ['OR',
+                 ('group', '=', None),
+                 ('group.kind', 'in', ['sale', 'both'])],
++                ('company', '=',
++                    Eval('_parent_sale', {}).get('company', -1)),
+             ],
+         states={
+             'invisible': Eval('type') != 'line',

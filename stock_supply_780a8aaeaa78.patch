@@ -1,0 +1,23 @@
+# exporting patch:
+# HG changeset patch
+# User Cédric Krier <ced@b2ck.com>
+# Date 1417619662 -3600
+#      Wed Dec 03 16:14:22 2014 +0100
+# Node ID 780a8aaeaa78e174b990de11de88e7db9a441492
+# Parent  6c18a72971b16133ef5feaba2ad2c1f1e2677bf5
+# Add missing company domain/field
+
+# issue4311
+# review7691002
+
+diff -r 6c18a72971b1 -r 780a8aaeaa78 purchase_request.py
+--- a/modules/stock_supply/purchase_request.py	Tue Dec 02 12:56:15 2014 +0100
++++ b/modules/stock_supply/purchase_request.py	Wed Dec 03 16:14:22 2014 +0100
+@@ -176,6 +176,7 @@
+         # fetch order points
+         order_points = OrderPoint.search([
+             ('type', '=', 'purchase'),
++            ('company', '=', company.id if company else None),
+             ])
+         # index them by product
+         product2ops = {}

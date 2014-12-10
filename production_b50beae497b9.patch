@@ -1,0 +1,42 @@
+# exporting patch:
+# HG changeset patch
+# User Cédric Krier <ced@b2ck.com>
+# Date 1417619637 -3600
+#      Wed Dec 03 16:13:57 2014 +0100
+# Node ID b50beae497b9daa73ac31cc02eafbc54b91c0851
+# Parent  7bf478a06a93e766297c0488f0606b90201c0a37
+# Add missing company domain/field
+
+# issue4311
+# review7691002
+
+diff -r 7bf478a06a93 -r b50beae497b9 production.py
+--- a/modules/production/production.py	Tue Dec 02 12:55:39 2014 +0100
++++ b/modules/production/production.py	Wed Dec 03 16:13:57 2014 +0100
+@@ -104,22 +104,24 @@
+         domain=[
+             ('from_location', 'child_of', [Eval('warehouse')], 'parent'),
+             ('to_location', '=', Eval('location')),
++            ('company', '=', Eval('company', -1)),
+             ],
+         states={
+             'readonly': (~Eval('state').in_(['request', 'draft', 'waiting'])
+                 | ~Eval('warehouse') | ~Eval('location')),
+             },
+-        depends=['warehouse', 'location'])
++        depends=['warehouse', 'location', 'company'])
+     outputs = fields.One2Many('stock.move', 'production_output', 'Outputs',
+         domain=[
+             ('from_location', '=', Eval('location')),
+             ('to_location', 'child_of', [Eval('warehouse')], 'parent'),
++            ('company', '=', Eval('company', -1)),
+             ],
+         states={
+             'readonly': (Eval('state').in_(['done', 'cancel'])
+                 | ~Eval('warehouse') | ~Eval('location')),
+             },
+-        depends=['warehouse', 'location'])
++        depends=['warehouse', 'location', 'company'])
+     state = fields.Selection([
+             ('request', 'Request'),
+             ('draft', 'Draft'),

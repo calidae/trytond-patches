@@ -1,0 +1,161 @@
+# exporting patch:
+# HG changeset patch
+# User Cédric Krier <ced@b2ck.com>
+# Date 1417619666 -3600
+#      Wed Dec 03 16:14:26 2014 +0100
+# Node ID f8c45f1b4d7d9f49af3b04d2263acfde2c6653de
+# Parent  9b27753b51889fc5dfc8a1cc9cad391ab1730199
+# Add missing company domain/field
+
+# issue4311
+# review7691002
+
+diff -r 9b27753b5188 -r f8c45f1b4d7d line.py
+--- a/modules/timesheet/line.py	Tue Dec 02 12:56:21 2014 +0100
++++ b/modules/timesheet/line.py	Wed Dec 03 16:14:26 2014 +0100
+@@ -10,6 +10,7 @@
+ from trytond.pyson import Eval, PYSONEncoder, Date
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool
++from trytond import backend
+
+ __all__ = ['Line', 'EnterLinesStart', 'EnterLines',
+     'HoursEmployee',
+@@ -20,14 +21,17 @@
+ class Line(ModelSQL, ModelView):
+     'Timesheet Line'
+     __name__ = 'timesheet.line'
++    company = fields.Many2One('company.company', 'Company', required=True)
+     employee = fields.Many2One('company.employee', 'Employee', required=True,
+         select=True, domain=[
+-            ('company', '=', Eval('context', {}).get('company', -1)),
+-            ])
++            ('company', '=', Eval('company', -1)),
++            ],
++        depends=['company'])
+     date = fields.Date('Date', required=True, select=True)
+     hours = fields.Float('Hours', digits=(16, 2), required=True)
+     work = fields.Many2One('timesheet.work', 'Work',
+         required=True, select=True, domain=[
++            ('company', '=', Eval('company', -1)),
+             ('timesheet_available', '=', True),
+             ['OR',
+                 ('timesheet_start_date', '=', None),
+@@ -38,7 +42,7 @@
+                 ('timesheet_end_date', '>=', Eval('date')),
+                 ],
+             ],
+-        depends=['date'])
++        depends=['date', 'company'])
+     description = fields.Char('Description')
+
+     @classmethod
+@@ -50,6 +54,31 @@
+              'CHECK(hours >= 0.0)', 'Hours field must be positive'),
+             ]
+
++    @classmethod
++    def __register__(cls, module_name):
++        TableHandler = backend.get('TableHandler')
++        cursor = Transaction().cursor
++        table = TableHandler(cursor, cls, module_name)
++        sql_table = cls.__table__()
++        pool = Pool()
++        Work = pool.get('timesheet.work')
++        work = Work.__table__()
++
++        created_company = not table.column_exist('company')
++
++        super(Line, cls).__register__(module_name)
++
++        # Migration from 3.4: new company field
++        if created_company:
++            # Don't use FROM because SQLite nor MySQL support it.
++            cursor.execute(*sql_table.update(
++                    [sql_table.company], [work.select(work.company,
++                            where=work.id == sql_table.work)]))
++
++    @staticmethod
++    def default_company():
++        return Transaction().context.get('company')
++
+     @staticmethod
+     def default_employee():
+         User = Pool().get('res.user')
+diff -r 9b27753b5188 -r f8c45f1b4d7d view/line_form.xml
+--- a/modules/timesheet/view/line_form.xml	Tue Dec 02 12:56:21 2014 +0100
++++ b/modules/timesheet/view/line_form.xml	Wed Dec 03 16:14:26 2014 +0100
+@@ -3,7 +3,9 @@
+ this repository contains the full copyright notices and license terms. -->
+ <form string="Timesheet Line">
+     <label name="employee"/>
+-    <field name="employee" colspan="3"/>
++    <field name="employee"/>
++    <label name="company"/>
++    <field name="company"/>
+     <label name="date"/>
+     <field name="date"/>
+     <label name="hours"/>
+diff -r 9b27753b5188 -r f8c45f1b4d7d view/line_tree.xml
+--- a/modules/timesheet/view/line_tree.xml	Tue Dec 02 12:56:21 2014 +0100
++++ b/modules/timesheet/view/line_tree.xml	Wed Dec 03 16:14:26 2014 +0100
+@@ -2,6 +2,7 @@
+ <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+ this repository contains the full copyright notices and license terms. -->
+ <tree string="Timesheet Lines" editable="bottom">
++    <field name="company"/>
+     <field name="employee"/>
+     <field name="date"/>
+     <field name="hours" widget="float_time" float_time="company_work_time"
+diff -r 9b27753b5188 -r f8c45f1b4d7d work.py
+--- a/modules/timesheet/work.py	Tue Dec 02 12:56:21 2014 +0100
++++ b/modules/timesheet/work.py	Wed Dec 03 16:14:26 2014 +0100
+@@ -19,10 +19,18 @@
+     name = fields.Char('Name', required=True)
+     active = fields.Boolean('Active')
+     parent = fields.Many2One('timesheet.work', 'Parent', left="left",
+-            right="right", select=True, ondelete="RESTRICT")
++            right="right", select=True, ondelete="RESTRICT",
++        domain=[
++            ('company', '=', Eval('company', -1)),
++            ],
++        depends=['company'])
+     left = fields.Integer('Left', required=True, select=True)
+     right = fields.Integer('Right', required=True, select=True)
+-    children = fields.One2Many('timesheet.work', 'parent', 'Children')
++    children = fields.One2Many('timesheet.work', 'parent', 'Children',
++        domain=[
++            ('company', '=', Eval('company', -1)),
++            ],
++        depends=['company'])
+     hours = fields.Function(fields.Float('Timesheet Hours', digits=(16, 2),
+             help="Total time spent on this work"), 'get_hours')
+     timesheet_available = fields.Boolean('Available on timesheets',
+@@ -51,9 +59,6 @@
+     def __setup__(cls):
+         super(Work, cls).__setup__()
+         cls._error_messages.update({
+-                'invalid_parent_company': ('Every work must be in the same '
+-                    'company as it\'s parent work but "%(child)s" and '
+-                    '"%(parent)s" are in different companies.'),
+                 'change_timesheet_available': ('You can not unset "Available '
+                     'on timesheets" for work "%s" because it already has  '
+                     'timesheets.'),
+@@ -83,17 +88,6 @@
+     def validate(cls, works):
+         super(Work, cls).validate(works)
+         cls.check_recursion(works, rec_name='name')
+-        for work in works:
+-            work.check_parent_company()
+-
+-    def check_parent_company(self):
+-        if not self.parent:
+-            return
+-        if self.parent.company != self.company:
+-            self.raise_user_error('invalid_parent_company', {
+-                    'child': self.rec_name,
+-                    'parent': self.parent.rec_name,
+-                    })
+
+     @classmethod
+     def get_hours(cls, works, name):
