@@ -19,15 +19,15 @@ issue12711002_1.diff
 issue8791002_1.diff
 
 # Multicompanyia! no borrar, no descomentar
-#account_42b9acc4c201.patch
-#account_asset_78bda42be464.patch
-#account_invoice_51e5f7fb547b.patch
-#account_payment_5dd8c0c2a04c.patch
-#account_payment_sepa_f69c5ffa5f79.patch
-#account_statement_2642b961c2bf.patch
-#party_c1cc3484518d.patch
-#production_b50beae497b9.patch
-#purchase_5b0d2d2727a6.patch
-#sale_23d0b5a3ceb1.patch
-#stock_supply_780a8aaeaa78.patch
-#timesheet_f8c45f1b4d7d.patch
+account_42b9acc4c201.patch
+account_asset_78bda42be464.patch
+account_invoice_51e5f7fb547b.patch
+account_payment_5dd8c0c2a04c.patch
+account_payment_sepa_f69c5ffa5f79.patch
+account_statement_2642b961c2bf.patch
+party_c1cc3484518d.patch
+production_b50beae497b9.patch
+purchase_5b0d2d2727a6.patch
+sale_23d0b5a3ceb1.patch
+stock_supply_780a8aaeaa78.patch
+timesheet_f8c45f1b4d7d.patch
