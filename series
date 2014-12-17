@@ -31,3 +31,4 @@ purchase_5b0d2d2727a6.patch
 sale_23d0b5a3ceb1.patch
 stock_supply_780a8aaeaa78.patch
 timesheet_f8c45f1b4d7d.patch
+sale_fix_invoiced_quantity_calculation.diff
