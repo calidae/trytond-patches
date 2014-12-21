@@ -9,13 +9,10 @@ disable_tests.diff
 client-open_url.diff
 fix_wizard_copy.diff
 issue6341003_1.diff
-issue8461003_1.diff
 issue10391004_1.diff
 issue8481003_1.diff
 issue9801002_40001.diff
 issue5731002_1.diff
-issue14661002_1.diff
-issue12711002_1.diff
 issue8791002_1.diff
 issue5881002_1.diff
 
