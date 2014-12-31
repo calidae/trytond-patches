@@ -17,8 +17,8 @@ diff -r fd68d64d6d76 -r 5b0d2d2727a6 purchase.py
          domain=[('parent', '=', None), ['OR',
                  ('group', '=', None),
                  ('group.kind', 'in', ['purchase', 'both'])],
-+                ('commpany', '=',
-+                    Eval('_parent_purchase', {}).get('commpany', -1)),
++                ('company', '=',
++                    Eval('_parent_purchase', {}).get('company', -1)),
              ],
          states={
              'invisible': Eval('type') != 'line',
