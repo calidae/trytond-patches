@@ -1,0 +1,15 @@
+# Issue: #022164: Divisió sense definir en albarans d'entrada amb cost de transport
+
+diff -r 5681a4f005cd stock.py
+--- a/modules/purchase_shipment_cost/stock.py	Mon Oct 20 15:04:01 2014 +0200
++++ b/modules/purchase_shipment_cost/stock.py	Fri Jan 02 18:19:23 2015 +0100
+@@ -86,6 +86,9 @@
+             unit_prices[move.id] = unit_price
+             sum_value += unit_price * Decimal(str(move.quantity))
+
++        if sum_value == Decimal('0'):
++            sum_value = Decimal(str(len(moves)))
++
+         costs = []
+         digit = Move.unit_price.digits[1]
+         exp = Decimal(str(10.0 ** -digit))
