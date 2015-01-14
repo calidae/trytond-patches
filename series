@@ -36,3 +36,4 @@ timesheet_f8c45f1b4d7d.patch
 sale_fix_invoiced_quantity_calculation.diff
 
 purchase_shipment_cost.diff
+issue7881002_1.diff
