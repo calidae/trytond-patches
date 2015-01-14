@@ -1,3 +1,21 @@
+diff -r 4f3d2a123b76 device.py
+--- a/trytond/trytond/modules/sale_payment/device.py	Tue Nov 04 13:49:33 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/device.py	Wed Jan 14 14:17:45 2015 +0100
+@@ -53,6 +53,14 @@
+     def search_company(cls, name, clause):
+         return [('shop.%s' % name,) + tuple(clause[1:])]
+ 
++    @classmethod
++    def copy(cls, reports, default=None):
++        if default is None:
++            default = {}
++        default = default.copy()
++        default['user'] = None
++        return super(SaleDevice, cls).copy(reports, default=default)
++
+ 
+ class SaleDeviceStatementJournal(ModelSQL):
+     'Sale Device - Statement Journal'
 diff -r 4f3d2a123b76 locale/ca_ES.po
 --- a/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue Nov 04 13:49:33 2014 +0100
 +++ b/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue Nov 18 17:40:02 2014 +0100
@@ -61,7 +79,7 @@ diff -r 4f3d2a123b76 locale/es_ES.po
  msgctxt "field:sale.sale,self_pick_up:"
  msgid "Self Pick Up"
  msgstr "Autorecogida"
-@@ -267,34 +291,10 @@
+@@ -267,34 +271,10 @@
  msgid "ID"
  msgstr "ID"
  
