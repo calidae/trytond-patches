@@ -10,7 +10,7 @@ diff -r 4f3d2a123b76 device.py
 +        if default is None:
 +            default = {}
 +        default = default.copy()
-+        default['user'] = None
++        default['users'] = None
 +        return super(SaleDevice, cls).copy(reports, default=default)
 +
  
