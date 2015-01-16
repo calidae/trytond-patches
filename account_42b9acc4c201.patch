@@ -168,10 +168,10 @@ diff -r d57626d6cf3e -r 42b9acc4c201 move.py
          amounts = {}
          move2draft_lines = {}
          for sub_move_ids in grouped_slice([m.id for m in moves]):
-@@ -324,7 +334,7 @@
+@@ -326,7 +326,7 @@
+             if not isinstance(amount, Decimal):
                  amount = Decimal(amount)
-             draft_lines = MoveLine.browse(
-                 list(move2draft_lines.get(move.id, [])))
+             draft_lines = MoveLine.browse(move2draft_lines.get(move.id, []))
 -            if not company.currency.is_zero(amount):
 +            if not move.company.currency.is_zero(amount):
                  draft_moves.append(move.id)
