@@ -25,7 +25,7 @@ diff -r 05f736458b5e payment.py
              datetime=datetime).filter(remove_comment).render()
 -        message = Message(message=message, type='out', state='waiting')
 +        message = Message(message=message, type='out', state='waiting',
-+            company=group.company)
++            company=self.company)
          self.sepa_messages += (message,)
 
      @property
