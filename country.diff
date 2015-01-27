@@ -1,0 +1,190 @@
+# Issue: #022388: Correcció subdivisió Vizcaya.
+
+diff -r 9f01290c6922 country.xml
+--- a/modules/country/country.xml	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/country.xml	Wed Jan 28 00:16:10 2015 +0100
+@@ -30397,7 +30397,7 @@
+         </record>
+ 
+         <record model="country.subdivision" id="es-bi">
+-            <field name="name">Vizcayaa / Bizkaia</field>
++            <field name="name">Vizcaya / Bizkaia</field>
+             <field name="code">ES-BI</field>
+             <field name="type">province</field>
+             <field name="parent" ref="es-pv"/>
+diff -r 9f01290c6922 locale/bg_BG.po
+--- a/modules/country/locale/bg_BG.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/bg_BG.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5709,8 +5709,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/ca_ES.po
+--- a/modules/country/locale/ca_ES.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/ca_ES.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/cs_CZ.po
+--- a/modules/country/locale/cs_CZ.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/cs_CZ.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/de_DE.po
+--- a/modules/country/locale/de_DE.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/de_DE.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5697,8 +5697,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/es_AR.po
+--- a/modules/country/locale/es_AR.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/es_AR.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/es_CO.po
+--- a/modules/country/locale/es_CO.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/es_CO.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/es_EC.po
+--- a/modules/country/locale/es_EC.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/es_EC.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/es_ES.po
+--- a/modules/country/locale/es_ES.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/es_ES.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/fr_FR.po
+--- a/modules/country/locale/fr_FR.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/fr_FR.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,7 +5699,7 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr "Biscaye"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 9f01290c6922 locale/lt_LT.po
+--- a/modules/country/locale/lt_LT.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/lt_LT.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5697,8 +5697,8 @@
+ msgstr "Badachoso provincija"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 9f01290c6922 locale/nl_NL.po
+--- a/modules/country/locale/nl_NL.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/nl_NL.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5713,7 +5713,7 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr "Biskaje / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 9f01290c6922 locale/ru_RU.po
+--- a/modules/country/locale/ru_RU.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/ru_RU.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5709,7 +5709,7 @@
+ msgstr ""
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr ""
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 9f01290c6922 locale/sl_SI.po
+--- a/modules/country/locale/sl_SI.po	Mon Oct 20 14:50:30 2014 +0200
++++ b/modules/country/locale/sl_SI.po	Wed Jan 28 00:16:10 2015 +0100
+@@ -5699,8 +5699,8 @@
+ msgstr "Badajoz"
+ 
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+ 
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
