@@ -1,0 +1,149 @@
+# HG changeset patch
+# User Guillem Barba <guillembarba@gmail.com>
+use method to compute balance, credit and debit getters query
+
+issue4543
+review6021003
+
+Index: account.py
+===================================================================
+
+--- a/modules/analytic_account/account.py
++++ b/modules/analytic_account/account.py
+@@ -124,17 +124,8 @@
+     def get_balance(cls, accounts, name):
+         res = {}
+         pool = Pool()
+-        Line = pool.get('analytic_account.line')
+-        MoveLine = pool.get('account.move.line')
+-        Account = pool.get('account.account')
+-        Company = pool.get('company.company')
+         Currency = pool.get('currency.currency')
+         cursor = Transaction().cursor
+-        table = cls.__table__()
+-        line = Line.__table__()
+-        move_line = MoveLine.__table__()
+-        a_account = Account.__table__()
+-        company = Company.__table__()
+ 
+         ids = [a.id for a in accounts]
+         childs = cls.search([('parent', 'child_of', ids)])
+@@ -145,25 +136,12 @@
+         for account in all_accounts:
+             id2account[account.id] = account
+ 
+-        line_query = Line.query_get(line)
+-        cursor.execute(*table.join(line, 'LEFT',
+-                condition=table.id == line.account
+-                ).join(move_line, 'LEFT',
+-                condition=move_line.id == line.move_line
+-                ).join(a_account, 'LEFT',
+-                condition=a_account.id == move_line.account
+-                ).join(company, 'LEFT',
+-                condition=company.id == a_account.company
+-                ).select(table.id,
+-                Sum(Coalesce(line.debit, 0) - Coalesce(line.credit, 0)),
+-                company.currency,
+-                where=(table.type != 'view')
+-                & table.id.in_(all_ids)
+-                & table.active & line_query,
+-                group_by=(table.id, company.currency)))
++        query = cls.query_get(all_ids, [name])
++        cursor.execute(*query)
++
+         account_sum = {}
+         id2currency = {}
+-        for account_id, sum, currency_id in cursor.fetchall():
++        for account_id, currency_id, sum in cursor.fetchall():
+             account_sum.setdefault(account_id, Decimal('0.0'))
+             # SQLite uses float for SUM
+             if not isinstance(sum, Decimal):
+@@ -200,17 +178,8 @@
+     @classmethod
+     def get_credit_debit(cls, accounts, names):
+         pool = Pool()
+-        Line = pool.get('analytic_account.line')
+-        MoveLine = pool.get('account.move.line')
+-        Account = pool.get('account.account')
+-        Company = pool.get('company.company')
+         Currency = pool.get('currency.currency')
+         cursor = Transaction().cursor
+-        table = cls.__table__()
+-        line = Line.__table__()
+-        move_line = MoveLine.__table__()
+-        a_account = Account.__table__()
+-        company = Company.__table__()
+ 
+         result = {}
+         ids = [a.id for a in accounts]
+@@ -223,23 +192,8 @@
+         for account in accounts:
+             id2account[account.id] = account
+ 
+-        line_query = Line.query_get(line)
+-        columns = [table.id, company.currency]
+-        for name in names:
+-            columns.append(Sum(Coalesce(Column(line, name), 0)))
+-        cursor.execute(*table.join(line, 'LEFT',
+-                condition=table.id == line.account
+-                ).join(move_line, 'LEFT',
+-                condition=move_line.id == line.move_line
+-                ).join(a_account, 'LEFT',
+-                condition=a_account.id == move_line.account
+-                ).join(company, 'LEFT',
+-                condition=company.id == a_account.company
+-                ).select(*columns,
+-                where=(table.type != 'view')
+-                & table.id.in_(ids)
+-                & table.active & line_query,
+-                group_by=(table.id, company.currency)))
++        query = cls.query_get(ids, names)
++        cursor.execute(*query)
+ 
+         id2currency = {}
+         for row in cursor.fetchall():
+@@ -263,6 +217,43 @@
+                     result[name][account.id] += account.currency.round(sum)
+         return result
+ 
++    @classmethod
++    def query_get(cls, ids, names):
++        pool = Pool()
++        Line = pool.get('analytic_account.line')
++        MoveLine = pool.get('account.move.line')
++        Account = pool.get('account.account')
++        Company = pool.get('company.company')
++        table = cls.__table__()
++        line = Line.__table__()
++        move_line = MoveLine.__table__()
++        a_account = Account.__table__()
++        company = Company.__table__()
++
++        line_query = Line.query_get(line)
++
++        columns = [table.id, company.currency]
++        for name in names:
++            if name == 'balance':
++                columns.append(
++                    Sum(Coalesce(line.debit, 0) - Coalesce(line.credit, 0)))
++            else:
++                columns.append(Sum(Coalesce(Column(line, name), 0)))
++        query = table.join(line, 'LEFT',
++            condition=table.id == line.account
++            ).join(move_line, 'LEFT',
++            condition=move_line.id == line.move_line
++            ).join(a_account, 'LEFT',
++            condition=a_account.id == move_line.account
++            ).join(company, 'LEFT',
++            condition=company.id == a_account.company
++            ).select(*columns,
++            where=(table.type != 'view')
++            & table.id.in_(ids)
++            & table.active & line_query,
++            group_by=(table.id, company.currency))
++        return query
++
+     def get_rec_name(self, name):
+         if self.code:
+             return self.code + ' - ' + unicode(self.name)
+
