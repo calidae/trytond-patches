@@ -1,8 +1,8 @@
 Index: product.py
 ===================================================================
 
---- ./modules/purchase/product.py
-+++ ./modules/purchase/product.py
+--- .a/trytond/trytond/modules/purchase/product.py
++++ .b/trytond/trytond/modules/purchase/product.py
 @@ -125,12 +125,14 @@
                  supplier_id = Transaction().context['supplier']
                  for product_supplier in product.product_suppliers:

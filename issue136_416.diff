@@ -1,8 +1,8 @@
 Index: production.py
 ===================================================================
 
---- ./modules/production/production.py
-+++ ./modules/production/production.py
+--- .a/trytond/trytond/modules/production/production.py
++++ .b/trytond/trytond/modules/production/production.py
 @@ -441,6 +441,9 @@
              production.check_cost()
  

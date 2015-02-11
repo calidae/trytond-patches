@@ -1,8 +1,8 @@
 Index: purchase_request.py
 ===================================================================
 
---- ./modules/stock_supply/purchase_request.py
-+++ ./modules/stock_supply/purchase_request.py
+--- .a/trytond/trytond/modules/stock_supply/purchase_request.py
++++ .b/trytond/trytond/modules/stock_supply/purchase_request.py
 @@ -677,7 +677,7 @@
                      setattr(purchase, f, v)
                  purchase.save()

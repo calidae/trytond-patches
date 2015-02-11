@@ -1,8 +1,8 @@
 Index: location.py
 ===================================================================
 
---- ./modules/stock/location.py
-+++ ./modules/stock/location.py
+--- .a/trytond/trytond/modules/stock/location.py
++++ .b/trytond/trytond/modules/stock/location.py
 @@ -160,6 +160,11 @@
          return [(cls._rec_name,) + tuple(clause[1:])]
  

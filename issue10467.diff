@@ -1,8 +1,8 @@
 Index: stock.py
 ===================================================================
 
---- ./modules/stock_lot/stock.py
-+++ ./modules/stock_lot/stock.py
+--- .a/trytond/trytond/modules/stock_lot/stock.py
++++ .b/trytond/trytond/modules/stock_lot/stock.py
 @@ -80,6 +80,20 @@
          for move in moves:
              move.check_lot()
