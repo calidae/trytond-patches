@@ -1,0 +1,12 @@
+diff -r 077108f6fcb6 inventory.py
+--- a/modules/stock/inventory.py	Mon Jan 26 17:16:34 2015 +0100
++++ b/modules/stock/inventory.py	Thu Feb 12 12:30:00 2015 +0100
+@@ -216,6 +216,8 @@
+                         or product2consumable[product_id]):
+                     continue
+                 quantity, uom_id = product_qty[product_id]
++                if not quantity:
++                    continue
+                 values = Line.create_values4complete(product_id, inventory,
+                     quantity, uom_id)
+                 to_create.append(values)
