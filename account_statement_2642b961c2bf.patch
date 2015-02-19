@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r 23e4eaac8bff -r 2642b961c2bf statement.py
---- a/modules/account_statement/statement.py	Tue Dec 02 12:54:50 2014 +0100
-+++ b/modules/account_statement/statement.py	Wed Dec 03 16:13:25 2014 +0100
+--- .a/trytond/trytond/modules/account_statement/statement.py	Tue Dec 02 12:54:50 2014 +0100
++++ .b/trytond/trytond/modules/account_statement/statement.py	Wed Dec 03 16:13:25 2014 +0100
 @@ -66,12 +66,12 @@
      journal = fields.Many2One('account.statement.journal', 'Journal',
          required=True, select=True,

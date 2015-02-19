@@ -1,6 +1,6 @@
 diff -r ae376b988766 product.py
---- a/trytond/trytond/modules/purchase/product.py	Mon Oct 20 15:02:51 2014 +0200
-+++ b/trytond/trytond/modules/purchase/product.py	Mon Nov 03 13:24:24 2014 +0100
+--- .a/trytond/trytond/modules/purchase/product.py	Mon Oct 20 15:02:51 2014 +0200
++++ .b/trytond/trytond/modules/purchase/product.py	Mon Nov 03 13:24:24 2014 +0100
 @@ -132,11 +132,14 @@
              for product_supplier in product.product_suppliers:
                  if product_supplier.match(pattern):

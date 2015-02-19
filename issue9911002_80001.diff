@@ -8,8 +8,8 @@ review9911002
 Index: modules/stock_supply_production/production.py
 ===================================================================
 
---- a/modules/stock_supply_production/production.py
-+++ b/modules/stock_supply_production/production.py
+--- .a/trytond/trytond/modules/stock_supply_production/production.py
++++ .b/trytond/trytond/modules/stock_supply_production/production.py
 @@ -212,13 +212,33 @@
              ])
      create_ = StateAction('stock_supply_production.act_production_request')

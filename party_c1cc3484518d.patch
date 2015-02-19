@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r ca47fe15e8b2 -r c1cc3484518d configuration.py
---- a/modules/party/configuration.py	Tue Dec 02 12:55:24 2014 +0100
-+++ b/modules/party/configuration.py	Wed Dec 03 16:13:47 2014 +0100
+--- .a/trytond/trytond/modules/party/configuration.py	Tue Dec 02 12:55:24 2014 +0100
++++ .b/trytond/trytond/modules/party/configuration.py	Wed Dec 03 16:13:47 2014 +0100
 @@ -1,6 +1,7 @@
  # This file is part of Tryton.  The COPYRIGHT file at the top level of
  # this repository contains the full copyright notices and license terms.

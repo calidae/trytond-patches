@@ -8,8 +8,8 @@ review6021003
 Index: account.py
 ===================================================================
 
---- a/modules/analytic_account/account.py
-+++ b/modules/analytic_account/account.py
+--- .a/trytond/trytond/modules/analytic_account/account.py
++++ .b/trytond/trytond/modules/analytic_account/account.py
 @@ -124,17 +124,8 @@
      def get_balance(cls, accounts, name):
          res = {}

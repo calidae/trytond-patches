@@ -1,6 +1,6 @@
 diff --git a/modules/purchase_shipment_cost/tests/test_purchase_shipment_cost.py b/modules/purchase_shipment_cost/tests/test_purchase_shipment_cost.py
---- a/modules/purchase_shipment_cost/tests/test_purchase_shipment_cost.py
-+++ b/modules/purchase_shipment_cost/tests/test_purchase_shipment_cost.py
+--- .a/trytond/trytond/modules/purchase_shipment_cost/tests/test_purchase_shipment_cost.py
++++ .b/trytond/trytond/modules/purchase_shipment_cost/tests/test_purchase_shipment_cost.py
 @@ -30,12 +30,12 @@
      suite.addTests(doctest.DocFileSuite('scenario_purchase_shipment_cost.rst',
              setUp=doctest_setup, tearDown=doctest_teardown, encoding='utf-8',

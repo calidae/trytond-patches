@@ -1,6 +1,6 @@
 diff -r 4e1ac035ae80 invoice.py
---- a/modules/account_invoice/invoice.py	Mon Oct 20 14:37:24 2014 +0200
-+++ b/modules/account_invoice/invoice.py	Tue Dec 09 18:52:31 2014 +0100
+--- .a/trytond/trytond/modules/account_invoice/invoice.py	Mon Oct 20 14:37:24 2014 +0200
++++ .b/trytond/trytond/modules/account_invoice/invoice.py	Tue Dec 09 18:52:31 2014 +0100
 @@ -114,15 +114,23 @@
          'on_change_with_currency_date')
      journal = fields.Many2One('account.journal', 'Journal', required=True,

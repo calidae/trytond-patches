@@ -1,8 +1,8 @@
 # http://codereview.tryton.org/5871002/
 
 diff -r 46c9a4316548 sale.py
---- a/modules/sale/sale.py	Thu Dec 04 23:41:16 2014 +0100
-+++ b/modules/sale/sale.py	Wed Dec 17 21:27:11 2014 +0100
+--- .a/trytond/trytond/modules/sale/sale.py	Thu Dec 04 23:41:16 2014 +0100
++++ .b/trytond/trytond/modules/sale/sale.py	Wed Dec 17 21:27:11 2014 +0100
 @@ -1365,8 +1369,10 @@
              if old_invoice_line.type != 'line':
                  continue

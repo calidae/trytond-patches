@@ -8,8 +8,8 @@ review10091002
 Index: invoice.xml
 ===================================================================
 
---- a/modules/account_invoice/invoice.xml
-+++ b/modules/account_invoice/invoice.xml
+--- .a/trytond/trytond/modules/account_invoice/invoice.xml
++++ .b/trytond/trytond/modules/account_invoice/invoice.xml
 @@ -38,6 +38,17 @@
              <field name="act_window" ref="act_invoice_form"/>
          </record>
@@ -33,8 +33,8 @@ Index: invoice.xml
 Index: ca_ES.xml
 ===================================================================
 
---- a/modules/account_invoice/locale/ca_ES.po
-+++ b/modules/account_invoice/locale/ca_ES.po
+--- .a/trytond/trytond/modules/account_invoice/locale/ca_ES.po
++++ .b/trytond/trytond/modules/account_invoice/locale/ca_ES.po
 @@ -1053,6 +1053,10 @@
  msgid "Invoices"
  msgstr "Factures"
@@ -51,8 +51,8 @@ Index: ca_ES.xml
 Index: ca_ES.xml
 ===================================================================
 
---- a/modules/account_invoice/locale/es_ES.po
-+++ b/modules/account_invoice/locale/es_ES.po
+--- .a/trytond/trytond/modules/account_invoice/locale/es_ES.po
++++ .b/trytond/trytond/modules/account_invoice/locale/es_ES.po
 @@ -1045,6 +1045,10 @@
  msgid "Invoices"
  msgstr "Todas las facturas"

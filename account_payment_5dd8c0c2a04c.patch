@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r 0feef65b0f4e -r 5dd8c0c2a04c account.py
---- a/modules/account_payment/account.py	Tue Dec 02 12:54:44 2014 +0100
-+++ b/modules/account_payment/account.py	Wed Dec 03 16:13:20 2014 +0100
+--- .a/trytond/trytond/modules/account_payment/account.py	Tue Dec 02 12:54:44 2014 +0100
++++ .b/trytond/trytond/modules/account_payment/account.py	Wed Dec 03 16:13:20 2014 +0100
 @@ -148,6 +148,7 @@
              kind = 'payable'
 
@@ -22,8 +22,8 @@ diff -r 0feef65b0f4e -r 5dd8c0c2a04c account.py
              party=line.party,
              kind=kind,
 diff -r 0feef65b0f4e -r 5dd8c0c2a04c payment.py
---- a/modules/account_payment/payment.py	Tue Dec 02 12:54:44 2014 +0100
-+++ b/modules/account_payment/payment.py	Wed Dec 03 16:13:20 2014 +0100
+--- .a/trytond/trytond/modules/account_payment/payment.py	Tue Dec 02 12:54:44 2014 +0100
++++ .b/trytond/trytond/modules/account_payment/payment.py	Wed Dec 03 16:13:20 2014 +0100
 @@ -118,6 +118,7 @@
          depends=_DEPENDS + ['currency_digits'])
      line = fields.Many2One('account.move.line', 'Line', ondelete='RESTRICT',

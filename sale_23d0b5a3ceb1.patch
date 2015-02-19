@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r fde9b7af345d -r 23d0b5a3ceb1 sale.py
---- a/modules/sale/sale.py	Tue Dec 02 12:55:52 2014 +0100
-+++ b/modules/sale/sale.py	Wed Dec 03 16:14:05 2014 +0100
+--- .a/trytond/trytond/modules/sale/sale.py	Tue Dec 02 12:55:52 2014 +0100
++++ .b/trytond/trytond/modules/sale/sale.py	Wed Dec 03 16:14:05 2014 +0100
 @@ -1023,6 +1023,8 @@
          domain=[('parent', '=', None), ['OR',
                  ('group', '=', None),

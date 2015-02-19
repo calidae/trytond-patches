@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r 7bf478a06a93 -r b50beae497b9 production.py
---- a/modules/production/production.py	Tue Dec 02 12:55:39 2014 +0100
-+++ b/modules/production/production.py	Wed Dec 03 16:13:57 2014 +0100
+--- .a/trytond/trytond/modules/production/production.py	Tue Dec 02 12:55:39 2014 +0100
++++ .b/trytond/trytond/modules/production/production.py	Wed Dec 03 16:13:57 2014 +0100
 @@ -104,22 +104,24 @@
          domain=[
              ('from_location', 'child_of', [Eval('warehouse')], 'parent'),

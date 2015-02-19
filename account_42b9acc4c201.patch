@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r d57626d6cf3e -r 42b9acc4c201 fiscalyear.py
---- a/modules/account/fiscalyear.py	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/fiscalyear.py	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/fiscalyear.py	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/fiscalyear.py	Wed Dec 03 16:13:08 2014 +0100
 @@ -326,6 +326,8 @@
      __name__ = 'account.fiscalyear.balance_non_deferral.start'
      fiscalyear = fields.Many2One('account.fiscalyear', 'Fiscal Year',
@@ -51,8 +51,8 @@ diff -r d57626d6cf3e -r 42b9acc4c201 fiscalyear.py
 
  class BalanceNonDeferral(Wizard):
 diff -r d57626d6cf3e -r 42b9acc4c201 move.py
---- a/modules/account/move.py	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/move.py	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/move.py	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/move.py	Wed Dec 03 16:13:08 2014 +0100
 @@ -49,8 +49,12 @@
      number = fields.Char('Number', required=True, readonly=True)
      post_number = fields.Char('Post Number', readonly=True,
@@ -194,8 +194,8 @@ diff -r d57626d6cf3e -r 42b9acc4c201 move.py
                  fiscalyear_ids = [f.id for f in fiscalyears] or [0]
              else:
 diff -r d57626d6cf3e -r 42b9acc4c201 period.py
---- a/modules/account/period.py	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/period.py	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/period.py	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/period.py	Wed Dec 03 16:13:08 2014 +0100
 @@ -34,7 +34,14 @@
          ('close', 'Close'),
          ], 'State', readonly=True, required=True)
@@ -258,8 +258,8 @@ diff -r d57626d6cf3e -r 42b9acc4c201 period.py
      @classmethod
      def find(cls, company_id, date=None, exception=True, test_state=True):
 diff -r d57626d6cf3e -r 42b9acc4c201 tax.py
---- a/modules/account/tax.py	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/tax.py	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/tax.py	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/tax.py	Wed Dec 03 16:13:08 2014 +0100
 @@ -627,9 +627,13 @@
          depends=['company', 'type'])
      invoice_base_code = fields.Many2One('account.tax.code',
@@ -353,8 +353,8 @@ diff -r d57626d6cf3e -r 42b9acc4c201 tax.py
  class TaxRuleTemplate(ModelSQL, ModelView):
      'Tax Rule Template'
 diff -r d57626d6cf3e -r 42b9acc4c201 view/move_form.xml
---- a/modules/account/view/move_form.xml	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/view/move_form.xml	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/view/move_form.xml	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/view/move_form.xml	Wed Dec 03 16:13:08 2014 +0100
 @@ -2,6 +2,9 @@
  <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
  this repository contains the full copyright notices and license terms. -->
@@ -366,8 +366,8 @@ diff -r d57626d6cf3e -r 42b9acc4c201 view/move_form.xml
      <field name="number"/>
      <label name="post_number"/>
 diff -r d57626d6cf3e -r 42b9acc4c201 view/move_tree.xml
---- a/modules/account/view/move_tree.xml	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/view/move_tree.xml	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/view/move_tree.xml	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/view/move_tree.xml	Wed Dec 03 16:13:08 2014 +0100
 @@ -2,6 +2,7 @@
  <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
  this repository contains the full copyright notices and license terms. -->
@@ -377,8 +377,8 @@ diff -r d57626d6cf3e -r 42b9acc4c201 view/move_tree.xml
      <field name="post_number"/>
      <field name="journal"/>
 diff -r d57626d6cf3e -r 42b9acc4c201 view/period_tree.xml
---- a/modules/account/view/period_tree.xml	Tue Dec 02 12:54:29 2014 +0100
-+++ b/modules/account/view/period_tree.xml	Wed Dec 03 16:13:08 2014 +0100
+--- .a/trytond/trytond/modules/account/view/period_tree.xml	Tue Dec 02 12:54:29 2014 +0100
++++ .b/trytond/trytond/modules/account/view/period_tree.xml	Wed Dec 03 16:13:08 2014 +0100
 @@ -2,6 +2,7 @@
  <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
  this repository contains the full copyright notices and license terms. -->

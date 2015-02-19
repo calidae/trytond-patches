@@ -1,8 +1,8 @@
 Index: __init__.py
 ===================================================================
 
---- ./modules/stock_lot/__init__.py
-+++ ./modules/stock_lot/__init__.py
+--- .a/trytond/trytond/modules/stock_lot/__init__.py
++++ .b/trytond/trytond/modules/stock_lot/__init__.py
 @@ -21,4 +21,9 @@
          Template,
          Product,
@@ -17,8 +17,8 @@ Index: __init__.py
 Index: stock.py
 ===================================================================
 
---- ./modules/stock_lot/stock.py
-+++ ./modules/stock_lot/stock.py
+--- .a/trytond/trytond/modules/stock_lot/stock.py
++++ .b/trytond/trytond/modules/stock_lot/stock.py
 @@ -1,17 +1,20 @@
  #This file is part of Tryton.  The COPYRIGHT file at the top level of
  #this repository contains the full copyright notices and license terms.
@@ -120,8 +120,8 @@ Index: stock.py
 Index: stock.xml
 ===================================================================
 
---- ./modules/stock_lot/stock.xml
-+++ ./modules/stock_lot/stock.xml
+--- .a/trytond/trytond/modules/stock_lot/stock.xml
++++ .b/trytond/trytond/modules/stock_lot/stock.xml
 @@ -48,6 +48,28 @@
              <field name="perm_delete" eval="True"/>
          </record>
@@ -157,7 +157,7 @@ Index: view/lot_by_location_start_form.xml
 new file mode 100644
 
 --- /dev/null
-+++ ./modules/stock_lot/view/lot_by_location_start_form.xml
++++ .b/trytond/trytond/modules/stock_lot/view/lot_by_location_start_form.xml
 @@ -0,0 +1,7 @@
 +<?xml version="1.0"?>
 +<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of

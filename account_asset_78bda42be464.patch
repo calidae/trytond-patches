@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r 288b4d6b861b -r 78bda42be464 asset.py
---- a/modules/account_asset/asset.py	Wed Dec 03 13:58:43 2014 +0100
-+++ b/modules/account_asset/asset.py	Wed Dec 03 16:13:09 2014 +0100
+--- .a/trytond/trytond/modules/account_asset/asset.py	Wed Dec 03 13:58:43 2014 +0100
++++ .b/trytond/trytond/modules/account_asset/asset.py	Wed Dec 03 16:13:09 2014 +0100
 @@ -44,11 +44,15 @@
                  ('product', '=', Eval('product', -1)),
                  ),

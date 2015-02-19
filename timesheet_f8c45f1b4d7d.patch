@@ -11,8 +11,8 @@
 # review7691002
 
 diff -r 9b27753b5188 -r f8c45f1b4d7d line.py
---- a/modules/timesheet/line.py	Tue Dec 02 12:56:21 2014 +0100
-+++ b/modules/timesheet/line.py	Wed Dec 03 16:14:26 2014 +0100
+--- .a/trytond/trytond/modules/timesheet/line.py	Tue Dec 02 12:56:21 2014 +0100
++++ .b/trytond/trytond/modules/timesheet/line.py	Wed Dec 03 16:14:26 2014 +0100
 @@ -10,6 +10,7 @@
  from trytond.pyson import Eval, PYSONEncoder, Date
  from trytond.transaction import Transaction
@@ -83,8 +83,8 @@ diff -r 9b27753b5188 -r f8c45f1b4d7d line.py
      def default_employee():
          User = Pool().get('res.user')
 diff -r 9b27753b5188 -r f8c45f1b4d7d view/line_form.xml
---- a/modules/timesheet/view/line_form.xml	Tue Dec 02 12:56:21 2014 +0100
-+++ b/modules/timesheet/view/line_form.xml	Wed Dec 03 16:14:26 2014 +0100
+--- .a/trytond/trytond/modules/timesheet/view/line_form.xml	Tue Dec 02 12:56:21 2014 +0100
++++ .b/trytond/trytond/modules/timesheet/view/line_form.xml	Wed Dec 03 16:14:26 2014 +0100
 @@ -3,7 +3,9 @@
  this repository contains the full copyright notices and license terms. -->
  <form string="Timesheet Line">
@@ -97,8 +97,8 @@ diff -r 9b27753b5188 -r f8c45f1b4d7d view/line_form.xml
      <field name="date"/>
      <label name="hours"/>
 diff -r 9b27753b5188 -r f8c45f1b4d7d view/line_tree.xml
---- a/modules/timesheet/view/line_tree.xml	Tue Dec 02 12:56:21 2014 +0100
-+++ b/modules/timesheet/view/line_tree.xml	Wed Dec 03 16:14:26 2014 +0100
+--- .a/trytond/trytond/modules/timesheet/view/line_tree.xml	Tue Dec 02 12:56:21 2014 +0100
++++ .b/trytond/trytond/modules/timesheet/view/line_tree.xml	Wed Dec 03 16:14:26 2014 +0100
 @@ -2,6 +2,7 @@
  <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
  this repository contains the full copyright notices and license terms. -->
@@ -108,8 +108,8 @@ diff -r 9b27753b5188 -r f8c45f1b4d7d view/line_tree.xml
      <field name="date"/>
      <field name="hours" widget="float_time" float_time="company_work_time"
 diff -r 9b27753b5188 -r f8c45f1b4d7d work.py
---- a/modules/timesheet/work.py	Tue Dec 02 12:56:21 2014 +0100
-+++ b/modules/timesheet/work.py	Wed Dec 03 16:14:26 2014 +0100
+--- .a/trytond/trytond/modules/timesheet/work.py	Tue Dec 02 12:56:21 2014 +0100
++++ .b/trytond/trytond/modules/timesheet/work.py	Wed Dec 03 16:14:26 2014 +0100
 @@ -19,10 +19,18 @@
      name = fields.Char('Name', required=True)
      active = fields.Boolean('Active')

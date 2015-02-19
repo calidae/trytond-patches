@@ -1,6 +1,6 @@
 diff -r 05f736458b5e account.py
---- a/modules/account_payment_sepa/account.py	Thu Dec 04 23:35:03 2014 +0100
-+++ b/modules/account_payment_sepa/account.py	Tue Dec 09 18:39:58 2014 +0100
+--- .a/trytond/trytond/modules/account_payment_sepa/account.py	Thu Dec 04 23:35:03 2014 +0100
++++ .b/trytond/trytond/modules/account_payment_sepa/account.py	Tue Dec 09 18:39:58 2014 +0100
 @@ -2,6 +2,7 @@
  #this repository contains the full copyright notices and license terms.
  from trytond.pool import PoolMeta
@@ -17,8 +17,8 @@ diff -r 05f736458b5e account.py
 +                        None]),
                  ]))
 diff -r 05f736458b5e payment.py
---- a/modules/account_payment_sepa/payment.py	Thu Dec 04 23:35:03 2014 +0100
-+++ b/modules/account_payment_sepa/payment.py	Tue Dec 09 18:39:58 2014 +0100
+--- .a/trytond/trytond/modules/account_payment_sepa/payment.py	Thu Dec 04 23:35:03 2014 +0100
++++ .b/trytond/trytond/modules/account_payment_sepa/payment.py	Tue Dec 09 18:39:58 2014 +0100
 @@ -157,7 +157,8 @@
              self.sepa_messages = ()
          message = tmpl.generate(group=self,
