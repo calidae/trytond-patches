@@ -1,38 +1,29 @@
 # HG changeset patch
 # User Guillem Barba <guillembarba@gmail.com>
-allow to provide ssl_context to set_xmlrpc()
-
-issue4592
+allow to provide ssl_context to set_xmlrpc()issue4592
 
 
 review6951002
 
-Index: proteus/proteus/config.py
+Index: proteus/config.py
 ===================================================================
 
 --- a/proteus/proteus/config.py
 +++ b/proteus/proteus/config.py
-@@ -10,6 +10,7 @@
- from decimal import Decimal
- import datetime
- import os
-+import ssl
- import urlparse
- 
- 
-@@ -286,10 +287,13 @@
+@@ -286,10 +286,14 @@
  class XmlrpcConfig(Config):
      'Configuration for XML-RPC'
  
 -    def __init__(self, url):
-+    def __init__(self, url, ssl_context=None):
++    def __init__(self, url, **kwargs):
          super(XmlrpcConfig, self).__init__()
          self.url = url
 -        self.server = xmlrpclib.ServerProxy(url, allow_none=1, use_datetime=1)
-+        if ssl_context is None:
-+            ssl_context = ssl.create_default_context()
-+        self.server = xmlrpclib.ServerProxy(url, allow_none=1, use_datetime=1,
-+            context=ssl_context)
++        if 'allow_none' not in kwargs:
++            kwargs['allow_none'] = 1
++        if 'use_datetime' not in kwargs:
++            kwargs['use_datetime'] = 1
++        self.server = xmlrpclib.ServerProxy(url, **kwargs)
          # TODO add user
          self.user = None
          self._context = self.server.model.res.user.get_preferences(True, {})
@@ -41,10 +32,10 @@ Index: proteus/proteus/config.py
  
  
 -def set_xmlrpc(url):
-+def set_xmlrpc(url, ssl_context=None):
++def set_xmlrpc(url, **kwargs):
      'Set XML-RPC as backend'
 -    _CONFIG.current = XmlrpcConfig(url)
-+    _CONFIG.current = XmlrpcConfig(url, ssl_context=ssl_context)
++    _CONFIG.current = XmlrpcConfig(url, **kwargs)
      return _CONFIG.current
  
  
