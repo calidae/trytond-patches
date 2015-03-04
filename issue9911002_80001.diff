@@ -45,3 +45,37 @@ Index: modules/stock_supply_production/production.py
          return action, {}
  
 
+Index: modules/stock_supply_production/locale/ca_ES.po
+===================================================================
+
+--- a/trytond/trytond/modules/stock_supply_production/locale/ca_ES.po	Tue Feb 17 21:08:47 2015 +0100
++++ b/trytond/trytond/modules/stock_supply_production/locale/ca_ES.po	Wed Mar 04 11:16:09 2015 +0100
+@@ -2,6 +2,10 @@
+ msgid ""
+ msgstr "Content-Type: text/plain; charset=utf-8\n"
+ 
++msgctxt "error:production.create_request:"
++msgid "There are some late productions."
++msgstr "Hi ha algunes produccions endarrerides."
++
+ msgctxt "field:production.configuration,supply_period:"
+ msgid "Supply Period"
+ msgstr "Període de subministre"
+ 
+
+Index: modules/stock_supply_production/locale/es_ES.po
+===================================================================
+
+--- a/trytond/trytond/modules/stock_supply_production/locale/es_ES.po	Tue Feb 17 21:08:47 2015 +0100
++++ b/trytond/trytond/modules/stock_supply_production/locale/es_ES.po	Wed Mar 04 11:16:09 2015 +0100
+@@ -2,6 +2,10 @@
+ msgid ""
+ msgstr "Content-Type: text/plain; charset=utf-8\n"
+ 
++msgctxt "error:production.create_request:"
++msgid "There are some late productions."
++msgstr "Hay algunas producciones retrasadas."
++
+ msgctxt "field:production.configuration,supply_period:"
+ msgid "Supply Period"
+ msgstr "Período de suministro"
