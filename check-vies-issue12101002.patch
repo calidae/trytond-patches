@@ -1,0 +1,13 @@
+diff -r acda45bb0d0e party.py
+--- .a/trytond/trytond/modules/party/party.py	Sun Mar 15 15:58:42 2015 +0100
++++ .b/trytond/trytond/modules/party/party.py	Thu Apr 02 17:19:58 2015 +0200
+@@ -318,7 +318,8 @@
+             if not party.vat_code:
+                 continue
+             try:
+-                if not vatnumber.check_vies(party.vat_code):
++                if (not party.vat_country
++                        or not vatnumber.check_vies(party.vat_code)):
+                     parties_failed.append(party.id)
+                 else:
+                     parties_succeed.append(party.id)
