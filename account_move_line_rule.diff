@@ -1,0 +1,19 @@
+diff -r 32ceadcd01cd move.xml
+--- a/trytond/trytond/modules/account/move.xml	Mon Feb 02 18:44:16 2015 +0100
++++ b/trytond/trytond/modules/account/move.xml	Thu Apr 02 10:58:14 2015 +0200
+@@ -259,6 +259,15 @@
+             <field name="perm_delete" eval="True"/>
+         </record>
+ 
++        <record model="ir.rule.group" id="rule_group_move_line">
++            <field name="model" search="[('model', '=', 'account.move.line')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_move_line1">
++            <field name="domain">[('account.company', 'in', [c.id for c in user.companies])]</field>
++            <field name="rule_group" ref="rule_group_move_line"/>
++        </record>
++
+         <record model="ir.ui.view" id="reconcile_lines_writeoff_view_form">
+             <field name="model">account.move.reconcile_lines.writeoff</field>
+             <field name="type">form</field>
