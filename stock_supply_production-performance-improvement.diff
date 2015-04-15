@@ -1,6 +1,6 @@
 diff -r 4af84eb4246d product.py
---- a/product.py	Tue Feb 17 21:08:47 2015 +0100
-+++ b/product.py	Wed Apr 15 17:57:32 2015 +0200
+--- a/trytond/trytond/modules/stock_supply_production/product.py	Tue Feb 17 21:08:47 2015 +0100
++++ b/trytond/trytond/modules/stock_supply_production/product.py	Wed Apr 15 17:57:32 2015 +0200
 @@ -10,8 +10,10 @@
  class Product:
      __name__ = 'product.product'
@@ -16,8 +16,8 @@ diff -r 4af84eb4246d product.py
 +        supply_period = int(Configuration(1).supply_period or 0)
 +        return dict((p, supply_period) for p in products)
 diff -r 4af84eb4246d production.py
---- a/production.py	Tue Feb 17 21:08:47 2015 +0100
-+++ b/production.py	Wed Apr 15 17:57:32 2015 +0200
+--- a/trytond/trytond/modules/stock_supply_production/production.py	Tue Feb 17 21:08:47 2015 +0100
++++ b/trytond/trytond/modules/stock_supply_production/production.py	Wed Apr 15 17:57:32 2015 +0200
 @@ -87,8 +87,8 @@
                      product_ids, with_childs=True)
  
