@@ -1,6 +1,6 @@
 diff -r 649b0805fa93 trytond/protocols/dispatcher.py
---- a/trytond/protocols/dispatcher.py	Fri Feb 20 09:11:59 2015 +0100
-+++ b/trytond/protocols/dispatcher.py	Sun Apr 19 03:17:46 2015 +0200
+--- a/trytond/trytond/protocols/dispatcher.py	Fri Feb 20 09:11:59 2015 +0100
++++ b/trytond/trytond/protocols/dispatcher.py	Sun Apr 19 03:17:46 2015 +0200
 @@ -19,6 +19,8 @@
      ConcurrencyException
  from trytond.rpc import RPC
@@ -38,7 +38,7 @@ diff -r 649b0805fa93 trytond/protocols/dispatcher.py
              pool = Pool(database_name)
 diff -r 649b0805fa93 trytond/protocols/top.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/trytond/protocols/top.py	Sun Apr 19 03:18:20 2015 +0200
++++ b/trytond/trytond/protocols/top.py	Sun Apr 19 03:18:20 2015 +0200
 @@ -0,0 +1,89 @@
 +import random
 +import signal
