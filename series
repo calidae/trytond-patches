@@ -48,3 +48,4 @@ check-vies-issue12101002.patch
 stock_supply_production-performance-improvement.diff
 
 top.diff
+issue15211002-sale-confirmed-to-done.diff
