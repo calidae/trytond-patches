@@ -47,5 +47,7 @@ issue92001_42002_52002_wsgi_protocol.diff
 check-vies-issue12101002.patch
 stock_supply_production-performance-improvement.diff
 
+issue6241002_1.diff
+
 top.diff
 issue15211002-sale-confirmed-to-done.diff
