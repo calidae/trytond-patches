@@ -1,0 +1,22 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+Fix tree click on board view
+
+issue4723
+review11221002
+
+Index: tryton/tryton/gui/window/view_board/action.py
+===================================================================
+
+--- a/tryton/tryton/gui/window/view_board/action.py
++++ b/tryton/tryton/gui/window/view_board/action.py
+@@ -94,7 +94,7 @@
+             return
+
+         if (self.screen.current_view.view_type == 'tree' and
+-                self.screen.current_view.treeview.keyword_open):
++                self.screen.current_view.attributes.get('keyword_open')):
+             GenericAction.exec_keyword('tree_open', {
+                 'model': self.screen.model_name,
+                 'id': self.screen.id_get(),
+
