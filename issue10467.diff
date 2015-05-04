@@ -17,7 +17,7 @@ Index: stock.py
 +            else:
 +                product_moves.append(move)
 +        return (super(Move, cls).assign_try(lot_moves,
-+                with_childs=with_childs, grouping=('product', 'lot')) and
-+            super(Move, cls).assign_try(product_moves,
++                with_childs=with_childs, grouping=('product', 'lot'))
++            & super(Move, cls).assign_try(product_moves,
 +                with_childs=with_childs, grouping=grouping))
 +
