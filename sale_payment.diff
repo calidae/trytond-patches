@@ -1,6 +1,6 @@
 diff -r 4f3d2a123b76 device.py
 --- a/trytond/trytond/modules/sale_payment/device.py	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/device.py	Wed Jan 14 14:17:45 2015 +0100
++++ b/trytond/trytond/modules/sale_payment/device.py	Tue May 12 16:07:37 2015 +0200
 @@ -53,6 +53,14 @@
      def search_company(cls, name, clause):
          return [('shop.%s' % name,) + tuple(clause[1:])]
@@ -18,7 +18,7 @@ diff -r 4f3d2a123b76 device.py
      'Sale Device - Statement Journal'
 diff -r 4f3d2a123b76 locale/ca_ES.po
 --- a/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue Nov 18 17:40:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/locale/ca_ES.po	Tue May 12 16:07:37 2015 +0200
 @@ -235,6 +235,10 @@
  msgid "Residual Amount"
  msgstr "Pendent"
@@ -67,7 +67,7 @@ diff -r 4f3d2a123b76 locale/ca_ES.po
  "The goods are picked up by the customer before the sale, so no shipment is "
 diff -r 4f3d2a123b76 locale/es_ES.po
 --- a/trytond/trytond/modules/sale_payment/locale/es_ES.po	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/locale/es_ES.po	Tue Nov 18 17:40:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/locale/es_ES.po	Tue May 12 16:07:37 2015 +0200
 @@ -235,6 +235,10 @@
  msgid "Residual Amount"
  msgstr "Pendiente"
@@ -116,9 +116,21 @@ diff -r 4f3d2a123b76 locale/es_ES.po
  "The goods are picked up by the customer before the sale, so no shipment is "
 diff -r 4f3d2a123b76 sale.py
 --- a/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/sale.py	Tue Nov 18 17:40:02 2014 +0100
-@@ -21,6 +21,10 @@
-         'get_paid_amount')
++++ b/trytond/trytond/modules/sale_payment/sale.py	Tue May 12 16:07:37 2015 +0200
+@@ -8,6 +8,7 @@
+ from trytond.pyson import Bool, Eval, Not
+ from trytond.transaction import Transaction
+ from trytond.wizard import Wizard, StateView, StateTransition, Button
++from sql.aggregate import Sum
+ 
+ 
+ __all__ = ['Sale', 'SalePaymentForm', 'WizardSalePayment', 'WizardSaleReconcile']
+@@ -18,9 +19,13 @@
+     __name__ = 'sale.sale'
+     payments = fields.One2Many('account.statement.line', 'sale', 'Payments')
+     paid_amount = fields.Function(fields.Numeric('Paid Amount', readonly=True),
+-        'get_paid_amount')
++        'get_paid_amount', searcher='search_paid_amount')
      residual_amount = fields.Function(fields.Numeric('Residual Amount',
              readonly=True), 'get_residual_amount')
 +    sale_device = fields.Many2One('sale.device', 'Sale Device',
@@ -128,7 +140,29 @@ diff -r 4f3d2a123b76 sale.py
  
      @classmethod
      def __setup__(cls):
-@@ -109,12 +113,13 @@
+@@ -42,6 +47,21 @@
+         return result
+ 
+     @classmethod
++    def search_paid_amount(cls, name, clause):
++        Sale = Pool().get('sale.sale')
++        StatementLine = Pool().get('account.statement.line')
++        sale = Sale.__table__()
++        line = StatementLine.__table__()
++
++        Operator = fields.SQL_OPERATORS[clause[1]]
++        join = sale.join(line, condition=(sale.id == line.sale))
++        query = join.select(
++            sale.id,
++            group_by=(sale.id),
++            having=Operator(Sum(line.amount), Decimal(clause[2] or 0)))
++        return [('id', 'in', query)]
++
++    @classmethod
+     def get_residual_amount(cls, sales, names):
+         return {
+             n: {s.id: s.total_amount - s.paid_amount for s in sales}
+@@ -109,12 +129,13 @@
          User = pool.get('res.user')
          sale = Sale(Transaction().context['active_id'])
          user = User(Transaction().user)
@@ -148,7 +182,7 @@ diff -r 4f3d2a123b76 sale.py
              'currency_digits': sale.currency_digits,
 diff -r 4f3d2a123b76 tryton.cfg
 --- a/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/tryton.cfg	Tue Nov 18 17:40:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/tryton.cfg	Tue May 12 16:07:37 2015 +0200
 @@ -4,7 +4,7 @@
      account_statement
      sale_shop
@@ -161,7 +195,7 @@ diff -r 4f3d2a123b76 tryton.cfg
 -    statement.xml
 diff -r 4f3d2a123b76 view/sale_form.xml
 --- a/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue Nov 18 17:40:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/view/sale_form.xml	Tue May 12 16:07:37 2015 +0200
 @@ -25,4 +25,11 @@
              <field name="residual_amount"/>
          </page>
@@ -176,7 +210,7 @@ diff -r 4f3d2a123b76 view/sale_form.xml
  </data>
 diff -r 4f3d2a123b76 view/user_form.xml
 --- a/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 04 13:49:33 2014 +0100
-+++ b/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue Nov 18 17:40:02 2014 +0100
++++ b/trytond/trytond/modules/sale_payment/view/user_form.xml	Tue May 12 16:07:37 2015 +0200
 @@ -7,6 +7,6 @@
          expr="/form/notebook/page[@id=&quot;preferences&quot;]/field[@name=&quot;shop&quot;]"
          position="after">
