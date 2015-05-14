@@ -40,12 +40,10 @@ issue10091002_1.diff
 issue9911002_80001.diff
 issue6021003_1.diff
 issue6951002_20001.diff
-issue92001_42002_52002_wsgi_protocol.diff
 
 check-vies-issue12101002.patch
 stock_supply_production-performance-improvement.diff
 
 
-top.diff
 issue15211002-sale-confirmed-to-done.diff
 purchase_translation.diff
