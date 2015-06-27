@@ -1,0 +1,23 @@
+# HG changeset patch
+# User Guillem Barba <guillembarba@gmail.com>
+Allow to modify internal shipment moves in waiting state
+
+issue4827
+
+review20301003
+
+Index: shipment.py
+===================================================================
+
+--- a/trytond/trytond/modules/stock/shipment.py
++++ b/trytond/trytond/modules/stock/shipment.py
+@@ -1784,7 +1784,7 @@
+             ], depends=['state'])
+     moves = fields.One2Many('stock.move', 'shipment', 'Moves',
+         states={
+-            'readonly': ((Eval('state') != 'draft')
++            'readonly': (Eval('state').in_(['cancel', 'assigned', 'done'])
+                 | ~Eval('from_location') | ~Eval('to_location')),
+             },
+         domain=[
+
