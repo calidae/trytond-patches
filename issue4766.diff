@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+# Date 1434356341 -7200
+#      Mon Jun 15 10:19:01 2015 +0200
+# Node ID a4d2cf773eb206a9e842736318112d214d61ad11
+# Parent  a92088860973665945b42472c2bddb8138ac5b69
+Only return default record if no domain supplied on ModelSingleton search
+
+issue4766
+review15401002
+
+diff -r a92088860973 -r a4d2cf773eb2 trytond/model/modelsingleton.py
+--- a/trytond/trytond/model/modelsingleton.py	Mon Jun 15 02:19:49 2015 +0200
++++ b/trytond/trytond/model/modelsingleton.py	Mon Jun 15 10:19:01 2015 +0200
+@@ -76,7 +76,7 @@
+     def search(cls, domain, offset=0, limit=None, order=None, count=False):
+         res = super(ModelSingleton, cls).search(domain, offset=offset,
+                 limit=limit, order=order, count=count)
+-        if not res:
++        if not res and not domain:
+             if count:
+                 return 1
+             return [cls(1)]
+diff -r a92088860973 -r a4d2cf773eb2 trytond/tests/test_modelsingleton.py
+--- a/trytond/trytond/tests/test_modelsingleton.py	Mon Jun 15 02:19:49 2015 +0200
++++ b/trytond/trytond/tests/test_modelsingleton.py	Mon Jun 15 10:19:01 2015 +0200
+@@ -121,6 +121,11 @@
+             count = self.singleton.search([], count=True)
+             self.assertEqual(count, 1)
+
++            self.singleton.create([{'name': 'foo'}])
++            singleton, = self.singleton.search([('name', '=', 'foo')])
++            self.assertEqual(singleton.name, 'foo')
++            singletons = self.singleton.search([('name', '=', 'bar')])
++            self.assertEqual(singletons, [])
+             transaction.cursor.rollback()
+
+
