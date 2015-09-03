@@ -1,0 +1,39 @@
+diff -r 8bae00903e21 account.py
+--- a/modules/account/account.py	Fri May 22 23:41:26 2015 +0200
++++ b/modules/account/account.py	Thu Sep 03 16:47:46 2015 +0200
+@@ -1690,11 +1690,11 @@
+                     ('account', '=', account_template.id),
+                     ('parent', '=', None),
+                     ])
+-            for tax_template in tax_templates:
+-                tax_template.create_tax(self.account.company.id,
+-                    template2tax_code=template2tax_code,
+-                    template2account=template2account,
+-                    template2tax=template2tax)
++
++            TaxTemplate.create_batch(tax_templates, self.account.company.id,
++                template2tax_code=template2tax_code,
++                template2account=template2account,
++                template2tax=template2tax)
+
+             # Update taxes on accounts
+             account_template.update_account_taxes(template2account,
+@@ -1717,6 +1717,7 @@
+             for tax_rule_line_template in tax_rule_line_templates:
+                 tax_rule_line_template.create_rule_line(template2tax,
+                     template2rule, template2rule_line=template2rule_line)
++
+         return 'properties'
+
+     def default_properties(self, fields):
+diff -r 21688b4ca06a tryton.cfg
+--- a/modules/account_es/tryton.cfg	Tue Aug 11 16:16:46 2015 +0200
++++ b/modules/account_es/tryton.cfg	Thu Sep 03 16:48:10 2015 +0200
+@@ -3,6 +3,7 @@
+ depends:
+     ir
+     account
++    account_chart_speedup
+ xml:
+     account.xml
+     view.xml
