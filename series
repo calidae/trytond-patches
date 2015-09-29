@@ -33,6 +33,8 @@ sale_23d0b5a3ceb1.patch
 stock_supply_780a8aaeaa78.patch
 timesheet_f8c45f1b4d7d.patch
 sale_fix_invoiced_quantity_calculation.diff
+# Multicompanyia! Les regles d'access han de dependre del context
+issue5000.diff
 
 issue7881002_1.diff
 country.diff

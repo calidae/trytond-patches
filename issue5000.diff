@@ -1,0 +1,22 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+ir rule domain_get cache should depend on context
+
+issue5000
+review17541003
+
+Index: trytond/trytond/ir/rule.py
+===================================================================
+
+--- a/trytond/trytond/ir/rule.py
++++ b/trytond/trytond/ir/rule.py
+@@ -100,7 +100,7 @@
+        required=True, ondelete="CASCADE")
+     domain = fields.Char('Domain', required=True,
+         help='Domain is evaluated with "user" as the current user')
+-    _domain_get_cache = Cache('ir_rule.domain_get', context=False)
++    _domain_get_cache = Cache('ir_rule.domain_get', context=True)
+
+     @classmethod
+     def __setup__(cls):
+
