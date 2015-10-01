@@ -1,22 +1,53 @@
-# HG changeset patch
-# User Sergi Almacellas Abellana <sergi@koolpi.com>
-ir rule domain_get cache should depend on context
+diff -r 789627e0bee6 __init__.py
+--- a/trytond/trytond/modules/company/__init__.py	Wed Sep 02 13:52:23 2015 +0200
++++ b/trytond/trytond/modules/company/__init__.py	Wed Sep 30 17:05:19 2015 +0200
+@@ -21,6 +21,7 @@
+         Cron,
+         CronCompany,
+         PartyConfiguration,
++        Rule,
+         module='company', type_='model')
+     Pool.register(
+         CompanyConfig,
+diff -r 789627e0bee6 company.py
+--- a/trytond/trytond/modules/company/company.py	Wed Sep 02 13:52:23 2015 +0200
++++ b/trytond/trytond/modules/company/company.py	Wed Sep 30 17:05:19 2015 +0200
+@@ -20,7 +20,7 @@
 
-issue5000
-review17541003
+ __all__ = ['Company', 'Employee', 'UserEmployee', 'User', 'Property',
+     'Sequence', 'SequenceStrict', 'Date', 'CompanyConfigStart',
+-    'CompanyConfig', 'CompanyReport', 'LetterReport']
++    'CompanyConfig', 'CompanyReport', 'LetterReport', 'Rule']
+ __metaclass__ = PoolMeta
 
-Index: trytond/trytond/ir/rule.py
-===================================================================
 
---- a/trytond/trytond/ir/rule.py
-+++ b/trytond/trytond/ir/rule.py
-@@ -100,7 +100,7 @@
-        required=True, ondelete="CASCADE")
-     domain = fields.Char('Domain', required=True,
-         help='Domain is evaluated with "user" as the current user')
--    _domain_get_cache = Cache('ir_rule.domain_get', context=False)
-+    _domain_get_cache = Cache('ir_rule.domain_get', context=True)
+@@ -249,6 +249,14 @@
+                         values['employee'] = employee_id
+         return result
 
-     @classmethod
-     def __setup__(cls):
++    @classmethod
++    def write(cls, *args):
++        pool = Pool()
++        Rule = pool.get('ir.urle')
++        super(User, cls).write(*args)
++        # Restart the cache on the domain_get method
++        Rule._domain_get_cache.clear()
++
 
+ class Property:
+     __name__ = 'ir.property'
+@@ -361,3 +369,14 @@
+
+ class LetterReport(CompanyReport):
+     __name__ = 'party.letter'
++
++
++class Rule:
++    __name__ = 'ir.rule'
++
++    @classmethod
++    def _get_cache_key(cls):
++        key = super(Rule, cls)._get_cache_key()
++        # XXX Use company from context instead of browse to prevent infinite
++        # loop, but the cache is cleared when User is written.
++        return key + (Transaction().context.get('company'),)
