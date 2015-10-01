@@ -28,7 +28,7 @@ diff -r 789627e0bee6 company.py
 +    @classmethod
 +    def write(cls, *args):
 +        pool = Pool()
-+        Rule = pool.get('ir.urle')
++        Rule = pool.get('ir.rule')
 +        super(User, cls).write(*args)
 +        # Restart the cache on the domain_get method
 +        Rule._domain_get_cache.clear()
