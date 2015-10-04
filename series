@@ -67,3 +67,4 @@ issue4950_stock.diff
 issue4950_sale.diff
 party_after_account.diff
 issue4986.diff
+#account_chart_speedup.diff
