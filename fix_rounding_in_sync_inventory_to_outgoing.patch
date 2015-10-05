@@ -1,0 +1,14 @@
+diff -r fdfe606e6b87 stock.py
+--- a/trytond/trytond/modules/stock_lot/stock.py	Thu Feb 19 00:04:21 2015 +0100
++++ b/trytond/trytond/modules/stock_lot/stock.py	Mon Oct 05 11:26:49 2015 +0200
+@@ -119,7 +119,9 @@
+                         round=False)
+                     if quantity < out_quantity:
+                         outgoing_moves.extend(Move.copy([out_move], default={
+-                                    'quantity': out_quantity - quantity,
++                                    'quantity': Uom.round(
++                                        out_quantity - quantity,
++                                        out_move.uom.rounding),
+                                     }))
+                         Move.write([out_move], {
+                                 'quantity': quantity,
