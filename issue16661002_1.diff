@@ -1,0 +1,32 @@
+diff -r 1ff52e782b17 account.py
+--- a/trytond/trytond/modules/account_invoice_stock/account.py	Sun Mar 01 19:44:41 2015 +0100
++++ b/trytond/trytond/modules/account_invoice_stock/account.py	Tue Oct 06 10:01:50 2015 +0200
+@@ -33,3 +33,12 @@
+             quantity += Uom.compute_qty(stock_move.uom, stock_move.quantity,
+                 self.unit)
+         return quantity
++
++    @property
++    def origin_quantity(self):
++        'The move quantity computed in origin unit'
++        pool = Pool()
++        Uom = pool.get('product.uom')
++        if not self.origin or not hasattr(self.origin, 'unit'):
++            return self.quantity
++        return Uom.compute_qty(self.unit, self.quantity, self.origin.unit)
+diff -r 1ff52e782b17 stock.py
+--- a/trytond/trytond/modules/account_invoice_stock/stock.py	Sun Mar 01 19:44:41 2015 +0100
++++ b/trytond/trytond/modules/account_invoice_stock/stock.py	Tue Oct 06 10:01:50 2015 +0200
+@@ -23,3 +23,12 @@
+             quantity += Uom.compute_qty(invoice_line.unit,
+                 invoice_line.quantity, self.uom)
+         return quantity
++
++    @property
++    def origin_quantity(self):
++        'The move quantity computed in origin unit'
++        pool = Pool()
++        Uom = pool.get('product.uom')
++        if not self.origin or not hasattr(self.origin, 'unit'):
++            return self.quantity
++        return Uom.compute_qty(self.uom, self.quantity, self.origin.unit)
