@@ -73,3 +73,4 @@ issue20451002_1.diff
 issue7961002_40001.diff
 #account_chart_speedup.diff
 #fix_rounding_in_sync_inventory_to_outgoing.patch
+#chart_not_translatable.diff
