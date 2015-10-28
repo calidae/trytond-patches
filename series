@@ -69,7 +69,9 @@ issue16661002_1.diff
 issue19491002_1.diff
 issue20451002_1.diff
 issue7961002_40001.diff
+# Uncomment in calfruitos and basidelta
 #account_chart_speedup.diff
+# Uncomment in calfruitos
 #fix_rounding_in_sync_inventory_to_outgoing.patch
 #chart_not_translatable.diff
 #024726_account_bank_remove_company.diff
