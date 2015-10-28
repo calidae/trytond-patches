@@ -74,3 +74,4 @@ issue7961002_40001.diff
 #chart_not_translatable.diff
 #024726_account_bank_remove_company.diff
 #024726_account_payment_type_remove_company.diff
+#stock_lot_improve_sync_inventory_to_outgoing.diff
