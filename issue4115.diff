@@ -1,0 +1,124 @@
+diff -r 06cf10aa7502 tax.py
+--- a/trytond/trytond/modules/account/tax.py	Tue Nov 10 15:00:44 2015 +0100
++++ b/trytond/trytond/modules/account/tax.py	Tue Nov 10 16:38:26 2015 +0100
+@@ -3,6 +3,7 @@
+ import datetime
+ from decimal import Decimal
+ from sql.aggregate import Sum
++from itertools import groupby
+
+ from trytond.model import ModelView, ModelSQL, MatchMixin, fields
+ from trytond.wizard import Wizard, StateView, StateAction, Button
+@@ -366,6 +367,7 @@
+         ('fixed', 'Fixed'),
+         ('none', 'None'),
+         ], 'Type', required=True)
++    update_unit_price = fields.Boolean('Update Unit Price')
+     parent = fields.Many2One('account.tax.template', 'Parent')
+     childs = fields.One2Many('account.tax.template', 'parent', 'Children')
+     invoice_account = fields.Many2One('account.account.template',
+@@ -445,6 +447,10 @@
+     def default_credit_note_tax_sign():
+         return Decimal('1')
+
++    @staticmethod
++    def default_update_unit_price():
++        return False
++
+     def _get_tax_value(self, tax=None):
+         '''
+         Set values for tax creation.
+@@ -453,7 +459,7 @@
+         for field in ('name', 'description', 'sequence', 'amount',
+                 'rate', 'type', 'invoice_base_sign', 'invoice_tax_sign',
+                 'credit_note_base_sign', 'credit_note_tax_sign',
+-                'start_date', 'end_date'):
++                'start_date', 'end_date', 'update_unit_price'):
+             if not tax or getattr(tax, field) != getattr(self, field):
+                 res[field] = getattr(self, field)
+         for field in ('group',):
+@@ -595,6 +601,9 @@
+         ('fixed', 'Fixed'),
+         ('none', 'None'),
+         ], 'Type', required=True)
++    update_unit_price = fields.Boolean('Update Unit Price',
++        help=('If checked then the unit price for further tax computation will'
++            'be modified by this tax'))
+     parent = fields.Many2One('account.tax', 'Parent', ondelete='CASCADE')
+     childs = fields.One2Many('account.tax', 'parent', 'Children')
+     company = fields.Many2One('company.company', 'Company', required=True,
+@@ -745,6 +754,10 @@
+         return Decimal('1')
+
+     @staticmethod
++    def default_update_unit_price():
++        return False
++
++    @staticmethod
+     def default_company():
+         return Transaction().context.get('company')
+
+@@ -770,18 +783,28 @@
+                 'tax': self,
+                 }
+
++    def _group_taxes(self):
++        'Key method used to group taxes'
++        return (self.sequence,)
++
+     @classmethod
+     def _unit_compute(cls, taxes, price_unit, date):
+         res = []
+-        for tax in taxes:
+-            start_date = tax.start_date or datetime.date.min
+-            end_date = tax.end_date or datetime.date.max
+-            if not (start_date <= date <= end_date):
+-                continue
+-            if tax.type != 'none':
+-                res.append(tax._process_tax(price_unit))
+-            if len(tax.childs):
+-                res.extend(cls._unit_compute(tax.childs, price_unit, date))
++        for _, group_taxes in groupby(taxes, key=cls._group_taxes):
++            unit_price_variation = 0
++            for tax in group_taxes:
++                start_date = tax.start_date or datetime.date.min
++                end_date = tax.end_date or datetime.date.max
++                if not (start_date <= date <= end_date):
++                    continue
++                if tax.type != 'none':
++                    value = tax._process_tax(price_unit)
++                    res.append(value)
++                    if tax.update_unit_price:
++                        unit_price_variation += value['amount']
++                if len(tax.childs):
++                    res.extend(cls._unit_compute(tax.childs, price_unit, date))
++            price_unit += unit_price_variation
+         return res
+
+     @classmethod
+diff -r 06cf10aa7502 view/tax_form.xml
+--- a/trytond/trytond/modules/account/view/tax_form.xml	Tue Nov 10 15:00:44 2015 +0100
++++ b/trytond/trytond/modules/account/view/tax_form.xml	Tue Nov 10 16:38:26 2015 +0100
+@@ -34,6 +34,9 @@
+             <label name="company"/>
+             <field name="company"/>
+             <newline/>
++            <label name="update_unit_price"/>
++            <field name="update_unit_price"/>
++            <newline/>
+             <label name="invoice_account"/>
+             <field name="invoice_account"/>
+             <newline/>
+diff -r 06cf10aa7502 view/tax_template_form.xml
+--- a/trytond/trytond/modules/account/view/tax_template_form.xml	Tue Nov 10 15:00:44 2015 +0100
++++ b/trytond/trytond/modules/account/view/tax_template_form.xml	Tue Nov 10 16:38:26 2015 +0100
+@@ -32,6 +32,9 @@
+                 </group>
+             </group>
+             <newline/>
++            <label name="update_unit_price"/>
++            <field name="update_unit_price"/>
++            <newline/>
+             <label name="invoice_account"/>
+             <field name="invoice_account"/>
+             <newline/>
