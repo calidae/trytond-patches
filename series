@@ -70,6 +70,7 @@ issue19491002_1.diff
 issue20451002_1.diff
 issue7961002_40001.diff
 issue4115.diff
+issue5118.diff
 # Uncomment in calfruitos and basidelta
 #account_chart_speedup.diff
 # Uncomment in calfruitos
