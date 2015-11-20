@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+Allow to customize productions code
+
+issue5144
+review18801002
+
+Index: trytond/trytond/modules/production/production.py
+===================================================================
+
+--- a/trytond/trytond/modules/production/production.py
++++ b/trytond/trytond/modules/production/production.py
+@@ -446,7 +446,8 @@
+         vlist = [x.copy() for x in vlist]
+         config = Config(1)
+         for values in vlist:
+-            values['code'] = Sequence.get_id(config.production_sequence.id)
++            if not values.get('code'):
++                values['code'] = Sequence.get_id(config.production_sequence.id)
+         productions = super(Production, cls).create(vlist)
+         for production in productions:
+             production._set_move_planned_date()
+@@ -458,6 +459,14 @@
+         for production in sum(args[::2], []):
+             production._set_move_planned_date()
+
++    @classmethod
++    def copy(cls, productions, default=None):
++        if default is None:
++            default = {}
++        default = default.copy()
++        default.setdefault('code', None)
++        return super(Production, cls).copy(productions, default=default)
++
+     def _get_move_planned_date(self):
+         "Return the planned dates for input and output moves"
+         return self.planned_date, self.planned_date
+
