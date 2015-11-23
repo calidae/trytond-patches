@@ -1,0 +1,115 @@
+diff -r 5d7c2958b920 move.py
+--- a/trytond/trytond/modules/stock/move.py	Mon Nov 23 17:59:15 2015 +0100
++++ b/trytond/trytond/modules/stock/move.py	Mon Nov 23 18:09:01 2015 +0100
+@@ -607,9 +607,15 @@
+     @Workflow.transition('assigned')
+     def assign(cls, moves):
+         cls.check_origin(moves)
++
++        to_write = []
+         for move in moves:
+             move.set_effective_date()
+-            move.save()
++            to_write.extend(([move], {
++                        'effective_date': move.effective_date,
++                        'state': 'assigned'
++                        }))
++        cls.write(*to_write)
+ 
+     @classmethod
+     @ModelView.button
+@@ -661,7 +667,12 @@
+ 
+     @classmethod
+     def write(cls, *args):
++        pool = Pool()
++        Product = pool.get('product.product')
++        Uom = pool.get('product.uom')
++
+         actions = iter(args)
++        args = []
+         for moves, values in zip(actions, actions):
+             vals_set = set(values)
+             if cls._deny_modify_assigned & vals_set:
+@@ -673,6 +684,27 @@
+                     if move.state in ('done', 'cancel'):
+                         cls.raise_user_error('modify_done_cancel',
+                             (move.rec_name,))
++            if set(['quantity', 'uom', 'product']) & vals_set:
++                int_qty2moves = {}
++                for move in moves:
++                    uom = values.get('uom', move.uom)
++                    if not isinstance(uom, Uom):
++                        uom = Uom(uom)
++                    product = values.get('product', move.product)
++                    if not isinstance(product, Uom):
++                        product = Product(product)
++                    internal_quantity = cls._get_internal_quantity(
++                        values.get('quantity', move.quantity),
++                        uom,
++                        product)
++                    int_qty2moves.setdefault(
++                        internal_quantity, []).append(move)
++                for int_qty, int_qty_moves in int_qty2moves.iteritems():
++                    new_values = values.copy()
++                    new_values['internal_quantity'] = int_qty
++                    args.extend((int_qty_moves, new_values))
++            else:
++                args.extend((moves, values))
+ 
+         super(Move, cls).write(*args)
+ 
+@@ -680,15 +712,6 @@
+         for moves, values in zip(actions, actions):
+             if any(f not in cls._allow_modify_closed_period for f in values):
+                 cls.check_period_closed(moves)
+-            for move in moves:
+-                internal_quantity = cls._get_internal_quantity(move.quantity,
+-                        move.uom, move.product)
+-                if (internal_quantity != move.internal_quantity
+-                        and internal_quantity
+-                        != values.get('internal_quantity')):
+-                    cls.write([move], {
+-                            'internal_quantity': internal_quantity,
+-                            })
+ 
+     @classmethod
+     def delete(cls, moves):
+diff -r 5d7c2958b920 shipment.py
+--- a/trytond/trytond/modules/stock/shipment.py	Mon Nov 23 17:59:15 2015 +0100
++++ b/trytond/trytond/modules/stock/shipment.py	Mon Nov 23 18:09:01 2015 +0100
+@@ -1225,18 +1225,26 @@
+         Set planned date of moves for the shipments
+         '''
+         Move = Pool().get('stock.move')
++        to_write = []
+         for shipment in shipments:
+             outgoing_date, inventory_date = shipment._move_planned_date
+-            Move.write([x for x in shipment.outgoing_moves
++            out_moves_to_write = [x for x in shipment.outgoing_moves
+                     if (x.state not in ('assigned', 'done', 'cancel')
+-                        and x.planned_date != outgoing_date)], {
+-                    'planned_date': outgoing_date,
+-                    })
+-            Move.write([x for x in shipment.inventory_moves
++                        and x.planned_date != outgoing_date)]
++            if out_moves_to_write:
++                to_write.extend((out_moves_to_write, {
++                        'planned_date': outgoing_date,
++                        }))
++
++            inv_moves_to_write = [x for x in shipment.inventory_moves
+                     if (x.state not in ('assigned', 'done', 'cancel')
+-                        and x.planned_date != inventory_date)], {
+-                    'planned_date': inventory_date,
+-                    })
++                        and x.planned_date != inventory_date)]
++            if inv_moves_to_write:
++                to_write.extend((inv_moves_to_write, {
++                        'planned_date': inventory_date,
++                        }))
++        if to_write:
++            Move.write(*to_write)
+ 
+     @classmethod
+     def create(cls, vlist):
