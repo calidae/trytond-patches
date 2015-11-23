@@ -82,3 +82,4 @@ issue18801002_1.diff
 #stock_lot_improve_sync_inventory_to_outgoing.diff
 #stock_lot_fix_pick_product_without_outgoing_moves.diff
 #purchase_fix_get_move_done_rounding.diff
+#multicompany_cron.diff
