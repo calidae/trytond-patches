@@ -84,3 +84,4 @@ issue18801002_1.diff
 #purchase_fix_get_move_done_rounding.diff
 #multicompany_cron.diff
 #025476_5154_5155_5456_optimize_move_write_assign.diff
+#incremental_wait_in_retries.diff

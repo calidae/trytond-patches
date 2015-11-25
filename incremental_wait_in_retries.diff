@@ -1,0 +1,15 @@
+diff -r 1b91a9bc6db1 trytond/protocols/dispatcher.py
+--- a/trytond/trytond/protocols/dispatcher.py	Mon Nov 09 23:16:42 2015 +0100
++++ b/trytond/trytond/protocols/dispatcher.py	Wed Nov 25 08:55:40 2015 +0100
+@@ -172,6 +172,11 @@
+             except DatabaseOperationalError:
+                 transaction.cursor.rollback()
+                 if count and not rpc.readonly:
++                    retry = config.getint('database', 'retry')
++                    waiting_time = min((retry - count) * (retry - count) * 0.1,
++                        4.0)
++                    if waiting_time:
++                        time.sleep(waiting_time)
+                     continue
+                 raise
+             except (NotLogged, ConcurrencyException, UserError, UserWarning):
