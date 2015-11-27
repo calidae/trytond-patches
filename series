@@ -87,3 +87,4 @@ issue18801002_1.diff
 #multicompany_cron.diff
 #025476_5154_5155_5456_optimize_move_write_assign.diff
 #do_not_lock_on_assign_try.diff
+#limit_invoices_in_creit_note_action_by_domain.diff
