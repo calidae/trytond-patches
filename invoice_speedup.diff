@@ -563,3 +563,49 @@ diff -r 6429c9c53cb8 trytond/trytond/modules/account_bank/account.py
 
      @classmethod
      def create(cls, vlist):
+diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
+--- a/trytond/trytond/modules/analytic_invoice/invoice.py	Sun Mar 01 15:34:41 2015 +0100
++++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Mon Nov 30 14:24:25 2015 +0100
+@@ -192,26 +192,25 @@
+         return result
+
+     def get_move_line(self):
+-        values = super(InvoiceLine, self).get_move_line()
++        pool = Pool()
++        AnalyticLine = pool.get('analytic_account.line')
++        lines = super(InvoiceLine, self).get_move_line()
+         if self.analytic_accounts and self.analytic_accounts.accounts:
+-            for value in values:
+-                value['analytic_lines'] = []
+-                to_create = []
++            for line in lines:
++                line.analytic_lines = []
+                 for account in self.analytic_accounts.accounts:
+-                    vals = {}
+-                    vals['name'] = self.description
+-                    vals['debit'] = value['debit']
+-                    vals['credit'] = value['credit']
+-                    vals['account'] = account.id
+-                    vals['journal'] = self.invoice.journal.id
+-                    vals['date'] = (self.invoice.accounting_date
++                    analytic_line = AnalyticLine()
++                    analytic_line.name = self.description
++                    analytic_line.debit = line.debit
++                    analytic_line.credit = line.credit
++                    analytic_line.account = account
++                    analytic_line.journal = self.invoice.journal
++                    analytic_line.date = (self.invoice.accounting_date
+                         or self.invoice.invoice_date)
+-                    vals['reference'] = self.invoice.reference
+-                    vals['party'] = self.invoice.party.id
+-                    to_create.append(vals)
+-                if to_create:
+-                    value['analytic_lines'] = [('create', to_create)]
+-        return values
++                    analytic_line.reference = self.invoice.reference
++                    analytic_line.party = self.invoice.party
++                    line.analytic_lines.append(analytic_line)
++        return lines
+
+
+ class Account(ModelSQL, ModelView):
