@@ -54,7 +54,7 @@ issue13181002_1.diff
 issue13211002_190001.diff
 issue17281002_20001.diff
 issue20301003_1.diff
-#invoice_speedup.diff
+invoice_speedup.diff
 babi_multiprocess.diff
 domain_field.diff
 issue18361002_40001.diff
