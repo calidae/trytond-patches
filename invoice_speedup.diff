@@ -143,42 +143,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
              cls.update_taxes(update_tax)
 
      @classmethod
-@@ -1311,26 +1307,18 @@
-         '''
-         Return values to credit invoice.
-         '''
--        res = {}
--        res['type'] = _CREDIT_TYPE[self.type]
--
--        for field in ('description', 'comment'):
--            res[field] = getattr(self, field)
-+        credit = self.__class__()
-+        credit.type = _CREDIT_TYPE[self.type]
-
-         for field in ('company', 'party', 'invoice_address', 'currency',
--                'journal', 'account', 'payment_term'):
--            res[field] = getattr(self, field).id
-+                'journal', 'account', 'payment_term', 'description',
-+                'comment'):
-+            setattr(credit, field, getattr(self, field))
-
--        res['lines'] = []
--        if self.lines:
--            res['lines'].append(('create',
--                    [line._credit() for line in self.lines]))
-+        credit.lines = [line._credit() for line in self.lines]
-
--        res['taxes'] = []
--        to_create = [tax._credit() for tax in self.taxes if tax.manual]
--        if to_create:
--            res['taxes'].append(('create', to_create))
--        return res
-+        credit.taxes = [tax._credit() for tax in self.taxes if tax.manual]
-+        return credit
-
-     @classmethod
-     def credit(cls, invoices, refund=False):
-@@ -1340,18 +1328,17 @@
+@@ -1340,18 +1336,16 @@
          '''
          MoveLine = Pool().get('account.move.line')
 
@@ -188,8 +153,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 -            new_invoices.append(new_invoice)
 -            if refund:
 -                cls.post([new_invoice])
-+        new_invoices = [i._credit() for i in invoices]
-+        new_invoices = cls.create([i._save_values for i in new_invoices])
++        new_invoices = cls.create([i._credit() for i in invoices])
 +        cls.update_taxes(new_invoices)
 +        if refund:
 +            cls.post(new_invoices)
@@ -203,7 +167,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          return new_invoices
 
      @classmethod
-@@ -1371,10 +1358,16 @@
+@@ -1371,10 +1365,16 @@
      @ModelView.button
      @Workflow.transition('validated')
      def validate_invoice(cls, invoices):
@@ -221,7 +185,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 
      @classmethod
      @ModelView.button
-@@ -1382,14 +1375,29 @@
+@@ -1382,14 +1382,29 @@
      def post(cls, invoices):
          Move = Pool().get('account.move')
 
@@ -257,7 +221,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for invoice in invoices:
              if invoice.type in ('out_invoice', 'out_credit_note'):
                  invoice.print_invoice()
-@@ -1428,14 +1436,17 @@
+@@ -1428,14 +1443,17 @@
 
          cancel_moves = []
          delete_moves = []
@@ -276,7 +240,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          if delete_moves:
              Move.delete(delete_moves)
          if cancel_moves:
-@@ -1754,8 +1765,7 @@
+@@ -1754,8 +1772,7 @@
          context = self.invoice.get_tax_context()
          taxes_keys = []
          with Transaction().set_context(**context):
@@ -286,7 +250,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for tax in taxes:
              key, _ = Invoice._compute_tax(tax, self.invoice.type)
              taxes_keys.append(key)
-@@ -2003,14 +2013,14 @@
+@@ -2003,14 +2020,14 @@
          pool = Pool()
          Tax = pool.get('account.tax')
          Currency = pool.get('currency.currency')
@@ -303,7 +267,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for tax in taxes:
              if self.invoice.type in ('out_invoice', 'in_invoice'):
                  base_code_id = (tax['tax'].invoice_base_code.id
-@@ -2025,79 +2035,76 @@
+@@ -2025,59 +2042,61 @@
                          date=self.invoice.currency_date):
                      amount = Currency.compute(self.invoice.currency,
                          amount, self.invoice.company.currency)
@@ -396,34 +360,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 
      def _credit(self):
          '''
-         Return values to credit line.
-         '''
--        res = {}
--        res['invoice_type'] = _CREDIT_TYPE[self.invoice_type]
--        res['origin'] = str(self)
-+        credit = self.__class__()
-+        credit.invoice_type = _CREDIT_TYPE[self.invoice_type]
-+        credit.origin = self
-
-         for field in ('sequence', 'type', 'quantity', 'unit_price',
--                'description'):
--            res[field] = getattr(self, field)
-+                'description', 'unit', 'product', 'account'):
-+            setattr(credit, field, getattr(self, field))
-
--        for field in ('unit', 'product', 'account'):
--            res[field] = getattr(getattr(self, field), 'id', None)
--
--        res['taxes'] = []
--        if self.taxes:
--            res['taxes'].append(('add', [tax.id for tax in self.taxes]))
--        return res
-+        credit.taxes = self.taxes
-+        return credit
-
-
- class InvoiceLineTax(ModelSQL):
-@@ -2293,67 +2300,67 @@
+@@ -2293,53 +2312,56 @@
 
      def get_move_line(self):
          '''
@@ -510,25 +447,6 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 
      def _credit(self):
          '''
-         Return values to credit tax.
-         '''
--        res = {}
--
-+        credit = self.__class__()
-         for field in ('description', 'sequence', 'base', 'amount',
--                'manual', 'base_sign', 'tax_sign'):
--            res[field] = getattr(self, field)
--
--        for field in ('account', 'base_code', 'tax_code', 'tax'):
--            res[field] = getattr(self, field).id
--        return res
-+                'manual', 'base_sign', 'tax_sign', 'account', 'base_code',
-+                'tax_code', 'tax'):
-+            setattr(credit, field, getattr(self, field))
-+        return credit
-
-
- class PrintInvoiceWarning(ModelView):
 diff -r 0e69764f2826 trytond/trytond/modules/account_payment_type/invoice.py
 --- a/trytond/trytond/modules/account_payment_type/invoice.py	Tue Jul 07 10:10:50 2015 +0200
 +++ b/trytond/trytond/modules/account_payment_type/invoice.py	Tue Jul 07 17:06:02 2015 +0200
