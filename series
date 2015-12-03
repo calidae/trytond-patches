@@ -1,4 +1,3 @@
-stock_lot_expand_lot_required.diff
 account_move_line_rule.diff
 issue154_316.diff
 issue136_416.diff
@@ -6,70 +5,32 @@ issue10467.diff
 issue130_392_10919.diff
 issue239_630.diff
 issue240_631.diff
-issue306_799.diff
 disable_tests.diff
-client-open_url.diff
 fix_wizard_copy.diff
 issue6341003_1.diff
 issue10391004_1.diff
-issue5731002_1.diff
-issue5881002_1.diff
-issue14841002_1.diff
-issue10061002_1.diff
 issue13891002_20001.diff
-issue10071002_1.diff
 
-# Multicompanyia! no borrar, no descomentar
-account_42b9acc4c201.patch
-account_asset_78bda42be464.patch
-account_invoice_51e5f7fb547b.patch
-account_payment_5dd8c0c2a04c.patch
-account_payment_sepa_f69c5ffa5f79.patch
-account_statement_2642b961c2bf.patch
-party_c1cc3484518d.patch
-production_b50beae497b9.patch
-purchase_5b0d2d2727a6.patch
-sale_23d0b5a3ceb1.patch
-stock_supply_780a8aaeaa78.patch
-timesheet_f8c45f1b4d7d.patch
-sale_fix_invoiced_quantity_calculation.diff
-
-issue7881002_1.diff
 country.diff
 issue10091002_1.diff
-issue9911002_80001.diff
 issue6021003_1.diff
-issue6951002_20001.diff
 issue92001_42002_52002_wsgi_protocol.diff
 
 stock_supply_production-performance-improvement.diff
 
-
 top.diff
 issue15211002-sale-confirmed-to-done.diff
-purchase_translation.diff
-issue9801002_40001.diff
-issue19281002_1.diff
 issue13181002_1.diff
-issue13211002_190001.diff
-issue17281002_20001.diff
-issue20301003_1.diff
 invoice_speedup.diff
 babi_multiprocess.diff
 domain_field.diff
-issue18361002_40001.diff
-issue24271002_1.diff
 issue18481003_1.diff
-issue4766.diff
 issue4950_stock.diff
 issue4950_sale.diff
-party_after_account.diff
 issue4986.diff
 issue16661002_1.diff
 issue19491002_1.diff
 issue20451002_1.diff
-issue7961002_40001.diff
-issue4115.diff
 issue5118.diff
 issue18801002_1.diff
 # Ignore next patches

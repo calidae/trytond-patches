@@ -1,7 +1,7 @@
 diff -r 8ba590e21c94 purchase.py
 --- a/trytond/trytond/modules/purchase/purchase.py	Tue Oct 06 10:09:51 2015 +0200
 +++ b/trytond/trytond/modules/purchase/purchase.py	Tue Oct 06 10:16:28 2015 +0200
-@@ -1048,7 +1048,6 @@
+@@ -995,7 +995,6 @@
          return 'line'
 
      def get_move_done(self, name):
@@ -9,7 +9,7 @@ diff -r 8ba590e21c94 purchase.py
          done = True
          if not self.product:
              return True
-@@ -1062,7 +1061,7 @@
+@@ -1009,7 +1008,7 @@
                      and move.id not in skip_ids:
                  done = False
                  break
@@ -18,7 +18,7 @@ diff -r 8ba590e21c94 purchase.py
          if done:
              if quantity > 0.0:
                  done = False
-@@ -1281,8 +1280,7 @@
+@@ -1232,8 +1231,7 @@
              quantity = 0.0
              for move in self.moves:
                  if move.state == 'done':
@@ -28,17 +28,18 @@ diff -r 8ba590e21c94 purchase.py
                      if move.invoiced_quantity < move.quantity:
                          stock_moves.append(move)
          invoice_line.stock_moves = stock_moves
-@@ -1293,8 +1291,7 @@
-             if old_invoice_line.type != 'line':
-                 continue
-             if old_invoice_line.id not in skip_ids:
+@@ -1250,9 +1248,7 @@
+                     old_invoice_type = old_invoice_line.invoice_type
+
+                 sign = 1 if old_invoice_type == invoice_type else -1
+-
 -                quantity -= Uom.compute_qty(old_invoice_line.unit,
--                        old_invoice_line.quantity, self.unit)
-+                quantity -= old_invoice_line.origin_quantity
+-                        sign * old_invoice_line.quantity, self.unit)
++                quantity -= sign * old_invoice_line.origin_quantity
 
          rounding = self.unit.rounding if self.unit else 0.01
          invoice_line.quantity = Uom.round(quantity, rounding)
-@@ -1352,8 +1349,7 @@
+@@ -1316,8 +1312,7 @@
          quantity = abs(self.quantity)
          for move in self.moves:
              if move not in skip:

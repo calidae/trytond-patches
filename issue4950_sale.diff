@@ -2,13 +2,13 @@ diff -r f9ff7d1399d1 stock.py
 --- a/trytond/trytond/modules/sale/stock.py	Fri Sep 04 16:30:54 2015 +0200
 +++ b/trytond/trytond/modules/sale/stock.py	Fri Sep 04 16:31:35 2015 +0200
 @@ -1,5 +1,6 @@
- #This file is part of Tryton.  The COPYRIGHT file at the top level of
- #this repository contains the full copyright notices and license terms.
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
 +from itertools import ifilter
+ from sql import Null
  from sql.operators import Concat
 
- from trytond.model import Workflow, ModelView, fields
-@@ -60,6 +61,35 @@
+@@ -61,6 +62,35 @@
 
          return super(ShipmentOut, cls).draft(shipments)
 
@@ -44,7 +44,7 @@ diff -r f9ff7d1399d1 stock.py
 
  class ShipmentOutReturn:
      __name__ = 'stock.shipment.out.return'
-@@ -146,6 +176,7 @@
+@@ -147,6 +177,7 @@
      @classmethod
      def _get_origin(cls):
          models = super(Move, cls)._get_origin()
