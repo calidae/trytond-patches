@@ -4,13 +4,13 @@ diff -r 32ceadcd01cd move.xml
 @@ -259,6 +259,15 @@
              <field name="perm_delete" eval="True"/>
          </record>
- 
+
 +        <record model="ir.rule.group" id="rule_group_move_line">
 +            <field name="model" search="[('model', '=', 'account.move.line')]"/>
 +            <field name="global_p" eval="True"/>
 +        </record>
 +        <record model="ir.rule" id="rule_move_line1">
-+            <field name="domain">[('account.company', 'in', [c.id for c in user.companies])]</field>
++            <field name="domain" eval="[('account.company', 'in', Eval('user', {}).get('companies', []))]" pyson="1"/>
 +            <field name="rule_group" ref="rule_group_move_line"/>
 +        </record>
 +

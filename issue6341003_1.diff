@@ -12,7 +12,7 @@ Index: trytond/trytond/modules/account_asset/asset.xml
 +            <field name="global_p" eval="True"/>
 +        </record>
 +        <record model="ir.rule" id="rule_asset_line1">
-+            <field name="domain">[('asset.company', '=', user.company.id if user.company else None)]</field>
++            <field name="domain" eval="[('asset.company', 'in', Eval('user', {}).get('companies', []))]" pyson="1"/>
 +            <field name="rule_group" ref="rule_group_asset_line"/>
 +        </record>
 +
