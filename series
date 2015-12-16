@@ -72,10 +72,9 @@ issue7961002_40001.diff
 issue4115.diff
 issue5118.diff
 issue18801002_1.diff
+account_chart_speedup.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
-# Uncomment in calfruitos and basidelta
-#account_chart_speedup.diff
 # Uncomment in calfruitos
 #fix_rounding_in_sync_inventory_to_outgoing.patch
 #chart_not_translatable.diff
