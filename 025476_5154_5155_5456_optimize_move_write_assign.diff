@@ -1,7 +1,7 @@
 diff -r 5d7c2958b920 move.py
 --- a/trytond/trytond/modules/stock/move.py	Mon Nov 23 17:59:15 2015 +0100
 +++ b/trytond/trytond/modules/stock/move.py	Mon Nov 23 18:09:01 2015 +0100
-@@ -607,9 +607,15 @@
+@@ -607,9 +607,16 @@
      @Workflow.transition('assigned')
      def assign(cls, moves):
          cls.check_origin(moves)
@@ -14,11 +14,12 @@ diff -r 5d7c2958b920 move.py
 +                        'effective_date': move.effective_date,
 +                        'state': 'assigned'
 +                        }))
-+        cls.write(*to_write)
++        if to_write:
++            cls.write(*to_write)
  
      @classmethod
      @ModelView.button
-@@ -661,7 +667,12 @@
+@@ -661,7 +668,12 @@
  
      @classmethod
      def write(cls, *args):
@@ -31,7 +32,7 @@ diff -r 5d7c2958b920 move.py
          for moves, values in zip(actions, actions):
              vals_set = set(values)
              if cls._deny_modify_assigned & vals_set:
-@@ -673,6 +684,27 @@
+@@ -673,6 +685,27 @@
                      if move.state in ('done', 'cancel'):
                          cls.raise_user_error('modify_done_cancel',
                              (move.rec_name,))
@@ -59,7 +60,7 @@ diff -r 5d7c2958b920 move.py
  
          super(Move, cls).write(*args)
  
-@@ -680,15 +712,6 @@
+@@ -680,15 +713,6 @@
          for moves, values in zip(actions, actions):
              if any(f not in cls._allow_modify_closed_period for f in values):
                  cls.check_period_closed(moves)
