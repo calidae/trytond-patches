@@ -76,6 +76,7 @@ account_chart_speedup.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncomment in calfruitos
+#issue4727.diff
 #fix_rounding_in_sync_inventory_to_outgoing.patch
 #chart_not_translatable.diff
 #024726_account_bank_remove_company.diff
