@@ -1,0 +1,67 @@
+# HG changeset patch
+# User Cédric Krier <cedric.krier@b2ck.com>
+Time.check_required must test against None
+
+
+datetime.time(0) is considered as False by Python.
+
+issue5229
+review22701002
+
+Index: tryton/tryton/gui/window/view_form/model/field.py
+===================================================================
+
+--- a/tryton/tryton/gui/window/view_form/model/field.py
++++ b/tryton/tryton/gui/window/view_form/model/field.py
+@@ -67,10 +67,13 @@
+         context.update(record.expr_eval(self.attrs.get('context', {})))
+         return context
+
++    def _is_empty(self, record):
++        return not self.get_eval(record)
++
+     def check_required(self, record):
+         state_attrs = self.get_state_attrs(record)
+         if bool(int(state_attrs.get('required') or 0)):
+-            if (not self.get_eval(record)
++            if (self._is_empty(record)
+                     and not bool(int(state_attrs.get('readonly') or 0))):
+                 return False
+         return True
+@@ -255,6 +258,9 @@
+
+     _default = None
+
++    def _is_empty(self, record):
++        return self.get(record) is None
++
+     def set_client(self, record, value, force_change=False):
+         if isinstance(value, datetime.datetime):
+             value = value.time()
+@@ -269,6 +275,9 @@
+
+     _default = None
+
++    def _is_empty(self, record):
++        return self.get(record) is None
++
+     def converter(self, record):
+         # TODO allow local context converter
+         return rpc.CONTEXT.get(self.attrs.get('converter'))
+@@ -287,13 +296,8 @@
+ class FloatField(Field):
+     _default = None
+
+-    def check_required(self, record):
+-        state_attrs = self.get_state_attrs(record)
+-        if bool(int(state_attrs.get('required') or 0)):
+-            if (self.get(record) is None
+-                    and not bool(int(state_attrs.get('readonly') or 0))):
+-                return False
+-        return True
++    def _is_empty(self, record):
++        return self.get(record) is None
+
+     def get(self, record):
+         return record.value.get(self.name, self._default)
+
