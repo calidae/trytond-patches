@@ -42,7 +42,7 @@ diff -r 395b4d928bd4 trytond/trytond/model/modelsql.py
 +                right_default = cls._defaults.get(field.right, lambda: None)()
 +                cursor.execute(*sql_table.select(sql_table.id,
 +                        where=(Column(sql_table, field.left) == left_default)
-+                        | (Column(sql_table, field.left) == ull)
++                        | (Column(sql_table, field.left) == Null)
 +                        | (Column(sql_table, field.right) == right_default)
 +                        | (Column(sql_table, field.right) == Null),
 +                        limit=1))
