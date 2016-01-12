@@ -1,18 +1,16 @@
-# HG changeset patch
-# User Sergi Almacellas Abellana <sergi@koolpi.com>
-Only rebuild mptt tree if needed
+diff -r 395b4d928bd4 trytond/trytond/model/modelsql.py
+--- a/trytond/trytond/model/modelsql.py	Tue Jan 12 11:42:44 2016 +0100
++++ b/trytond/trytond/model/modelsql.py	Tue Jan 12 11:44:27 2016 +0100
+@@ -5,7 +5,7 @@
+ from functools import reduce
+ from itertools import islice, izip, chain, ifilter
 
-The tree will be only rebuild if a record with the default value of left or right fields exists. 
-
-issue5118
-review16921002
-
-Index: trytond/trytond/model/modelsql.py
-===================================================================
-
---- a/trytond/trytond/model/modelsql.py
-+++ b/trytond/trytond/model/modelsql.py
-@@ -126,6 +126,8 @@
+-from sql import Table, Column, Literal, Desc, Asc, Expression, Flavor
++from sql import Table, Column, Literal, Desc, Asc, Expression, Flavor, Null
+ from sql.functions import Now, Extract
+ from sql.conditionals import Coalesce
+ from sql.operators import Or, And, Operator
+@@ -63,6 +63,8 @@
 
      @classmethod
      def __register__(cls, module_name):
@@ -21,7 +19,7 @@ Index: trytond/trytond/model/modelsql.py
          TableHandler = backend.get('TableHandler')
          super(ModelSQL, cls).__register__(module_name)
 
-@@ -135,10 +137,10 @@
+@@ -72,10 +74,10 @@
          pool = Pool()
 
          # create/update table in the database
@@ -35,17 +33,16 @@ Index: trytond/trytond/model/modelsql.py
              history_table.index_action('id', action='add')
 
          for field_name, field in cls._fields.iteritems():
-@@ -205,17 +207,24 @@
+@@ -139,17 +141,24 @@
              if isinstance(field, fields.Many2One) \
                      and field.model_name == cls.__name__ \
                      and field.left and field.right:
 -                cls._rebuild_tree(field_name, None, 0)
-+                from sql import Null
 +                left_default = cls._defaults.get(field.left, lambda: None)()
 +                right_default = cls._defaults.get(field.right, lambda: None)()
 +                cursor.execute(*sql_table.select(sql_table.id,
 +                        where=(Column(sql_table, field.left) == left_default)
-+                        | (Column(sql_table, field.left) == Null)
++                        | (Column(sql_table, field.left) == ull)
 +                        | (Column(sql_table, field.right) == right_default)
 +                        | (Column(sql_table, field.right) == Null),
 +                        limit=1))
@@ -65,7 +62,7 @@ Index: trytond/trytond/model/modelsql.py
              if cursor.fetchone():
                  cursor.execute(*history_table.select(history_table.id))
                  if not cursor.fetchone():
-@@ -223,7 +232,7 @@
+@@ -157,7 +166,7 @@
                          if not hasattr(f, 'set')]
                      cursor.execute(*history_table.insert(
                              [Column(history_table, c) for c in columns],
@@ -74,4 +71,3 @@ Index: trytond/trytond/model/modelsql.py
                                      for c in columns))))
                      cursor.execute(*history_table.update(
                              [history_table.write_date], [None]))
-
