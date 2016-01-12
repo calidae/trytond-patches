@@ -40,6 +40,7 @@ Index: trytond/trytond/model/modelsql.py
                      and field.model_name == cls.__name__ \
                      and field.left and field.right:
 -                cls._rebuild_tree(field_name, None, 0)
++                from sql import Null
 +                left_default = cls._defaults.get(field.left, lambda: None)()
 +                right_default = cls._defaults.get(field.right, lambda: None)()
 +                cursor.execute(*sql_table.select(sql_table.id,
