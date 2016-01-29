@@ -275,7 +275,7 @@ diff -r d57626d6cf3e -r 42b9acc4c201 tax.py
      invoice_base_sign = fields.Numeric('Invoice Base Sign', digits=(2, 0),
          help='Usualy 1 or -1',
          states={
-@@ -638,9 +642,13 @@
+@@ -636,9 +640,13 @@
              }, depends=['type'])
      invoice_tax_code = fields.Many2One('account.tax.code',
          'Invoice Tax Code',
@@ -290,19 +290,23 @@ diff -r d57626d6cf3e -r 42b9acc4c201 tax.py
      invoice_tax_sign = fields.Numeric('Invoice Tax Sign', digits=(2, 0),
          help='Usualy 1 or -1',
          states={
-@@ -654,15 +662,23 @@
+@@ -647,9 +655,13 @@
              }, depends=['type'])
-     credit_note_base_sign = fields.Numeric('Credit Note Base Sign',
-         digits=(2, 0), help='Usualy 1 or -1',
+     credit_note_base_code = fields.Many2One('account.tax.code',
+         'Credit Note Base Code',
 +        domain=[
 +            ('company', '=', Eval('company', -1)),
 +            ],
          states={
-             'required': Eval('type') != 'none',
              'readonly': Eval('type') == 'none',
 -            }, depends=['type'])
 +            },
 +        depends=['type', 'company'])
+     credit_note_base_sign = fields.Numeric('Credit Note Base Sign',
+         digits=(2, 0), help='Usualy 1 or -1',
+         states={
+@@ -658,9 +670,13 @@
+             }, depends=['type'])
      credit_note_tax_code = fields.Many2One('account.tax.code',
          'Credit Note Tax Code',
 +        domain=[
