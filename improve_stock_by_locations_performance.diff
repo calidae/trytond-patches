@@ -1,0 +1,51 @@
+diff -r 5bb863a750d5 move.py
+--- a/trytond/trytond/modules/stock/move.py	Fri Jan 29 09:24:50 2016 +0100
++++ b/trytond/trytond/modules/stock/move.py	Fri Jan 29 09:47:43 2016 +0100
+@@ -1144,8 +1144,15 @@
+             res_product_ids.add(product_getter(line))
+             keys.add(key)
+
++        if with_childs and len(location_ids) == 1:
++                for key in keys:
++                    pkey = (location_ids[0], ) + key
++                    quantities[pkey] = sum([v for k, v
++                            in quantities.iteritems() if k[1:] == key])
++
+         # Propagate quantities on from child locations to their parents
+-        if with_childs:
++        if with_childs and len(location_ids) > 1:
++
+             # Fetch all child locations
+             locations = Location.search([
+                     ('parent', 'child_of', location_ids),
+@@ -1184,9 +1191,28 @@
+                 if location not in location_ids:
+                     del quantities[key]
+
++        Product = Pool().get('product.product')
++        Template = Pool().get('product.template')
++        Uom = Pool().get('product.uom')
++
+         # Round quantities
+-        default_uom = dict((p.id, p.default_uom) for p in
+-            Product.browse(list(res_product_ids)))
++        product = Product.__table__()
++        template = Template.__table__()
++
++        cursor = Transaction().cursor
++
++        cursor.execute(*template.join(product,
++            condition=product.template == template.id).select(
++                product.id, template.default_uom,
++                where=reduce_ids(product.id, list(res_product_ids))))
++
++        default_uom = {}
++        for product in res_product_ids:
++            default_uom[product] = {}
++
++        for product, duom in cursor.fetchall():
++            default_uom[product] = Uom(duom)
++
+         for key, quantity in quantities.iteritems():
+             location = key[0]
+             product = product_getter(key)
