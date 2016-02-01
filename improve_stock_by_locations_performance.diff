@@ -1,16 +1,37 @@
-diff -r 5bb863a750d5 move.py
---- a/trytond/trytond/modules/stock/move.py	Fri Jan 29 09:24:50 2016 +0100
-+++ b/trytond/trytond/modules/stock/move.py	Fri Jan 29 09:47:43 2016 +0100
-@@ -1144,8 +1144,15 @@
-             res_product_ids.add(product_getter(line))
-             keys.add(key)
-
-+        if with_childs and len(location_ids) == 1:
-+                for key in keys:
-+                    pkey = (location_ids[0], ) + key
-+                    quantities[pkey] = sum([v for k, v
-+                            in quantities.iteritems() if k[1:] == key])
+diff -r 9bacf20e468b move.py
+--- a/trytond/trytond/modules/stock/move.py	Mon Feb 01 11:47:44 2016 +0100
++++ b/trytond/trytond/modules/stock/move.py	Mon Feb 01 11:48:23 2016 +0100
+@@ -1136,16 +1136,29 @@
+         res_product_ids = set()
+         quantities = {}
+         keys = set()
+-        for line in raw_lines:
+-            location = line[0]
+-            key = tuple(line[1:-1])
+-            quantity = line[-1]
+-            quantities[(location,) + key] = quantity
+-            res_product_ids.add(product_getter(line))
+-            keys.add(key)
 +
++        if with_childs and len(location_ids) == 1:
++            for line in raw_lines:
++                location = line[0]
++                row_key = tuple(line[1:-1])
++                quantity = line[-1]
++                key = (location,) + row_key
++                if key not in quantities:
++                    quantities[key] = 0
++                quantities[key] += quantity
++
++        if len(location_ids > 1):
++            for line in raw_lines:
++                location = line[0]
++                key = tuple(line[1:-1])
++                quantity = line[-1]
++                quantities[(location,) + key] = quantity
++                res_product_ids.add(product_getter(line))
++                keys.add(key)
+
          # Propagate quantities on from child locations to their parents
 -        if with_childs:
 +        if with_childs and len(location_ids) > 1:
@@ -18,7 +39,7 @@ diff -r 5bb863a750d5 move.py
              # Fetch all child locations
              locations = Location.search([
                      ('parent', 'child_of', location_ids),
-@@ -1184,9 +1191,28 @@
+@@ -1184,9 +1197,28 @@
                  if location not in location_ids:
                      del quantities[key]
 
