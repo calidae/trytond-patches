@@ -1,6 +1,6 @@
 diff -r 4795583a375d move.py
---- a/move.py	Mon Feb 01 12:12:47 2016 +0100
-+++ b/move.py	Mon Feb 01 12:16:17 2016 +0100
+--- a/trytond/trytond/modules/stock/move.py	Mon Feb 01 12:12:47 2016 +0100
++++ b/trytond/trytond/modules/stock/move.py	Mon Feb 01 12:16:17 2016 +0100
 @@ -1136,16 +1136,31 @@
          res_product_ids = set()
          quantities = {}
@@ -33,7 +33,7 @@ diff -r 4795583a375d move.py
 +                quantities[(location,) + key] = quantity
 +                res_product_ids.add(product_getter(line))
 +                keys.add(key)
- 
+
          # Propagate quantities on from child locations to their parents
 -        if with_childs:
 +        if with_childs and len(location_ids) > 1:
@@ -44,7 +44,7 @@ diff -r 4795583a375d move.py
 @@ -1184,9 +1199,28 @@
                  if location not in location_ids:
                      del quantities[key]
- 
+
 +        Product = Pool().get('product.product')
 +        Template = Pool().get('product.template')
 +        Uom = Pool().get('product.uom')
