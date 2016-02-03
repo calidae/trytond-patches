@@ -1,0 +1,13 @@
+diff -r 9ce9fcd82471 move.py
+--- a/trytond/trytond/modules/account/move.py	Wed Feb 03 10:58:41 2016 +0100
++++ b/trytond/trytond/modules/account/move.py	Wed Feb 03 10:59:10 2016 +0100
+@@ -1453,7 +1453,8 @@
+ 
+             xml = '<?xml version="1.0"?>\n' \
+                 '<tree string="%s" editable="top" on_write="on_write" ' \
+-                'colors="red:state==\'draft\'">\n' % title
++                'colors:If(Eval(\'state\') == \'draft\', \'red\', ' \
++                '\'black\')">\n' % title
+             fields = set()
+             for column in journal.view.columns:
+                 fields.add(column.field.name)
