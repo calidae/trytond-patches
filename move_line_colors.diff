@@ -1,13 +1,15 @@
-diff -r 9ce9fcd82471 move.py
---- a/trytond/trytond/modules/account/move.py	Wed Feb 03 10:58:41 2016 +0100
-+++ b/trytond/trytond/modules/account/move.py	Wed Feb 03 10:59:10 2016 +0100
-@@ -1453,7 +1453,8 @@
+diff -r 7d2f4738fbd2 move.py
+--- a/move.py	Wed Feb 03 11:29:23 2016 +0100
++++ b/move.py	Wed Feb 03 11:30:31 2016 +0100
+@@ -1451,9 +1451,10 @@
+             if not journal.view:
+                 return result
  
++            colors = "If(Eval('state') =='draft', 'red', 'black')"
              xml = '<?xml version="1.0"?>\n' \
                  '<tree string="%s" editable="top" on_write="on_write" ' \
 -                'colors="red:state==\'draft\'">\n' % title
-+                'colors:If(Eval(\'state\') == \'draft\', \'red\', ' \
-+                '\'black\')">\n' % title
++                'colors="%s">\n' % (title, colors)
              fields = set()
              for column in journal.view.columns:
                  fields.add(column.field.name)
