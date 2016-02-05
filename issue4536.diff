@@ -1,0 +1,56 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+# Date 1423848218 -3600
+# Node ID 33efb49ead7c3adc08533c8e005b9c14c640ebcd
+# Parent  5fb197ea5e54e638f1ef5e465fea712d071a0140
+Add active on bank account
+
+issue4536
+review10161002
+
+diff -r 5fb197ea5e54 -r 33efb49ead7c bank.py
+--- a/trytond/trytond/modules/bank/bank.py	Tue Jan 27 18:13:12 2015 +0100
++++ b/trytond/trytond/modules/bank/bank.py	Fri Feb 13 18:23:38 2015 +0100
+@@ -30,6 +30,11 @@
+     currency = fields.Many2One('currency.currency', 'Currency')
+     numbers = fields.One2Many('bank.account.number', 'account', 'Numbers',
+         required=True)
++    active = fields.Boolean('Active', select=True)
++
++    @staticmethod
++    def default_active():
++        return True
+
+     def get_rec_name(self, name):
+         return self.numbers[0].number
+diff -r 5fb197ea5e54 -r 33efb49ead7c view/bank_account_form.xml
+--- a/trytond/trytond/modules/bank/view/bank_account_form.xml	Tue Jan 27 18:13:12 2015 +0100
++++ b/trytond/trytond/modules/bank/view/bank_account_form.xml	Fri Feb 13 18:23:38 2015 +0100
+@@ -1,12 +1,14 @@
+ <?xml version="1.0"?>
+ <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+ this repository contains the full copyright notices and license terms. -->
+-<form string="Bank Account">
++<form string="Bank Account" col="6">
+     <label name="bank"/>
+     <field name="bank"/>
+     <label name="currency"/>
+     <field name="currency"/>
+-    <field name="owners" colspan="4"/>
+-    <field name="numbers" colspan="4" pre_validate="1"
++    <label name="active"/>
++    <field name="active"/>
++    <field name="owners" colspan="6"/>
++    <field name="numbers" colspan="6" pre_validate="1"
+         view_ids="bank.bank_account_number_view_list_sequence"/>
+ </form>
+diff -r 5fb197ea5e54 -r 33efb49ead7c view/bank_account_list.xml
+--- a/trytond/trytond/modules/bank/view/bank_account_list.xml	Tue Jan 27 18:13:12 2015 +0100
++++ b/trytond/trytond/modules/bank/view/bank_account_list.xml	Fri Feb 13 18:23:38 2015 +0100
+@@ -5,4 +5,5 @@
+     <field name="rec_name"/>
+     <field name="bank"/>
+     <field name="currency"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+

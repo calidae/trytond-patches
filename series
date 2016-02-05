@@ -75,10 +75,11 @@ issue18801002_1.diff
 account_chart_speedup.diff
 issue21611002_20001.diff
 move_line_colors.diff
+issue4536.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncoment in electrans
-improve_stock_by_locations_performance.diff
+# improve_stock_by_locations_performance.diff
 # Uncomment in calfruitos
 #issue4727.diff
 #fix_rounding_in_sync_inventory_to_outgoing.patch
