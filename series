@@ -76,7 +76,7 @@ account_chart_speedup.diff
 issue21611002_20001.diff
 move_line_colors.diff
 issue4536.diff
-#improve_stock_by_locations_performance.diff
+improve_stock_by_locations_performance.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncomment in calfruitos
