@@ -76,7 +76,7 @@ account_chart_speedup.diff
 issue21611002_20001.diff
 move_line_colors.diff
 issue4536.diff
-improve_stock_by_locations_performance.diff
+#improve_stock_by_locations_performance.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncomment in calfruitos
@@ -89,7 +89,7 @@ improve_stock_by_locations_performance.diff
 #stock_lot_fix_pick_product_without_outgoing_moves.diff
 #purchase_fix_get_move_done_rounding.diff
 #multicompany_cron.diff
-025476_5154_5155_5456_optimize_move_write_assign.diff
+#025476_5154_5155_5456_optimize_move_write_assign.diff
 #do_not_lock_on_assign_try.diff
 #limit_invoices_in_creit_note_action_by_domain.diff
-move_do_batch_write.diff
+#move_do_batch_write.diff
