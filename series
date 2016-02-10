@@ -92,3 +92,4 @@ fix_rounding_in_sync_inventory_to_outgoing.patch
 #do_not_lock_on_assign_try.diff
 #limit_invoices_in_creit_note_action_by_domain.diff
 move_do_batch_write.diff
+issue10433002_60001.diff

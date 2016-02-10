@@ -1,0 +1,227 @@
+Index: trytond/backend/database.py
+===================================================================
+
+--- a/trytond/trytond/backend/database.py
++++ b/trytond/trytond/backend/database.py
+@@ -1,6 +1,7 @@
+ #This file is part of Tryton.  The COPYRIGHT file at the top level of
+ #this repository contains the full copyright notices and license terms.
+ from trytond.const import MODEL_CACHE_SIZE
++from collections import defaultdict
+
+ DatabaseIntegrityError = None
+ DatabaseOperationalError = None
+@@ -109,15 +110,18 @@
+
+     def __init__(self):
+         self.cache = {}
++        from trytond.cache import LRUDict
++        self.cache = defaultdict(
++            lambda: LRUDict(MODEL_CACHE_SIZE))
+
+     def get_cache(self):
+-        from trytond.cache import LRUDict
+         from trytond.transaction import Transaction
+-        user = Transaction().user
+-        context = Transaction().context
++        transaction = Transaction()
++        user = transaction.user
++        context = transaction.context
+         keys = tuple(((key, context[key]) for key in sorted(self.cache_keys)
+                 if key in context))
+-        return self.cache.setdefault((user, keys), LRUDict(MODEL_CACHE_SIZE))
++        return self.cache[(user, keys)]
+
+     def execute(self, sql, params=None):
+         '''
+
+Index: trytond/cache.py
+===================================================================
+
+--- a/trytond/trytond/cache.py
++++ b/trytond/trytond/cache.py
+@@ -127,9 +127,12 @@
+     Dictionary with a size limit.
+     If size limit is reached, it will remove the first added items.
+     """
++    __slots__ = ('size_limit', 'counter')
++
+     def __init__(self, size_limit, *args, **kwargs):
+         assert size_limit > 0
+         self.size_limit = size_limit
++        self.counter = Transaction().counter
+         super(LRUDict, self).__init__(*args, **kwargs)
+         self._check_size_limit()
+
+@@ -146,6 +149,14 @@
+         self._check_size_limit()
+         return default
+
++    def clear(self):
++        super(LRUDict, self).clear()
++        self.counter = Transaction().counter
++
++    def refresh(self):
++        if self.counter != Transaction().counter:
++            self.clear()
++
+     def _check_size_limit(self):
+         while len(self) > self.size_limit:
+             self.popitem(last=False)
+
+Index: trytond/model/fields/field.py
+===================================================================
+
+--- a/trytond/trytond/model/fields/field.py
++++ b/trytond/trytond/model/fields/field.py
+@@ -210,6 +210,8 @@
+         if inst is None:
+             return self
+         assert self.name is not None
++        if self.name == 'id':
++            return inst._id
+         return inst.__getattr__(self.name)
+
+     def __set__(self, inst, value):
+
+Index: trytond/model/model.py
+===================================================================
+
+--- a/trytond/trytond/model/model.py
++++ b/trytond/trytond/model/model.py
+@@ -413,36 +413,30 @@
+         super(Model, self).__init__()
+         if id is not None:
+             id = int(id)
+-        self.__dict__['id'] = id
++        self._id = id
+         self._values = None
+-        parent_values = {}
+-        for name, value in kwargs.iteritems():
+-            if not name.startswith('_parent_'):
+-                setattr(self, name, value)
+-            else:
+-                parent_values[name] = value
+-        for name, value in parent_values.iteritems():
+-            parent_name, field = name.split('.', 1)
+-            parent_name = parent_name[8:]  # Strip '_parent_'
+-            parent = getattr(self, parent_name, None)
+-            if parent is not None:
+-                setattr(parent, field, value)
+-            else:
+-                setattr(self, parent_name, {field: value})
++        if kwargs:
++            parent_values = {}
++            for name, value in kwargs.iteritems():
++                if not name.startswith('_parent_'):
++                    setattr(self, name, value)
++                else:
++                    parent_values[name] = value
++            for name, value in parent_values.iteritems():
++                parent_name, field = name.split('.', 1)
++                parent_name = parent_name[8:]  # Strip '_parent_'
++                parent = getattr(self, parent_name, None)
++                if parent is not None:
++                    setattr(parent, field, value)
++                else:
++                    setattr(self, parent_name, {field: value})
+
+     def __getattr__(self, name):
+-        if name == 'id':
+-            return self.__dict__['id']
+-        elif self._values and name in self._values:
+-            return self._values.get(name)
+-        raise AttributeError("'%s' Model has no attribute '%s': %s"
+-            % (self.__name__, name, self._values))
+-
+-    def __setattr__(self, name, value):
+-        if name == 'id':
+-            self.__dict__['id'] = value
+-            return
+-        super(Model, self).__setattr__(name, value)
++        try:
++            return self._values[name]
++        except (KeyError, TypeError):
++            raise AttributeError("'%s' Model has no attribute '%s': %s"
++                % (self.__name__, name, self._values))
+
+     def __getitem__(self, name):
+         warnings.warn('Use __getattr__ instead of __getitem__',
+
+Index: trytond/model/modelstorage.py
+===================================================================
+
+--- a/trytond/trytond/model/modelstorage.py
++++ b/trytond/trytond/model/modelstorage.py
+@@ -443,9 +443,14 @@
+         '''
+         Return a list of instance for the ids
+         '''
++        transaction = Transaction()
+         ids = map(int, ids)
+         local_cache = LRUDict(RECORD_CACHE_SIZE)
+-        return [cls(int(x), _ids=ids, _local_cache=local_cache) for x in ids]
++        cursor_cache = transaction.cursor.get_cache()
++        return [cls(x, _ids=ids,
++                _local_cache=local_cache,
++                _cursor_cache=cursor_cache,
++                _transaction=transaction) for x in ids]
+
+     @staticmethod
+     def __export_row(record, fields_names):
+@@ -1144,9 +1149,13 @@
+     def __init__(self, id=None, **kwargs):
+         _ids = kwargs.pop('_ids', None)
+         _local_cache = kwargs.pop('_local_cache', None)
+-        self._cursor = Transaction().cursor
+-        self._user = Transaction().user
+-        self._context = Transaction().context
++        _cursor_cache = kwargs.pop('_cursor_cache', None)
++        transaction = kwargs.pop('_transaction', None)
++        if transaction is None:
++            transaction = Transaction()
++        self._cursor = transaction.cursor
++        self._user = transaction.user
++        self._context = transaction.context
+         if id is not None:
+             id = int(id)
+         if _ids is not None:
+@@ -1155,13 +1164,15 @@
+         else:
+             self._ids = [id]
+
+-        self._cursor_cache = self._cursor.get_cache()
++        if _cursor_cache is not None:
++            self._cursor_cache = _cursor_cache
++        else:
++            self._cursor_cache = self._cursor.get_cache()
+
+         if _local_cache is not None:
+             self._local_cache = _local_cache
+         else:
+             self._local_cache = LRUDict(RECORD_CACHE_SIZE)
+-        self._local_cache.counter = Transaction().counter
+
+         super(ModelStorage, self).__init__(id, **kwargs)
+
+@@ -1180,9 +1191,7 @@
+                 raise
+
+         counter = Transaction().counter
+-        if self._local_cache.counter != counter:
+-            self._local_cache.clear()
+-            self._local_cache.counter = counter
++        self._local_cache.refresh()
+
+         # fetch the definition of the field
+         try:
+@@ -1413,7 +1422,7 @@
+                     if self.id < 0:
+                         self._ids.remove(self.id)
+                         try:
+-                            self.id = self.create([save_values])[0].id
++                            self._id = self.create([save_values])[0].id
+                         finally:
+                             self._ids.append(self.id)
+                     else:
+
