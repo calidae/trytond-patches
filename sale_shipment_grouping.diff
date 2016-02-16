@@ -1,0 +1,12 @@
+diff -r e098ffef0317 sale.py
+--- a/modules/sale_shipment_grouping/sale.py	Sat Feb 21 09:21:21 2015 +0100
++++ b/modules/sale_shipment_grouping/sale.py	Tue Feb 16 10:43:38 2016 +0100
+@@ -37,6 +37,8 @@
+         defaults = Shipment.default_get(self._shipment_grouping_fields,
+             with_rec_name=False)
+         for field in self._shipment_grouping_fields:
++            if not hasattr(shipment, field):
++                continue
+             shipment_domain.append((field, '=',
+                     getattr(shipment, field, defaults.get(field))))
+         return shipment_domain
