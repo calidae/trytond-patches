@@ -33,6 +33,9 @@ issue19491002_1.diff
 issue20451002_1.diff
 issue5118.diff
 issue18801002_1.diff
+issue23901002_1.diff
+issue17881002_1.diff
+
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncomment in calfruitos and basidelta
