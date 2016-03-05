@@ -13,8 +13,8 @@ review23901002
 Index: tryton/action/main.py
 ===================================================================
 
---- a/tryton/action/main.py
-+++ b/tryton/action/main.py
+--- a/tryton/tryton/action/main.py
++++ b/tryton/tryton/action/main.py
 @@ -54,31 +54,16 @@
  
      @staticmethod
@@ -60,8 +60,8 @@ Index: tryton/action/main.py
 Index: tryton/gui/window/view_form/view/list_gtk/widget.py
 ===================================================================
 
---- a/tryton/gui/window/view_form/view/list_gtk/widget.py
-+++ b/tryton/gui/window/view_form/view/list_gtk/widget.py
+--- a/tryton/tryton/gui/window/view_form/view/list_gtk/widget.py
++++ b/tryton/tryton/gui/window/view_form/view/list_gtk/widget.py
 @@ -909,4 +909,8 @@
          if state_changes.get('invisible') \
                  or state_changes.get('readonly'):
