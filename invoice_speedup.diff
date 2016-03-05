@@ -499,24 +499,3 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 
 
  class AnalyticAccountEntry:
-diff -r 4b26ee82dda3 trytond/trytond/modules/account_payment_type_cost/invoice.py
---- a/trytond/trytond/modules/account_payment_type_cost/invoice.py	Thu Dec 24 16:20:29 2015 +0100
-+++ b/trytond/trytond/modules/account_payment_type_cost/invoice.py	Fri Feb 26 15:35:11 2016 +0100
-@@ -10,7 +10,7 @@
-     'Invoice'
-     __name__ = 'account.invoice'
-
--    def create_move(self):
-+    def get_move(self):
-         pool = Pool()
-         Line = pool.get('account.invoice.line')
-         if self.payment_type and self.payment_type.has_cost:
-@@ -23,7 +23,7 @@
-                 line.save()
-         # Taxes must be recomputed before creating the move
-         self.update_taxes([self])
--        return super(Invoice, self).create_move()
-+        return super(Invoice, self).get_move()
-
-     def _get_payment_type_cost_line(self):
-         " Returns invoice line with the cost"
