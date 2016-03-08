@@ -1,0 +1,41 @@
+diff -r 9b5fafd2c656 trytond/trytond/modules/account_invoice/invoice.py
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Tue Mar 08 10:16:56 2016 +0100
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Tue Mar 08 10:18:43 2016 +0100
+@@ -464,8 +464,7 @@
+         def round_taxes():
+             if self.currency:
+                 for value in computed_taxes.itervalues():
+-                    for field in ('base', 'amount'):
+-                        value[field] = self.currency.round(value[field])
++                    value['amount'] = self.currency.round(value['amount'])
+
+         if self.lines:
+             context = self.get_tax_context()
+@@ -482,6 +481,8 @@
+                 for tax in taxes:
+                     key, val = self._compute_tax(tax,
+                         self.type or 'out_invoice')
++                    if self.currency:
++                        val['base'] = self.currency.round(val['base'])
+                     if key not in computed_taxes:
+                         computed_taxes[key] = val
+                     else:
+@@ -845,8 +846,7 @@
+
+         def round_taxes():
+             for value in taxes.itervalues():
+-                for field in ('base', 'amount'):
+-                    value[field] = self.currency.round(value[field])
++                value['amount'] = self.currency.round(value['amount'])
+
+         for line in self.lines:
+             if line.type != 'line':
+@@ -858,6 +858,8 @@
+             for tax in tax_list:
+                 key, val = self._compute_tax(tax, self.type)
+                 val['invoice'] = self.id
++                if self.currency:
++                    val['base'] = self.currency.round(val['base'])
+                 if key not in taxes:
+                     taxes[key] = val
+                 else:
