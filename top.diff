@@ -44,6 +44,7 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +import signal
 +import locale
 +import sys
++import faulthandler
 +from operator import itemgetter
 +from datetime import datetime
 +
@@ -89,7 +90,7 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +        print
 +
 +# End Printing Tables
-+ 
++
 +def signal_user_handler(signal, frame):
 +    print '-' * 30
 +    if current_actions:
@@ -99,7 +100,7 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +           'timestamp', 'elapsed', 'object_name', 'method', 'args')
 +       table = []
 +       table.append([x.upper() for x in header])
-+       
++
 +       for action in sorted(current_actions.values(), key=itemgetter('timestamp')):
 +           row = []
 +           for key in header:
@@ -112,8 +113,9 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +           table.append(row)
 +       pprint_table(table)
 +       print '=' * 30
-+ 
++
 +signal.signal(signal.SIGUSR1, signal_user_handler)
++faulthandler.register(signal.SIGUSR2)
 +
 +
 +def add(value):
