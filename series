@@ -35,6 +35,7 @@ issue5118.diff
 issue18801002_1.diff
 issue23901002_1.diff
 issue17881002_1.diff
+workflow-performance.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
