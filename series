@@ -95,3 +95,4 @@ fix_rounding_in_sync_inventory_to_outgoing.patch
 move_do_batch_write.diff
 issue10433002_60001.diff
 sale_shipment_grouping.diff
+workflow-performance.diff
