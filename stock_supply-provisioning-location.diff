@@ -73,17 +73,6 @@ diff -r e2e0148fb10c location.xml
 +        </record>
 +    </data>
 +</tryton>
-diff -r e2e0148fb10c purchase_request.py
---- a/trytond/trytond/modules/stock_supply/purchase_request.py	Tue Feb 17 21:21:18 2015 +0100
-+++ b/trytond/trytond/modules/stock_supply/purchase_request.py	Mon Mar 14 07:33:28 2016 +0100
-@@ -176,6 +176,7 @@
-         # fetch order points
-         order_points = OrderPoint.search([
-             ('type', '=', 'purchase'),
-+            ('company', '=', company.id if company else None),
-             ])
-         # index them by product
-         product2ops = {}
 diff -r e2e0148fb10c shipment.py
 --- a/trytond/trytond/modules/stock_supply/shipment.py	Tue Feb 17 21:21:18 2015 +0100
 +++ b/trytond/trytond/modules/stock_supply/shipment.py	Mon Mar 14 07:33:28 2016 +0100
