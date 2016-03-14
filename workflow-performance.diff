@@ -1,6 +1,6 @@
 diff -r db06cda245c1 trytond/model/workflow.py
---- a/trytond/model/workflow.py	Tue Feb 02 19:03:11 2016 +0100
-+++ b/trytond/model/workflow.py	Sun Mar 13 00:40:20 2016 +0100
+--- a/trytond/trytond/model/workflow.py	Tue Feb 02 19:03:11 2016 +0100
++++ b/trytond/trytond/model/workflow.py	Sun Mar 13 00:40:20 2016 +0100
 @@ -20,7 +20,7 @@
              @wraps(func)
              def wrapper(cls, records, *args, **kwargs):
