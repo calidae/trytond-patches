@@ -43,6 +43,7 @@ issue6951002_20001.diff
 issue92001_42002_52002_wsgi_protocol.diff
 
 stock_supply_production-performance-improvement.diff
+stock_supply-provisioning-location.diff
 
 
 top.diff

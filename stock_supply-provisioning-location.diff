@@ -1,0 +1,270 @@
+diff -r e2e0148fb10c __init__.py
+--- a/trytond/trytond/modules/stock_supply/__init__.py	Tue Feb 17 21:21:18 2015 +0100
++++ b/trytond/trytond/modules/stock_supply/__init__.py	Mon Mar 14 07:33:28 2016 +0100
+@@ -6,6 +6,7 @@
+ from .product import *
+ from .purchase_request import *
+ from .shipment import *
++from .location import *
+ 
+ 
+ def register():
+@@ -17,6 +18,7 @@
+         CreatePurchaseAskParty,
+         ShipmentInternal,
+         CreateShipmentInternalStart,
++        Location,
+         module='stock_supply', type_='model')
+     Pool.register(
+         CreatePurchaseRequest,
+diff -r e2e0148fb10c doc/index.rst
+--- a/trytond/trytond/modules/stock_supply/doc/index.rst	Tue Feb 17 21:21:18 2015 +0100
++++ b/trytond/trytond/modules/stock_supply/doc/index.rst	Mon Mar 14 07:33:28 2016 +0100
+@@ -66,4 +66,6 @@
+ with respect to stock levels and existing shipments and requests. The
+ stock levels are computed between the next two supply dates. If the
+ stock level of a product without order point on the given warehouse is
+-below zero, a purchase request is also created.
++below zero, a purchase request is also created. The same happens if
++the stock level of a storage location with a provisioning location is
++below zero.
+diff -r e2e0148fb10c location.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/stock_supply/location.py	Mon Mar 14 07:33:28 2016 +0100
+@@ -0,0 +1,25 @@
++# This file is part of Tryton.  The COPYRIGHT file at the top level of
++# this repository contains the full copyright notices and license terms.
++from trytond.pool import PoolMeta
++from trytond.model import fields
++from trytond.pyson import Eval
++
++
++__all__ = ['Location']
++
++
++class Location:
++    __metaclass__ = PoolMeta
++    __name__ = 'stock.location'
++
++    provisioning_location = fields.Many2One('stock.location',
++        'Provisioning Location',
++        states={
++            'invisible': Eval('type') != 'storage',
++            'readonly': ~Eval('active'),
++            },
++        domain=[
++            ('type', '=', 'storage'),
++            ],
++        depends=['type', 'active'],
++        help='Leave empty for no default provisioning')
+diff -r e2e0148fb10c location.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/stock_supply/location.xml	Mon Mar 14 07:33:28 2016 +0100
+@@ -0,0 +1,12 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<tryton>
++    <data>
++        <record model="ir.ui.view" id="location_view_form">
++            <field name="model">stock.location</field>
++            <field name="inherit" ref="stock.location_view_form"/>
++            <field name="name">location_form</field>
++        </record>
++    </data>
++</tryton>
+diff -r e2e0148fb10c purchase_request.py
+--- a/trytond/trytond/modules/stock_supply/purchase_request.py	Tue Feb 17 21:21:18 2015 +0100
++++ b/trytond/trytond/modules/stock_supply/purchase_request.py	Mon Mar 14 07:33:28 2016 +0100
+@@ -176,6 +176,7 @@
+         # fetch order points
+         order_points = OrderPoint.search([
+             ('type', '=', 'purchase'),
++            ('company', '=', company.id if company else None),
+             ])
+         # index them by product
+         product2ops = {}
+diff -r e2e0148fb10c shipment.py
+--- a/trytond/trytond/modules/stock_supply/shipment.py	Tue Feb 17 21:21:18 2015 +0100
++++ b/trytond/trytond/modules/stock_supply/shipment.py	Mon Mar 14 07:33:28 2016 +0100
+@@ -46,6 +46,7 @@
+         """
+         pool = Pool()
+         OrderPoint = pool.get('stock.order_point')
++        Location = pool.get('stock.location')
+         Product = pool.get('product.product')
+         Date = pool.get('ir.date')
+         User = pool.get('res.user')
+@@ -57,25 +58,50 @@
+             ('type', '=', 'internal'),
+             ])
+         id2product = {}
+-        location_ids = []
++        product2op = {}
++        id2location = {}
+         for op in order_points:
+             id2product[op.product.id] = op.product
+-            location_ids.append(op.storage_location.id)
++            product2op[
++                (op.storage_location.id, op.product.id)
++                ] = op
++            id2location[op.storage_location.id] = op.storage_location
++        provisioned = Location.search([
++                ('provisioning_location', '!=', None),
++                ])
++        id2location.update({l.id: l for l in provisioned})
+ 
++        # ordered by ids to speedup reduce_ids in products_by_location
++        if provisioned:
++            products = Product.search([
++                    ('type', 'in', ['goods', 'assets']),
++                    ], order=[('id', 'ASC')])
++            product_ids = [p.id for p in products]
++        else:
++            product_ids = id2product.keys()
++            product_ids.sort()
+         # TODO Allow to compute for other future date
+         with Transaction().set_context(forecast=True, stock_date_end=today):
+-            pbl = Product.products_by_location(location_ids,
+-                list(id2product.iterkeys()), with_childs=True)
++            pbl = Product.products_by_location(id2location.keys(),
++                product_ids, with_childs=True)
+ 
+         # Create a list of move to create
+         moves = {}
+-        for op in order_points:
+-            qty = pbl.get((op.storage_location.id, op.product.id), 0)
+-            if qty < op.min_quantity:
+-                key = (op.provisioning_location.id,
+-                       op.storage_location.id,
+-                       op.product.id)
+-                moves[key] = op.max_quantity - qty
++        for location in id2location.itervalues():
++            for product_id in product_ids:
++                qty = pbl.get((location.id, product_id), 0)
++                op = product2op.get((location.id, product_id))
++                if op:
++                    min_qty, max_qty = op.min_quantity, op.max_quantity
++                    provisioning_location = op.provisioning_location
++                elif location and location.provisioning_location:
++                    min_qty, max_qty = 0, 0
++                    provisioning_location = location.provisioning_location
++                else:
++                    continue
++                if qty < min_qty:
++                    key = (provisioning_location.id, location.id, product_id)
++                    moves[key] = max_qty - qty
+ 
+         # Group moves by {from,to}_location
+         to_create = {}
+@@ -94,13 +120,16 @@
+                 moves=[],
+                 )
+             for move in moves:
+-                product, qty = move
++                product_id, qty = move
++                product = id2product.setdefault(
++                    product_id, Product(product_id))
+                 shipment.moves.append(Move(
+                         from_location=from_location,
+                         to_location=to_location,
++                        planned_date=today,
+                         product=product,
+                         quantity=qty,
+-                        uom=id2product[product].default_uom,
++                        uom=product.default_uom,
+                         company=user_record.company,
+                         ))
+             shipment.save()
+diff -r e2e0148fb10c tests/scenario_stock_internal_supply.rst
+--- a/trytond/trytond/modules/stock_supply/tests/scenario_stock_internal_supply.rst	Tue Feb 17 21:21:18 2015 +0100
++++ b/trytond/trytond/modules/stock_supply/tests/scenario_stock_internal_supply.rst	Mon Mar 14 07:33:28 2016 +0100
+@@ -117,8 +117,9 @@
+     >>> customer_loc, = Location.find([('code', '=', 'CUS')])
+     >>> output_loc, = Location.find([('code', '=', 'OUT')])
+     >>> storage_loc, = Location.find([('code', '=', 'STO')])
++    >>> lost_loc, = Location.find([('type', '=', 'lost_found')])
+ 
+-Create new internal location::
++Create provisioning location::
+ 
+     >>> Location = Model.get('stock.location')
+     >>> provisioning_loc = Location()
+@@ -127,12 +128,20 @@
+     >>> provisioning_loc.parent = warehouse_loc
+     >>> provisioning_loc.save()
+ 
++Create a new storage location::
++
++    >>> sec_storage_loc = Location()
++    >>> sec_storage_loc.name = 'Second Storage'
++    >>> sec_storage_loc.type = 'storage'
++    >>> sec_storage_loc.parent = warehouse_loc
++    >>> sec_storage_loc.provisioning_location = provisioning_loc
++    >>> sec_storage_loc.save()
++
+ Create internal order point::
+ 
+     >>> OrderPoint = Model.get('stock.order_point')
+     >>> order_point = OrderPoint()
+     >>> order_point.product = product
+-    >>> order_point.warehouse_location = warehouse_loc
+     >>> order_point.storage_location = storage_loc
+     >>> order_point.provisioning_location = provisioning_loc
+     >>> order_point.type = 'internal'
+@@ -176,3 +185,33 @@
+     u'Provisioning Location'
+     >>> move.to_location.code
+     u'STO'
++
++Create negative quantity in Second Storage::
++
++    >>> Move = Model.get('stock.move')
++    >>> move = Move()
++    >>> move.product = product
++    >>> move.quantity = 10
++    >>> move.from_location = sec_storage_loc
++    >>> move.to_location = lost_loc
++    >>> move.click('do')
++    >>> move.state
++    u'done'
++
++Execute internal supply::
++
++    >>> Wizard('stock.shipment.internal.create').execute('create_')
++    >>> shipment, = ShipmentInternal.find([('id', '!=', shipment.id)])
++    >>> shipment.state
++    u'waiting'
++    >>> len(shipment.moves)
++    1
++    >>> move, = shipment.moves
++    >>> move.product.template.name
++    u'Product'
++    >>> move.quantity
++    10.0
++    >>> move.from_location.name
++    u'Provisioning Location'
++    >>> move.to_location.name
++    u'Second Storage'
+diff -r e2e0148fb10c tryton.cfg
+--- a/trytond/trytond/modules/stock_supply/tryton.cfg	Tue Feb 17 21:21:18 2015 +0100
++++ b/trytond/trytond/modules/stock_supply/tryton.cfg	Mon Mar 14 07:33:28 2016 +0100
+@@ -12,3 +12,4 @@
+     order_point.xml
+     purchase_request.xml
+     shipment.xml
++    location.xml
+diff -r e2e0148fb10c view/location_form.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/stock_supply/view/location_form.xml	Mon Mar 14 07:33:28 2016 +0100
+@@ -0,0 +1,10 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<data>
++    <xpath expr="/form/field[@name='address']" position="after">
++        <newline/>
++        <label name="provisioning_location"/>
++        <field name="provisioning_location"/>
++    </xpath>
++</data>
