@@ -1,0 +1,152 @@
+diff -r c78f5fd48086 configuration.py
+--- a/modules/stock/configuration.py	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//configuration.py	Thu Mar 31 10:45:19 2016 +0200
+@@ -39,3 +39,9 @@
+                     [Eval('context', {}).get('company', -1), None]),
+                 ('code', '=', 'stock.shipment.internal'),
+                 ], required=True))
++    inventory_sequence = fields.Property(fields.Many2One(
++            'ir.sequence', 'Inventory Sequence', domain=[
++                ('company', 'in',
++                    [Eval('context', {}).get('company', -1), None]),
++                ('code', '=', 'stock.inventory'),
++                ], required=True))
+diff -r c78f5fd48086 configuration.xml
+--- a/modules/stock/configuration.xml	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//configuration.xml	Thu Mar 31 10:45:19 2016 +0200
+@@ -52,6 +52,13 @@
+             <field name="value" eval="'ir.sequence,' + str(ref('sequence_shipment_internal'))"/>
+         </record>
+
++        <record model="ir.property" id="property_inventory_sequence">
++            <field name="field"
++                search="[('model.model', '=', 'stock.configuration'), ('name', '=', 'inventory_sequence')]"/>
++            <field name="value"
++                eval="'ir.sequence,' + str(ref('sequence_inventory'))"/>
++        </record>
++
+         <record model="ir.model.access" id="access_configuration">
+             <field name="model" search="[('model', '=', 'stock.configuration')]"/>
+             <field name="perm_read" eval="True"/>
+diff -r c78f5fd48086 inventory.py
+--- a/modules/stock/inventory.py	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//inventory.py	Thu Mar 31 10:45:19 2016 +0200
+@@ -17,6 +17,8 @@
+ class Inventory(Workflow, ModelSQL, ModelView):
+     'Stock Inventory'
+     __name__ = 'stock.inventory'
++    _rec_name = 'number'
++    number = fields.Char('Number', states=STATES, depends=DEPENDS)
+     location = fields.Many2One(
+         'stock.location', 'Location', required=True,
+         domain=[('type', '=', 'storage')], states={
+@@ -151,6 +153,7 @@
+         default = default.copy()
+         default['date'] = Date.today()
+         default['lines'] = None
++        default.setdefault('number')
+
+         new_inventories = []
+         for inventory in inventories:
+@@ -321,6 +324,20 @@
+             key.append(value)
+         return tuple(key)
+
++    def create(cls, vlist):
++        pool = Pool()
++        Sequence = pool.get('ir.sequence')
++        Configuration = pool.get('stock.configuration')
++        config = Configuration(1)
++        vlist = [x.copy() for x in vlist]
++        for values in vlist:
++            if values.get('number') is None:
++                values['number'] = Sequence.get_id(
++                    config.inventory_sequence.id)
++        inventories = super(Inventory, cls).create(vlist)
++        cls.complete_lines(inventories, fill=False)
++        return inventories
++
+     @classmethod
+     def cancel_move(cls, lines):
+         Move = Pool().get('stock.move')
+diff -r c78f5fd48086 inventory.xml
+--- a/modules/stock/inventory.xml	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//inventory.xml	Thu Mar 31 10:45:19 2016 +0200
+@@ -118,5 +118,25 @@
+             <field name="group" ref="group_stock"/>
+         </record>
+
++        <record model="ir.sequence.type" id="sequence_type_inventory">
++            <field name="name">Inventory</field>
++            <field name="code">stock.inventory</field>
++        </record>
++        <record model="ir.sequence.type-res.group"
++            id="sequence_type_inventory_group_admin">
++            <field name="sequence_type" ref="sequence_type_inventory"/>
++            <field name="group" ref="res.group_admin"/>
++        </record>
++        <record model="ir.sequence.type-res.group"
++            id="sequence_type_inventory_group_stock_admin">
++            <field name="sequence_type" ref="sequence_type_inventory"/>
++            <field name="group" ref="group_stock_admin"/>
++        </record>
++
++        <record model="ir.sequence" id="sequence_inventory">
++            <field name="name">Inventory</field>
++            <field name="code">stock.inventory</field>
++        </record>
++
+     </data>
+ </tryton>
+diff -r c78f5fd48086 view/configuration_form.xml
+--- a/modules/stock/view/configuration_form.xml	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//view/configuration_form.xml	Thu Mar 31 10:45:19 2016 +0200
+@@ -2,6 +2,7 @@
+ <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+ this repository contains the full copyright notices and license terms. -->
+ <form string="Stock Configuration">
++    <separator id="shipment" colspan="4" string="Shipments"/>
+     <label name="shipment_in_sequence"/>
+     <field name="shipment_in_sequence"/>
+     <label name="shipment_in_return_sequence"/>
+@@ -12,4 +13,7 @@
+     <field name="shipment_out_return_sequence"/>
+     <label name="shipment_internal_sequence"/>
+     <field name="shipment_internal_sequence"/>
++    <separator id="inventory" colspan="4" string="Inventory"/>
++    <label name="inventory_sequence"/>
++    <field name="inventory_sequence"/>
+ </form>
+diff -r c78f5fd48086 view/inventory_form.xml
+--- a/modules/stock/view/inventory_form.xml	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//view/inventory_form.xml	Thu Mar 31 10:45:19 2016 +0200
+@@ -4,13 +4,15 @@
+ <form string="Inventory" col="4">
+     <label name="location"/>
+     <field name="location"/>
++    <label name="number"/>
++    <field name="number"/>
++    <label name="date"/>
++    <field name="date"/>
+     <label name="lost_found"/>
+     <field name="lost_found"/>
+-    <label name="date"/>
+-    <field name="date"/>
+     <label name="company"/>
+     <field name="company"/>
+-    <label colspan="2" id="empty"/>
++    <newline/>
+     <button string="Complete Inventory"
+         name="complete_lines" colspan="2"
+         help="Add an inventory line for each missing products"/>
+diff -r c78f5fd48086 view/inventory_tree.xml
+--- a/modules/stock/view/inventory_tree.xml	Thu Mar 31 10:01:41 2016 +0200
++++ b/modules/stock//view/inventory_tree.xml	Thu Mar 31 10:45:19 2016 +0200
+@@ -2,6 +2,7 @@
+ <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+ this repository contains the full copyright notices and license terms. -->
+ <tree string="Inventories">
++    <field name="number"/>
+     <field name="location"/>
+     <field name="date"/>
+     <field name="state"/>
