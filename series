@@ -35,6 +35,10 @@ issue23901002_1.diff
 issue17881002_1.diff
 workflow-performance.diff
 account_chart_speedup.diff
+analytic_account.diff
+analytic_invoice.diff
+analytic_sale.diff
+analytic_purchase.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
