@@ -1,0 +1,12 @@
+diff -r 5ce23ab2f2fb trytond/trytond/modules/sale/sale.py
+--- a/trytond/trytond/modules/sale/sale.py	Wed Apr 06 10:13:30 2016 +0200
++++ b/trytond/trytond/modules/sale/sale.py	Wed Apr 06 10:14:05 2016 +0200
+@@ -1148,7 +1148,7 @@
+                 break
+             quantity -= move.origin_quantity
+         if done:
+-            if quantity > 0.0:
++            if quantity > move.uom.rounding:
+                 done = False
+         return done
+
