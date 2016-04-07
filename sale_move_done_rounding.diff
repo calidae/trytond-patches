@@ -6,7 +6,7 @@ diff -r 5ce23ab2f2fb trytond/trytond/modules/sale/sale.py
              quantity -= move.origin_quantity
          if done:
 -            if quantity > 0.0:
-+            if quantity > move.uom.rounding:
++            if quantity > self.unit.rounding:
                  done = False
          return done
 
