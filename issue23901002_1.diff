@@ -1,0 +1,75 @@
+# HG changeset patch
+# User Cédric Krier <cedric.krier@b2ck.com>
+Execute action synchronously
+
+
+The clicked event must be blocked when the action is started, so the retrieval
+of the action definition should be synchronous to be done inside the
+try/finally.
+
+issue5362
+review23901002
+
+Index: tryton/action/main.py
+===================================================================
+
+--- a/tryton/tryton/action/main.py
++++ b/tryton/tryton/action/main.py
+@@ -54,31 +54,16 @@
+ 
+     @staticmethod
+     def execute(act_id, data, action_type=None, context=None):
+-        def get_action_type(actions):
+-            try:
+-                action, = actions()
+-            except RPCException:
+-                return
++        # Must be executed synchronously to avoid double execution
++        # on double click.
++        if not action_type:
++            action, = RPCExecute('model', 'ir.action', 'read', [act_id],
++                ['type'], context=context)
+             action_type = action['type']
+-            exec_action(action_type)
+-
+-        def exec_action(action_type):
+-            def callback(actions):
+-                try:
+-                    action, = actions()
+-                except RPCException:
+-                    return
+-                Action._exec_action(action, data, context=context)
+-
+-            RPCExecute('model', action_type, 'search_read',
+-                [('action', '=', act_id)], 0, 1, None, None,
+-                context=context, callback=callback)
+-
+-        if not action_type:
+-            RPCExecute('model', 'ir.action', 'read', [act_id],
+-                ['type'], context=context, callback=get_action_type)
+-        else:
+-            exec_action(action_type)
++        action, = RPCExecute('model', action_type, 'search_read',
++            [('action', '=', act_id)], 0, 1, None, None,
++            context=context)
++        Action._exec_action(action, data, context=context)
+ 
+     @staticmethod
+     def _exec_action(action, data=None, context=None):
+
+Index: tryton/gui/window/view_form/view/list_gtk/widget.py
+===================================================================
+
+--- a/tryton/tryton/gui/window/view_form/view/list_gtk/widget.py
++++ b/tryton/tryton/gui/window/view_form/view/list_gtk/widget.py
+@@ -909,4 +909,8 @@
+         if state_changes.get('invisible') \
+                 or state_changes.get('readonly'):
+             return True
+-        self.view.screen.button(self.attrs)
++        widget.handler_block_by_func(self.button_clicked)
++        try:
++            self.view.screen.button(self.attrs)
++        finally:
++            widget.handler_unblock_by_func(self.button_clicked)
+

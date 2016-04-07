@@ -13,11 +13,11 @@ Index: invoice.xml
 @@ -38,6 +38,17 @@
              <field name="act_window" ref="act_invoice_form"/>
          </record>
- 
+
 +        <record model="ir.action.act_window" id="act_credit_notes_form">
 +            <field name="name">Credit Notes</field>
 +            <field name="res_model">account.invoice</field>
-+            <field name="domain">[('lines.origin.invoice', 'in', Eval('active_ids'), 'account.invoice.line')]</field>
++            <field name="domain" eval="[('lines.origin.invoice', 'in', Eval('active_ids'), 'account.invoice.line')]" pyson="1"/>
 +        </record>
 +        <record model="ir.action.keyword" id="act_open_credit_notes_keyword1">
 +            <field name="keyword">form_relate</field>
@@ -25,8 +25,8 @@ Index: invoice.xml
 +            <field name="action" ref="act_credit_notes_form"/>
 +        </record>
 +
-         <record model="ir.action.act_window" id="act_invoice_out_invoice_form">
-             <field name="name">Invoices</field>
+         <record model="ir.action.act_window" id="act_invoice_out_form">
+             <field name="name">Customer Invoices</field>
              <field name="res_model">account.invoice</field>
 
 
@@ -38,7 +38,7 @@ Index: ca_ES.xml
 @@ -1053,6 +1053,10 @@
  msgid "Invoices"
  msgstr "Factures"
- 
+
 +msgctxt "model:ir.action,name:act_credit_notes_form"
 +msgid "Credit Notes"
 +msgstr "Abonaments"
@@ -56,7 +56,7 @@ Index: ca_ES.xml
 @@ -1045,6 +1045,10 @@
  msgid "Invoices"
  msgstr "Todas las facturas"
- 
+
 +msgctxt "model:ir.action,name:act_credit_notes_form"
 +msgid "Credit Notes"
 +msgstr "Abonos"

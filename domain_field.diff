@@ -1,10 +1,10 @@
 diff -r 1a22411f9264 trytond/trytond/model/fields/many2many.py
 --- a/trytond/trytond/model/fields/many2many.py	Thu Jul 16 01:13:45 2015 +0200
 +++ b/trytond/trytond/model/fields/many2many.py	Mon Jul 20 14:20:18 2015 +0200
-@@ -270,6 +270,9 @@
-         transaction = Transaction()
+@@ -287,6 +287,9 @@
          table, _ = tables[None]
          name, operator, value = domain[:3]
+         assert operator not in {'where', 'not where'} or '.' not in name
 +        method = getattr(Model, 'domain_%s' % name, None)
 +        if method:
 +            return method(domain, tables)
@@ -14,7 +14,7 @@ diff -r 1a22411f9264 trytond/trytond/model/fields/many2many.py
 diff -r 1a22411f9264 trytond/trytond/model/fields/many2one.py
 --- a/trytond/trytond/model/fields/many2one.py	Thu Jul 16 01:13:45 2015 +0200
 +++ b/trytond/trytond/model/fields/many2one.py	Mon Jul 20 14:20:18 2015 +0200
-@@ -141,6 +141,9 @@
+@@ -159,6 +159,9 @@
 
          table, _ = tables[None]
          name, operator, value = domain[:3]
@@ -23,14 +23,14 @@ diff -r 1a22411f9264 trytond/trytond/model/fields/many2one.py
 +            return method(domain, tables)
          column = self.sql_column(table)
          if '.' not in name:
-             if operator in ('child_of', 'not child_of'):
+             if operator.endswith('child_of') or operator.endswith('parent_of'):
 diff -r 1a22411f9264 trytond/trytond/model/fields/one2many.py
 --- a/trytond/trytond/model/fields/one2many.py	Thu Jul 16 01:13:45 2015 +0200
 +++ b/trytond/trytond/model/fields/one2many.py	Mon Jul 20 14:20:18 2015 +0200
-@@ -231,6 +231,9 @@
-         transaction = Transaction()
+@@ -232,6 +232,9 @@
          table, _ = tables[None]
          name, operator, value = domain[:3]
+         assert operator not in {'where', 'not where'} or '.' not in name
 +        method = getattr(Model, 'domain_%s' % name, None)
 +        if method:
 +            return method(domain, tables)
@@ -41,7 +41,7 @@ diff -r 1a22411f9264 trytond/trytond/model/fields/property.py
 --- a/trytond/trytond/model/fields/property.py	Thu Jul 16 01:13:45 2015 +0200
 +++ b/trytond/trytond/model/fields/property.py	Mon Jul 20 14:20:18 2015 +0200
 @@ -72,6 +72,9 @@
-         cursor = Transaction().cursor
+         cursor = Transaction().connection.cursor()
 
          name, operator, value = domain
 +        method = getattr(Model, 'domain_%s' % name, None)
@@ -53,7 +53,7 @@ diff -r 1a22411f9264 trytond/trytond/model/fields/property.py
 diff -r 1a22411f9264 trytond/trytond/model/fields/reference.py
 --- a/trytond/trytond/model/fields/reference.py	Thu Jul 16 01:13:45 2015 +0200
 +++ b/trytond/trytond/model/fields/reference.py	Mon Jul 20 14:20:18 2015 +0200
-@@ -125,6 +125,9 @@
+@@ -124,6 +124,9 @@
              return super(Reference, self).convert_domain(domain, tables, Model)
          pool = Pool()
          name, operator, value, target = domain[:4]

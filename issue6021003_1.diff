@@ -19,19 +19,19 @@ Index: account.py
 -        Account = pool.get('account.account')
 -        Company = pool.get('company.company')
          Currency = pool.get('currency.currency')
-         cursor = Transaction().cursor
+         cursor = Transaction().connection.cursor()
 -        table = cls.__table__()
 -        line = Line.__table__()
 -        move_line = MoveLine.__table__()
 -        a_account = Account.__table__()
 -        company = Company.__table__()
- 
+
          ids = [a.id for a in accounts]
          childs = cls.search([('parent', 'child_of', ids)])
 @@ -145,25 +136,12 @@
          for account in all_accounts:
              id2account[account.id] = account
- 
+
 -        line_query = Line.query_get(line)
 -        cursor.execute(*table.join(line, 'LEFT',
 -                condition=table.id == line.account
@@ -46,7 +46,7 @@ Index: account.py
 -                company.currency,
 -                where=(table.type != 'view')
 -                & table.id.in_(all_ids)
--                & table.active & line_query,
+-                & (table.active == True) & line_query,
 -                group_by=(table.id, company.currency)))
 +        query = cls.query_get(all_ids, [name])
 +        cursor.execute(*query)
@@ -67,19 +67,19 @@ Index: account.py
 -        Account = pool.get('account.account')
 -        Company = pool.get('company.company')
          Currency = pool.get('currency.currency')
-         cursor = Transaction().cursor
+         cursor = Transaction().connection.cursor()
 -        table = cls.__table__()
 -        line = Line.__table__()
 -        move_line = MoveLine.__table__()
 -        a_account = Account.__table__()
 -        company = Company.__table__()
- 
+
          result = {}
          ids = [a.id for a in accounts]
 @@ -223,23 +192,8 @@
          for account in accounts:
              id2account[account.id] = account
- 
+
 -        line_query = Line.query_get(line)
 -        columns = [table.id, company.currency]
 -        for name in names:
@@ -95,17 +95,17 @@ Index: account.py
 -                ).select(*columns,
 -                where=(table.type != 'view')
 -                & table.id.in_(ids)
--                & table.active & line_query,
+-                & (table.active == True) & line_query,
 -                group_by=(table.id, company.currency)))
 +        query = cls.query_get(ids, names)
 +        cursor.execute(*query)
- 
+
          id2currency = {}
          for row in cursor.fetchall():
 @@ -263,6 +217,43 @@
                      result[name][account.id] += account.currency.round(sum)
          return result
- 
+
 +    @classmethod
 +    def query_get(cls, ids, names):
 +        pool = Pool()
@@ -146,4 +146,3 @@ Index: account.py
      def get_rec_name(self, name):
          if self.code:
              return self.code + ' - ' + unicode(self.name)
-

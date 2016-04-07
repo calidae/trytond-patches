@@ -1,49 +1,49 @@
 diff -r 649b0805fa93 trytond/protocols/dispatcher.py
 --- a/trytond/trytond/protocols/dispatcher.py	Fri Feb 20 09:11:59 2015 +0100
 +++ b/trytond/trytond/protocols/dispatcher.py	Sun Apr 19 03:17:46 2015 +0200
-@@ -19,6 +19,8 @@
-     ConcurrencyException
- from trytond.rpc import RPC
+@@ -20,6 +20,8 @@
+ from trytond.tools import is_instance_method
+ from trytond.wsgi import app
 
 +import top
 +
  logger = logging.getLogger(__name__)
 
  ir_configuration = Table('ir_configuration')
-@@ -153,6 +155,16 @@
-         with Transaction().start(database_name, user,
+@@ -190,6 +192,16 @@
+         with Transaction().start(pool.database_name, user,
                  readonly=rpc.readonly) as transaction:
-             Cache.clean(database_name)
+             Cache.clean(pool.database_name)
 +            action_id = top.add({
-+                    'host': host,
-+                    'port': port,
-+                    'protocol': protocol,
-+                    'database_name': database_name,
++                    'host': request.host,
++                    'port': '',
++                    'protocol': '',
++                    'database_name': pool.database_name,
 +                    'user': user,
-+                    'object_name': object_name,
++                    'object_name': obj.__name__,
 +                    'method': method,
 +                    'args': repr(args)[:30],
 +                    })
              try:
                  c_args, c_kwargs, transaction.context, transaction.timestamp \
                      = rpc.convert(obj, *args, **kwargs)
-@@ -182,6 +194,8 @@
-                 logger.error(exception_message, exc_info=sys.exc_info())
-                 transaction.cursor.rollback()
+@@ -217,6 +229,8 @@
+             except Exception:
+                 logger.error(log_message, *log_args, exc_info=True)
                  raise
 +            finally:
 +                top.remove(action_id)
-             Cache.resets(database_name)
-         with Transaction().start(database_name, 0) as transaction:
-             pool = Pool(database_name)
+             Cache.resets(pool.database_name)
+         if request.authorization.type == 'session':
+             try:
 diff -r 649b0805fa93 trytond/protocols/top.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
 +++ b/trytond/trytond/protocols/top.py	Sun Apr 19 03:18:20 2015 +0200
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,90 @@
 +import random
 +import signal
 +import locale
-+import sys
++import faulthandler
 +from operator import itemgetter
 +from datetime import datetime
 +
@@ -89,7 +89,7 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +        print
 +
 +# End Printing Tables
-+ 
++
 +def signal_user_handler(signal, frame):
 +    print '-' * 30
 +    if current_actions:
@@ -99,7 +99,7 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +           'timestamp', 'elapsed', 'object_name', 'method', 'args')
 +       table = []
 +       table.append([x.upper() for x in header])
-+       
++
 +       for action in sorted(current_actions.values(), key=itemgetter('timestamp')):
 +           row = []
 +           for key in header:
@@ -112,8 +112,9 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +           table.append(row)
 +       pprint_table(table)
 +       print '=' * 30
-+ 
++
 +signal.signal(signal.SIGUSR1, signal_user_handler)
++faulthandler.register(signal.SIGUSR2)
 +
 +
 +def add(value):

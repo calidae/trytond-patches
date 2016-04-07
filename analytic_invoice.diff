@@ -1,0 +1,48 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+Add company domain on analytic entries
+
+
+issue5104
+
+
+review24081002
+
+Index: trytond/trytond/modules/analytic_invoice/invoice.py
+===================================================================
+
+--- a/trytond/trytond/modules/analytic_invoice/invoice.py
++++ b/trytond/trytond/modules/analytic_invoice/invoice.py
+@@ -1,5 +1,6 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
++from trytond.model import fields
+ from trytond.pool import PoolMeta, Pool
+
+ from trytond.modules.analytic_account import AnalyticMixin
+@@ -61,3 +62,24 @@
+     def _get_origin(cls):
+         origins = super(AnalyticAccountEntry, cls)._get_origin()
+         return origins + ['account.invoice.line']
++
++    @fields.depends('origin')
++    def on_change_with_company(self, name=None):
++        pool = Pool()
++        InvoiceLine = pool.get('account.invoice.line')
++        company = super(AnalyticAccountEntry, self).on_change_with_company(
++            name)
++        if isinstance(self.origin, InvoiceLine):
++            if self.origin.invoice:
++                return self.origin.invoice.company.id
++            elif self.origin.company:
++                return self.origin.company.id
++        return company
++
++    @classmethod
++    def search_company(cls, name, clause):
++        return ['OR',
++            [('origin.company',) + tuple(clause[1:]) +
++                tuple(('account.invoice.line',))],
++            [('origin.invoice.company',) + tuple(clause[1:]) +
++                tuple(('account.invoice.line',))]]
+
