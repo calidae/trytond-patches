@@ -40,18 +40,10 @@ diff -r c78f5fd48086 inventory.py
      location = fields.Many2One(
          'stock.location', 'Location', required=True,
          domain=[('type', '=', 'storage')], states={
-@@ -151,6 +153,7 @@
-         default = default.copy()
-         default['date'] = Date.today()
-         default['lines'] = None
-+        default.setdefault('number')
+@@ -141,6 +143,19 @@
+         Line.cancel_move([l for i in inventories for l in i.lines])
 
-         new_inventories = []
-         for inventory in inventories:
-@@ -321,6 +324,20 @@
-             key.append(value)
-         return tuple(key)
-
+     @classmethod
 +    def create(cls, vlist):
 +        pool = Pool()
 +        Sequence = pool.get('ir.sequence')
@@ -62,13 +54,20 @@ diff -r c78f5fd48086 inventory.py
 +            if values.get('number') is None:
 +                values['number'] = Sequence.get_id(
 +                    config.inventory_sequence.id)
-+        inventories = super(Inventory, cls).create(vlist)
-+        cls.complete_lines(inventories, fill=False)
-+        return inventories
++        return super(Inventory, cls).create(vlist)
 +
-     @classmethod
-     def cancel_move(cls, lines):
-         Move = Pool().get('stock.move')
++    @classmethod
+     def copy(cls, inventories, default=None):
+         pool = Pool()
+         Date = pool.get('ir.date')
+@@ -151,6 +166,7 @@
+         default = default.copy()
+         default['date'] = Date.today()
+         default['lines'] = None
++        default.setdefault('number')
+
+         new_inventories = []
+         for inventory in inventories:
 diff -r c78f5fd48086 inventory.xml
 --- a/modules/stock/inventory.xml	Thu Mar 31 10:01:41 2016 +0200
 +++ b/modules/stock//inventory.xml	Thu Mar 31 10:45:19 2016 +0200
