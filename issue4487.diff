@@ -1,0 +1,42 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+# Date 1421866239 -3600
+#      Wed Jan 21 19:50:39 2015 +0100
+# Node ID a505376e449a2ab69e452fc0be58b6d93bacb5f7
+# Parent  cd0f2a2c1c88f3b195bb282256dc28cd5dafd1e6
+Remove all the view elements which the user doesn't have access
+
+issue4487
+review10071002
+
+diff -r cd0f2a2c1c88 -r a505376e449a trytond/trytond/model/modelview.py
+--- a/trytond/trytond/model/modelview.py	Tue Jan 20 18:48:46 2015 +0100
++++ b/trytond/trytond/model/modelview.py	Wed Jan 21 19:50:39 2015 +0100
+@@ -307,19 +307,20 @@
+
+         # Remove field without read access
+         for field in fields_to_remove:
+-            for i, element in enumerate(tree.xpath(
+-                    '//field[@name="%s"] | //label[@name="%s"]'
+-                    % (field, field))):
+-                if type == 'form':
++            xpath = ('//field[@name="%(field)s"] | //label[@name="%(field)s"]'
++                ' | //page[@name="%(field)s"] | //group[@name="%(field)s"]'
++                ' | //separator[@name="%(field)s"]') % {'field': field}
++            for i, element in enumerate(tree.xpath(xpath)):
++                if type == 'tree' or element.tag == 'page':
++                    parent = element.getparent()
++                    parent.remove(element)
++                elif type == 'form':
+                     element.tag = 'label'
+                     colspan = element.attrib.get('colspan')
+                     element.attrib.clear()
+                     element.attrib['id'] = 'hidden %s-%s' % (field, i)
+                     if colspan is not None:
+                         element.attrib['colspan'] = colspan
+-                elif type == 'tree':
+-                    parent = element.getparent()
+-                    parent.remove(element)
+
+         if type == 'tree':
+             ViewTreeWidth = pool.get('ir.ui.view_tree_width')

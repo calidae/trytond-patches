@@ -76,6 +76,7 @@ issue21611002_20001.diff
 issue4536.diff
 improve_stock_by_locations_performance.diff
 issue5370.diff
+issue4487.diff
 sale_move_done_rounding.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
