@@ -445,6 +445,7 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 --- a/trytond/trytond/modules/analytic_invoice/invoice.py	Sun Mar 01 15:34:41 2015 +0100
 +++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Mon Nov 30 14:24:25 2015 +0100
 @@ -26,32 +26,32 @@
+@@ -25,32 +25,33 @@
 
          return result
 
@@ -483,7 +484,7 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 -                value['analytic_lines'] = []
 -                to_create = []
 +            for line in lines:
-+                line.analytic_lines = []
++                analytic_lines = []
                  for entry in self.analytic_accounts:
                      if not entry.account:
                          continue
@@ -491,9 +492,9 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 -                if to_create:
 -                    value['analytic_lines'] = [('create', to_create)]
 -        return values
-+                    line.analytic_lines.append(self.get_analytic_entry(entry,
++                    analytic_lines.append(self.get_analytic_entry(entry,
 +                            line))
++                line.analytic_lines = analytic_lines
 +        return lines
 
 
- class AnalyticAccountEntry:
