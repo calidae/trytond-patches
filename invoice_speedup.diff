@@ -444,7 +444,6 @@ diff -r 6429c9c53cb8 trytond/trytond/modules/account_bank/account.py
 diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 --- a/trytond/trytond/modules/analytic_invoice/invoice.py	Sun Mar 01 15:34:41 2015 +0100
 +++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Mon Nov 30 14:24:25 2015 +0100
-@@ -26,32 +26,32 @@
 @@ -25,32 +25,33 @@
 
          return result
@@ -498,3 +497,4 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 +        return lines
 
 
+ class AnalyticAccountEntry:
