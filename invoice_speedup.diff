@@ -426,23 +426,6 @@ diff -r 0e69764f2826 trytond/trytond/modules/account_payment_type/invoice.py
 
      @classmethod
      def compute_default_payment_type(cls, values):
-diff -r 6429c9c53cb8 trytond/trytond/modules/account_bank/account.py
---- a/trytond/trytond/modules/account_bank/account.py	Tue May 05 14:36:02 2015 +0200
-+++ b/trytond/trytond/modules/account_bank/account.py	Tue Jul 07 15:36:26 2015 +0200
-@@ -179,10 +179,10 @@
-         '''
-         Add account bank to move line when post invoice.
-         '''
--        res = super(Invoice, self)._get_move_line(date, amount)
-+        line = super(Invoice, self)._get_move_line(date, amount)
-         if self.bank_account:
--            res['bank_account'] = self.bank_account
--        return res
-+            line.bank_account = self.bank_account
-+        return line
-
-     @classmethod
-     def create(cls, vlist):
 diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 --- a/trytond/trytond/modules/analytic_invoice/invoice.py	Sun Mar 01 15:34:41 2015 +0100
 +++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Mon Nov 30 14:24:25 2015 +0100
@@ -485,7 +468,7 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 -                value['analytic_lines'] = []
 -                to_create = []
 +            for line in lines:
-+                line.analytic_lines = []
++                analytic_lines = []
                  for entry in self.analytic_accounts:
                      if not entry.account:
                          continue
@@ -493,8 +476,8 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 -                if to_create:
 -                    value['analytic_lines'] = [('create', to_create)]
 -        return values
-+                    line.analytic_lines.append(self.get_analytic_entry(entry,
-+                            line))
++                    analytic_lines.append(self.get_analytic_entry(entry, line))
++                line.analytic_lines = analytic_lines
 +        return lines
 
 
