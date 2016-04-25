@@ -19,7 +19,7 @@ Index: trytond/trytond/modules/account/move.py
          line = Line.__table__()
          Account = pool.get('account.account')
          account = Account.__table__()
-         cursor = Transaction().connection.cursor()
+         cursor = Transaction().cursor
 +        rule_expression = Rule.query_get(Account.__name__)
 
          balance = line.debit - line.credit
