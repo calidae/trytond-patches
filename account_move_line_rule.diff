@@ -1,7 +1,7 @@
-diff -r 32ceadcd01cd move.xml
---- a/trytond/trytond/modules/account/move.xml	Mon Feb 02 18:44:16 2015 +0100
-+++ b/trytond/trytond/modules/account/move.xml	Thu Apr 02 10:58:14 2015 +0200
-@@ -259,6 +259,15 @@
+diff -r e09ed092a99d move.xml
+--- a/trytond/trytond/modules/account/move.xml	Sat Apr 02 15:59:02 2016 +0200
++++ b/trytond/trytond/modules/account/move.xml	Mon Apr 25 18:18:32 2016 +0200
+@@ -285,6 +285,15 @@
              <field name="perm_delete" eval="True"/>
          </record>
 
