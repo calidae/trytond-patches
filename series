@@ -27,6 +27,7 @@ analytic_account.diff
 analytic_invoice.diff
 analytic_sale.diff
 analytic_purchase.diff
+issue18061002_1.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
