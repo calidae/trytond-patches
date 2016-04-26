@@ -1,0 +1,35 @@
+diff -r db06cda245c1 trytond/model/workflow.py
+--- a/trytond/trytond/model/workflow.py	Tue Feb 02 19:03:11 2016 +0100
++++ b/trytond/trytond/model/workflow.py	Sun Mar 13 00:40:20 2016 +0100
+@@ -20,7 +20,7 @@
+             @wraps(func)
+             def wrapper(cls, records, *args, **kwargs):
+                 filtered = []
+-                to_update = {}
++                to_check = []
+
+                 for record in records:
+                     current_state = getattr(record, cls._transition_state)
+@@ -28,15 +28,16 @@
+                     if transition in cls._transitions:
+                         filtered.append(record)
+                         if current_state != state:
+-                            to_update[record] = current_state
++                            to_check.append((record, current_state))
+
+                 result = func(cls, filtered, *args, **kwargs)
+-                if to_update:
+-                    for record in to_update.keys():
++                if to_check:
++                    to_update = []
++                    for record, previous_state in to_check:
+                         current_state = getattr(record, cls._transition_state)
+-                        if current_state != to_update[record]:
+-                            del to_update[record]
+-                    cls.write(to_update.keys(), {
++                        if current_state == previous_state:
++                            to_update.append(record)
++                    cls.write(to_update, {
+                             cls._transition_state: state,
+                             })
+                 return result
