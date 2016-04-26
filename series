@@ -40,6 +40,7 @@ analytic_invoice.diff
 analytic_sale.diff
 analytic_purchase.diff
 issue18061002_1.diff
+tax_active_invisible.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
