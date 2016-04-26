@@ -1,0 +1,74 @@
+changeset:   306:ae858ca7b462
+tag:         tip
+user:        Sergi Almacellas Abellana <sergi@koolpi.com>
+date:        Mon Apr 25 08:54:40 2016 +0200
+files:       product.xml
+description:
+Add access rules for taxes relations on templates and categories.
+
+Since changeset 974cd0415640 many2many fields are not joining the target table
+so the access rules of taxes are not applied and this causes an access_error
+on the client. We add the access rule till issue4080 is resolved
+
+issue5509
+review22981002
+
+
+diff -r 95c68dde8d7e -r ae858ca7b462 product.xml
+--- a/trytond/trytond/modules/account_product/product.xml	Fri Apr 22 15:40:59 2016 +0200
++++ b/trytond/trytond/modules/account_product/product.xml	Mon Apr 25 08:54:40 2016 +0200
+@@ -22,5 +22,53 @@
+             <field name="name">template_tree</field>
+         </record>
+ 
++        <record model="ir.rule.group" id="rule_group_category_customer_taxes">
++            <field name="model"
++                search="[('model', '=', 'product.category-customer-account.tax')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_category_customer_taxes">
++            <field name="domain"
++                eval="[('tax.company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_category_customer_taxes"/>
++        </record>
++
++        <record model="ir.rule.group" id="rule_group_category_supplier_taxes">
++            <field name="model"
++                search="[('model', '=', 'product.category-supplier-account.tax')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_category_supplier_taxes">
++            <field name="domain"
++                eval="[('tax.company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_category_supplier_taxes"/>
++        </record>
++
++        <record model="ir.rule.group" id="rule_group_template_customer_taxes">
++            <field name="model"
++                search="[('model', '=', 'product.template-customer-account.tax')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_template_customer_taxes">
++            <field name="domain"
++                eval="[('tax.company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_template_customer_taxes"/>
++        </record>
++
++        <record model="ir.rule.group" id="rule_group_template_supplier_taxes">
++            <field name="model"
++                search="[('model', '=', 'product.template-supplier-account.tax')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_template_supplier_taxes">
++            <field name="domain"
++                eval="[('tax.company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_template_supplier_taxes"/>
++        </record>
++
+     </data>
+ </tryton>
+
