@@ -65,8 +65,8 @@ issue4950_sale.diff
 party_after_account.diff
 issue4986.diff
 issue16661002_1.diff
-issue19491002_1.diff
-issue20451002_1.diff
+#issue19491002_1.diff
+#issue20451002_1.diff
 issue7961002_40001.diff
 issue4115.diff
 issue5118.diff
