@@ -1,0 +1,26 @@
+diff -r 3af0565f0bad cron.py
+--- a/trytond/trytond/modules/company/cron.py	Wed Dec 23 00:13:47 2015 +0100
++++ b/trytond/trytond/modules/company/cron.py	Tue May 17 16:18:02 2016 +0200
+@@ -15,6 +15,22 @@
+             'Companies', help='Companies registered for this cron')
+ 
+     @classmethod
++    def __setup__(cls):
++        super(Cron, cls).__setup__()
++        cls._error_messages.update({
++                'company': 'Company: %s\n',
++                })
++
++    @classmethod
++    def create_body_message(cls, cron):
++        Company = Pool().get('company.company')
++        company = Company(Transaction().context.get('company'))
++        msg =  cls.raise_user_error('company', (company.party.name,),
++            raise_exception=False)
++        msg += super(Cron, cls).create_body_message(cron)
++        return msg
++
++    @classmethod
+     def _callback(cls, cron):
+         User = Pool().get('res.user')
+         if not cron.companies:

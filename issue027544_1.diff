@@ -1,0 +1,44 @@
+diff -r 32a7b3eab9eb trytond/ir/cron.py
+--- a/trytond/trytond/ir/cron.py	Tue May 10 08:46:45 2016 +0200
++++ b/trytond/trytond/ir/cron.py	Tue May 17 16:35:25 2016 +0200
+@@ -125,22 +125,34 @@
+         return _INTERVALTYPES[cron.interval_type](cron.interval_number)
+ 
+     @classmethod
+-    def send_error_message(cls, cron):
++    def create_subject_message(cls):
++        return cls.raise_user_error('request_title',
++            raise_exception=False)
++
++    @classmethod
++    def create_body_message(cls, cron):
+         tb_s = ''.join(traceback.format_exception(*sys.exc_info()))
+         tb_s = tb_s.decode('utf-8', 'ignore')
+-        subject = cls.raise_user_error('request_title',
+-            raise_exception=False)
+-        body = cls.raise_user_error('request_body',
++        return cls.raise_user_error('request_body',
+             (cron.name, cron.__url__, tb_s),
+             raise_exception=False)
+ 
+-        from_addr = config.get('email', 'from')
+-        to_addr = cron.request_user.email
++    @classmethod
++    def create_error_message(cls, cron, from_addr, to_addr):
++        subject = cls.create_subject_message()
++        body = cls.create_body_message(cron)
+ 
+         msg = MIMEText(body, _charset='utf-8')
+         msg['To'] = to_addr
+         msg['From'] = from_addr
+         msg['Subject'] = Header(subject, 'utf-8')
++        return msg
++
++    @classmethod
++    def send_error_message(cls, cron):
++        from_addr = config.get('email', 'from')
++        to_addr = cron.request_user.email
++        msg = cls.create_error_message(cron, from_addr, to_addr)
+         logger = logging.getLogger(__name__)
+         if not to_addr:
+             logger.error(msg.as_string())
