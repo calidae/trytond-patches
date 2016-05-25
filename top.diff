@@ -1,16 +1,16 @@
-diff -r 649b0805fa93 trytond/protocols/dispatcher.py
---- a/trytond/trytond/protocols/dispatcher.py	Fri Feb 20 09:11:59 2015 +0100
-+++ b/trytond/trytond/protocols/dispatcher.py	Sun Apr 19 03:17:46 2015 +0200
+diff -r 6c0d835dd918 trytond/protocols/dispatcher.py
+--- a/trytond/protocols/dispatcher.py	Wed May 11 10:40:32 2016 +0200
++++ b/trytond/protocols/dispatcher.py	Wed May 25 15:15:50 2016 +0200
 @@ -20,6 +20,8 @@
  from trytond.tools import is_instance_method
  from trytond.wsgi import app
-
+ 
 +import top
 +
  logger = logging.getLogger(__name__)
-
+ 
  ir_configuration = Table('ir_configuration')
-@@ -190,6 +192,16 @@
+@@ -192,6 +194,16 @@
          with Transaction().start(pool.database_name, user,
                  readonly=rpc.readonly) as transaction:
              Cache.clean(pool.database_name)
@@ -27,19 +27,19 @@ diff -r 649b0805fa93 trytond/protocols/dispatcher.py
              try:
                  c_args, c_kwargs, transaction.context, transaction.timestamp \
                      = rpc.convert(obj, *args, **kwargs)
-@@ -217,6 +229,8 @@
+@@ -219,6 +231,8 @@
              except Exception:
                  logger.error(log_message, *log_args, exc_info=True)
                  raise
 +            finally:
 +                top.remove(action_id)
+             # Need to commit to unlock SQLite database
+             transaction.commit()
              Cache.resets(pool.database_name)
-         if request.authorization.type == 'session':
-             try:
-diff -r 649b0805fa93 trytond/protocols/top.py
+diff -r 6c0d835dd918 trytond/protocols/top.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/trytond/trytond/protocols/top.py	Sun Apr 19 03:18:20 2015 +0200
-@@ -0,0 +1,90 @@
++++ b/trytond/protocols/top.py	Wed May 25 15:15:50 2016 +0200
+@@ -0,0 +1,94 @@
 +import random
 +import signal
 +import locale
@@ -52,6 +52,11 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +
 +# Start Printing Tables
 +# http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
++
++# Usage:
++# 1. Gets which PID trytond run
++# 2. sudo kill -s SIGUSR1 PID
++# 3. See results in trytond logs
 +
 +def format_num(num):
 +    """Format a number according to given places.
@@ -103,19 +108,18 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +       for action in sorted(current_actions.values(), key=itemgetter('timestamp')):
 +           row = []
 +           for key in header:
-+	       value = action.get(key, '')
-+               if key == 'elapsed':
++                value = action.get(key, '')
++                if key == 'elapsed':
 +                   value = (datetime.now() - action['timestamp']).total_seconds()
-+               if isinstance(value, datetime):
++                if isinstance(value, datetime):
 +                   value = value.ctime()
-+               row.append(value)
++                row.append(value)
 +           table.append(row)
 +       pprint_table(table)
 +       print '=' * 30
 +
 +signal.signal(signal.SIGUSR1, signal_user_handler)
 +faulthandler.register(signal.SIGUSR2)
-+
 +
 +def add(value):
 +    action_id = new_id()
