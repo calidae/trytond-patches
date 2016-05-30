@@ -1,19 +1,10 @@
-# HG changeset patch
-# User Guillem Barba <guillembarba@gmail.com>
-add relate to Credit Notes in Invoices
-
-issue4506
-review10091002
-
-Index: invoice.xml
-===================================================================
-
---- .a/trytond/trytond/modules/account_invoice/invoice.xml
-+++ .b/trytond/trytond/modules/account_invoice/invoice.xml
+diff -r c7607908611c trytond/trytond/modules/account_invoice/invoice.xml
+--- a/trytond/trytond/modules/account_invoice/invoice.xml	Wed May 11 11:37:56 2016 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.xml	Mon May 30 14:08:53 2016 +0200
 @@ -38,6 +38,17 @@
              <field name="act_window" ref="act_invoice_form"/>
          </record>
-
+ 
 +        <record model="ir.action.act_window" id="act_credit_notes_form">
 +            <field name="name">Credit Notes</field>
 +            <field name="res_model">account.invoice</field>
@@ -28,39 +19,31 @@ Index: invoice.xml
          <record model="ir.action.act_window" id="act_invoice_out_form">
              <field name="name">Customer Invoices</field>
              <field name="res_model">account.invoice</field>
-
-
-Index: ca_ES.xml
-===================================================================
-
---- .a/trytond/trytond/modules/account_invoice/locale/ca_ES.po
-+++ .b/trytond/trytond/modules/account_invoice/locale/ca_ES.po
+diff -r c7607908611c trytond/trytond/modules/account_invoice/locale/ca_ES.po
+--- a/trytond/trytond/modules/account_invoice/locale/ca_ES.po	Wed May 11 11:37:56 2016 +0200
++++ b/trytond/trytond/modules/account_invoice/locale/ca_ES.po	Mon May 30 14:08:53 2016 +0200
 @@ -1053,6 +1053,10 @@
- msgid "Invoices"
- msgstr "Factures"
-
+ msgid "Invoice Tax"
+ msgstr "Impost de factura"
+ 
 +msgctxt "model:ir.action,name:act_credit_notes_form"
 +msgid "Credit Notes"
 +msgstr "Abonaments"
 +
- msgctxt "model:ir.action,name:act_invoice_in_credit_note_form"
- msgid "Supplier Credit Notes"
- msgstr "Abonaments de proveïdor"
-
-
-Index: ca_ES.xml
-===================================================================
-
---- .a/trytond/trytond/modules/account_invoice/locale/es_ES.po
-+++ .b/trytond/trytond/modules/account_invoice/locale/es_ES.po
-@@ -1045,6 +1045,10 @@
+ msgctxt "model:ir.action,name:act_invoice_form"
  msgid "Invoices"
- msgstr "Todas las facturas"
-
+ msgstr "Totes les factures"
+diff -r c7607908611c trytond/trytond/modules/account_invoice/locale/es_ES.po
+--- a/trytond/trytond/modules/account_invoice/locale/es_ES.po	Wed May 11 11:37:56 2016 +0200
++++ b/trytond/trytond/modules/account_invoice/locale/es_ES.po	Mon May 30 14:08:53 2016 +0200
+@@ -1050,6 +1050,10 @@
+ msgid "Invoice Tax"
+ msgstr "Impuesto de factura"
+ 
 +msgctxt "model:ir.action,name:act_credit_notes_form"
 +msgid "Credit Notes"
 +msgstr "Abonos"
 +
- msgctxt "model:ir.action,name:act_invoice_form2"
+ msgctxt "model:ir.action,name:act_invoice_form"
  msgid "Invoices"
- msgstr "Facturas"
+ msgstr "Todas las facturas"
