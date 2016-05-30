@@ -1,3 +1,4 @@
+issue5154.diff
 do_not_lock_on_assign_try.diff
 account_move_line_rule.diff
 issue154_316.diff
@@ -41,5 +42,4 @@ tax_active_invisible.diff
 #stock_lot_fix_pick_product_without_outgoing_moves.diff
 #purchase_fix_get_move_done_rounding.diff
 #multicompany_cron.diff
-#025476_5154_5155_5456_optimize_move_write_assign.diff
 #limit_invoices_in_creit_note_action_by_domain.diff

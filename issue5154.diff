@@ -1,0 +1,60 @@
+diff -r 95ad0421e638 trytond/trytond/modules/stock/move.py
+--- a/trytond/trytond/modules/stock/move.py	Wed May 11 11:24:37 2016 +0200
++++ b/trytond/trytond/modules/stock/move.py	Mon May 30 14:38:51 2016 +0200
+@@ -682,7 +682,12 @@
+ 
+     @classmethod
+     def write(cls, *args):
++        pool = Pool()
++        Product = pool.get('product.product')
++        Uom = pool.get('product.uom')
++
+         actions = iter(args)
++        args = []
+         for moves, values in zip(actions, actions):
+             vals_set = set(values)
+             if cls._deny_modify_assigned & vals_set:
+@@ -694,6 +699,27 @@
+                     if move.state in ('done', 'cancel'):
+                         cls.raise_user_error('modify_done_cancel',
+                             (move.rec_name,))
++            if set(['quantity', 'uom', 'product']) & vals_set:
++                int_qty2moves = {}
++                for move in moves:
++                    uom = values.get('uom', move.uom)
++                    if not isinstance(uom, Uom):
++                        uom = Uom(uom)
++                    product = values.get('product', move.product)
++                    if not isinstance(product, Product):
++                        product = Product(product)
++                    internal_quantity = cls._get_internal_quantity(
++                        values.get('quantity', move.quantity),
++                        uom,
++                        product)
++                    int_qty2moves.setdefault(
++                        internal_quantity, []).append(move)
++                for int_qty, int_qty_moves in int_qty2moves.iteritems():
++                    new_values = values.copy()
++                    new_values['internal_quantity'] = int_qty
++                    args.extend((int_qty_moves, new_values))
++            else:
++                args.extend((moves, values))
+ 
+         super(Move, cls).write(*args)
+ 
+@@ -701,15 +727,6 @@
+         for moves, values in zip(actions, actions):
+             if any(f not in cls._allow_modify_closed_period for f in values):
+                 cls.check_period_closed(moves)
+-            for move in moves:
+-                internal_quantity = cls._get_internal_quantity(move.quantity,
+-                        move.uom, move.product)
+-                if (internal_quantity != move.internal_quantity
+-                        and internal_quantity
+-                        != values.get('internal_quantity')):
+-                    cls.write([move], {
+-                            'internal_quantity': internal_quantity,
+-                            })
+ 
+     @classmethod
+     def delete(cls, moves):
