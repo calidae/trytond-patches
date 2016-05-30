@@ -16,6 +16,7 @@ issue15211002-sale-confirmed-to-done.diff
 issue13181002_1.diff
 invoice_speedup.diff
 babi_multiprocess.diff
+country.diff
 domain_field.diff
 issue18481003_1.diff
 issue4950_stock.diff
