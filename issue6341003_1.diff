@@ -1,12 +1,20 @@
-Index: trytond/trytond/modules/account_asset/asset.xml
-===================================================================
-
---- a/trytond/trytond/modules/account_asset/asset.xml
-+++ b/trytond/trytond/modules/account_asset/asset.xml
-@@ -139,6 +139,16 @@
+diff -r fea5b77cdd66 trytond/trytond/modules/account_asset/asset.xml
+--- a/trytond/trytond/modules/account_asset/asset.xml	Wed May 11 12:04:36 2016 +0200
++++ b/trytond/trytond/modules/account_asset/asset.xml	Mon May 30 15:49:39 2016 +0200
+@@ -139,6 +139,26 @@
              <field name="name">asset_line_tree</field>
          </record>
-
+ 
++        <record model="ir.rule.group" id="rule_group_asset_line">
++            <field name="model" search="[('model', '=', 'account.asset.line')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_asset_line1">
++            <field name="domain" eval="[('asset.company', 'in', Eval('user', {}).get('companies', []))]" pyson="1"/>
++            <field name="rule_group" ref="rule_group_asset_line"/>
++        </record>
++
++
 +        <record model="ir.rule.group" id="rule_group_asset_line">
 +            <field name="model" search="[('model', '=', 'account.asset.line')]"/>
 +            <field name="global_p" eval="True"/>
