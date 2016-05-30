@@ -1,7 +1,7 @@
-diff -r 8635acede28d sale.py
---- .a/trytond/trytond/modules/sale/sale.py	Sat Feb 21 19:06:50 2015 +0100
-+++ .b/trytond/trytond/modules/sale/sale.py	Mon Apr 20 09:32:28 2015 +0200
-@@ -951,7 +951,7 @@
+diff -r 758b49de71a9 trytond/trytond/modules/sale/sale.py
+--- a/trytond/trytond/modules/sale/sale.py	Wed May 11 11:54:40 2016 +0200
++++ b/trytond/trytond/modules/sale/sale.py	Mon May 30 15:22:18 2016 +0200
+@@ -919,7 +919,7 @@
              if sale.is_done():
                  if sale.state != 'done':
                      done.append(sale)
