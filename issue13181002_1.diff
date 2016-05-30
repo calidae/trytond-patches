@@ -1,49 +1,37 @@
-# HG changeset patch
-# User Sergi Almacellas Abellana <sergi@koolpi.com>
-save tree state when executing actions from list view menu
-
-issue4771
-review13181002
-
-Index: tryton/tryton/common/popup_menu.py
-===================================================================
-
---- a/tryton/tryton/common/popup_menu.py
-+++ b/tryton/tryton/common/popup_menu.py
-@@ -11,7 +11,7 @@
+diff -r a2294b0ec2e8 tryton/tryton/common/popup_menu.py
+--- a/tryton/tryton/common/popup_menu.py	Wed May 11 10:42:28 2016 +0200
++++ b/tryton/tryton/common/popup_menu.py	Mon May 30 15:16:30 2016 +0200
+@@ -12,7 +12,7 @@
  _ = gettext.gettext
-
-
+ 
+ 
 -def populate(menu, model, record, title='', field=None):
 +def populate(menu, model, record, title='', field=None, parent_screen=None):
      '''
      Fill menu with the actions of model for the record.
      If title is filled, the actions will be put in a submenu.
-@@ -37,6 +37,8 @@
+@@ -38,6 +38,8 @@
          return record
-
+ 
      def activate(menuitem, action, atype):
 +        if parent_screen:
 +            parent_screen.save_tree_state()
          rec = load(record)
          action = Action.evaluate(action, atype, rec)
          data = {
-
-Index: tryton/tryton/gui/window/view_form/view/list.py
-===================================================================
-
---- a/tryton/tryton/gui/window/view_form/view/list.py
-+++ b/tryton/tryton/gui/window/view_form/view/list.py
-@@ -901,7 +901,7 @@
+diff -r a2294b0ec2e8 tryton/tryton/gui/window/view_form/view/list.py
+--- a/tryton/tryton/gui/window/view_form/view/list.py	Wed May 11 10:42:28 2016 +0200
++++ b/tryton/tryton/gui/window/view_form/view/list.py	Mon May 30 15:16:30 2016 +0200
+@@ -872,7 +872,7 @@
              menu = gtk.Menu()
              menu.popup(None, None, None, event.button, event.time)
-
+ 
 -            def pop(menu, group, record):
 +            def pop(menu, group, record, screen):
                  copy_item = gtk.ImageMenuItem('gtk-copy')
                  copy_item.connect('activate', lambda x: self.on_copy())
                  menu.append(copy_item)
-@@ -915,7 +915,8 @@
+@@ -886,7 +886,8 @@
                          break
                      parent = parent.parent
                  else:
@@ -53,7 +41,7 @@ Index: tryton/tryton/gui/window/view_form/view/list.py
                  for col in self.treeview.get_columns():
                      if not col.get_visible() or not col.name:
                          continue
-@@ -932,10 +933,11 @@
+@@ -903,10 +904,11 @@
                      if not model:
                          continue
                      label = field.attrs['string']
@@ -67,4 +55,3 @@ Index: tryton/tryton/gui/window/view_form/view/list.py
          elif event.button == 2:
              event.button = 1
              event.state |= gtk.gdk.MOD1_MASK
-
