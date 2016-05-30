@@ -1,0 +1,32 @@
+diff -r 6c0d835dd918 trytond/trytond/protocols/dispatcher.py
+--- a/trytond/trytond/protocols/dispatcher.py	Wed May 11 10:40:32 2016 +0200
++++ b/trytond/trytond/protocols/dispatcher.py	Mon May 30 15:10:42 2016 +0200
+@@ -214,7 +214,7 @@
+                 logger.error(log_message, *log_args, exc_info=True)
+                 raise
+             except (ConcurrencyException, UserError, UserWarning):
+-                logger.debug(log_message, *log_args, exc_info=True)
++                logger.warning(log_message, *log_args, exc_info=True)
+                 raise
+             except Exception:
+                 logger.error(log_message, *log_args, exc_info=True)
+diff -r 6c0d835dd918 trytond/trytond/protocols/jsonrpc.py
+--- a/trytond/trytond/protocols/jsonrpc.py	Wed May 11 10:40:32 2016 +0200
++++ b/trytond/trytond/protocols/jsonrpc.py	Mon May 30 15:10:42 2016 +0200
+@@ -9,6 +9,7 @@
+ except ImportError:
+     import json
+ import base64
++import logging
+ 
+ from werkzeug.wrappers import Response
+ from werkzeug.utils import cached_property
+@@ -17,6 +18,8 @@
+ from trytond.protocols.wrappers import Request
+ from trytond.exceptions import TrytonException
+ 
++logger = logging.getLogger(__name__)
++
+ 
+ class JSONDecoder(object):
+ 

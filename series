@@ -1,3 +1,4 @@
+logging_jsonrpc_exeption.diff
 issue5154.diff
 do_not_lock_on_assign_try.diff
 account_move_line_rule.diff
