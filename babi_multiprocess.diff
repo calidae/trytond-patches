@@ -1,11 +1,12 @@
-diff -r 75c44f5a88e0 trytond/trytond/protocols/dispatcher.py
---- a/trytond/trytond/protocols/dispatcher.py	Mon Jul 20 09:50:24 2015 +0200
-+++ b/trytond/trytond/protocols/dispatcher.py	Mon Jul 20 10:21:09 2015 +0200
-@@ -157,7 +157,19 @@
+diff -r 6c0d835dd918 trytond/protocols/dispatcher.py
+--- a/trytond/trytond/protocols/dispatcher.py	Wed May 11 10:40:32 2016 +0200
++++ b/trytond/trytond/protocols/dispatcher.py	Mon May 30 13:24:32 2016 +0200
+@@ -159,8 +159,19 @@
      type, _ = method.split('.', 1)
      name = '.'.join(method.split('.')[1:-1])
      method = method.split('.')[-1]
 -    return pool.get(name, type=type), method
+-
 +    try:
 +        obj = pool.get(name, type=type)
 +    except KeyError:
@@ -19,6 +20,6 @@ diff -r 75c44f5a88e0 trytond/trytond/protocols/dispatcher.py
 +        else:
 +            raise
 +    return obj, method
-
-
+ 
  @app.auth_required
+ @with_pool
