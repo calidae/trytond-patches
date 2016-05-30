@@ -1,18 +1,9 @@
-# HG changeset patch
-# User Sergi Almacellas Abellana <sergi@koolpi.com>
-Correctly show reference and party on invoice rec_name
-
-issue4878
-review18481003
-
-Index: trytond/trytond/modules/account_invoice/invoice.py
-===================================================================
-
---- a/trytond/trytond/modules/account_invoice/invoice.py
-+++ b/trytond/trytond/modules/account_invoice/invoice.py
-@@ -942,9 +942,12 @@
+diff -r c7607908611c trytond/trytond/modules/account_invoice/invoice.py
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Wed May 11 11:37:56 2016 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Mon May 30 15:28:43 2016 +0200
+@@ -1018,9 +1018,12 @@
                  cls.raise_user_error('modify_invoice', (invoice.rec_name,))
-
+ 
      def get_rec_name(self, name):
 -        return (self.number or unicode(self.id)
 -            + (self.reference and (' ' + self.reference) or '')
@@ -23,7 +14,6 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +        if self.party:
 +            name += ' %s' % self.party.rec_name
 +        return name
-
+ 
      @classmethod
      def search_rec_name(cls, name, clause):
-
