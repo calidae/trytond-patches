@@ -1,6 +1,7 @@
-diff -r c7607908611c trytond/trytond/modules/account_invoice/invoice.py
---- a/trytond/trytond/modules/account_invoice/invoice.py	Wed May 11 11:37:56 2016 +0200
-+++ b/trytond/trytond/modules/account_invoice/invoice.py	Tue May 31 10:28:56 2016 +0200
+Index: nan40/trytond/trytond/modules/account_invoice/invoice.py
+===================================================================
+--- nan40.orig/trytond/trytond/modules/account_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ nan40/trytond/trytond/modules/account_invoice/invoice.py	2016-05-31 15:12:13.266350897 +0200
 @@ -890,34 +890,36 @@
          '''
          Return move line
@@ -397,9 +398,10 @@ diff -r c7607908611c trytond/trytond/modules/account_invoice/invoice.py
  
      def _credit(self):
          '''
-diff -r 7f31fc9f8199 trytond/trytond/modules/account_payment_type/invoice.py
---- a/trytond/trytond/modules/account_payment_type/invoice.py	Tue May 03 00:35:20 2016 +0200
-+++ b/trytond/trytond/modules/account_payment_type/invoice.py	Tue May 31 10:41:08 2016 +0200
+Index: nan40/trytond/trytond/modules/account_payment_type/invoice.py
+===================================================================
+--- nan40.orig/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ nan40/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.266350897 +0200
 @@ -82,7 +82,7 @@
                      return self.company.party.customer_payment_type.id
  
@@ -411,9 +413,10 @@ diff -r 7f31fc9f8199 trytond/trytond/modules/account_payment_type/invoice.py
 -        return res
 +            line.payment_type = self.payment_type
 +        return line
-diff -r 60f1b8972c76 trytond/trytond/modules/account_bank/account.py
---- a/trytond/trytond/modules/account_bank/account.py	Mon May 30 12:30:33 2016 +0200
-+++ btrytond/trytond/modules/account_bank//account.py	Tue May 31 10:41:34 2016 +0200
+Index: nan40/trytond/trytond/modules/account_bank/account.py
+===================================================================
+--- nan40.orig/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
++++ nan40/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
 @@ -251,10 +251,10 @@
          '''
          Add account bank to move line when post invoice.
@@ -428,18 +431,11 @@ diff -r 60f1b8972c76 trytond/trytond/modules/account_bank/account.py
  
      @classmethod
      def compute_default_bank_account(cls, values):
-diff -r 5d64f58a9c9b trytond/trytond/modules/analytic_invoice/invoice.py
---- a/trytond/trytond/modules/analytic_invoice/invoice.py	Wed May 11 11:48:47 2016 +0200
-+++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Tue May 31 11:55:51 2016 +0200
-@@ -1,5 +1,7 @@
- # This file is part of Tryton.  The COPYRIGHT file at the top level of
- # this repository contains the full copyright notices and license terms.
-+import datetime
-+from trytond.model import fields
- from trytond.pool import PoolMeta, Pool
- 
- from trytond.modules.analytic_account import AnalyticMixin
-@@ -25,32 +27,33 @@
+Index: nan40/trytond/trytond/modules/analytic_invoice/invoice.py
+===================================================================
+--- nan40.orig/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ nan40/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
+@@ -26,32 +26,33 @@
  
          return result
  
@@ -493,28 +489,3 @@ diff -r 5d64f58a9c9b trytond/trytond/modules/analytic_invoice/invoice.py
  
  
  class AnalyticAccountEntry:
-@@ -61,3 +64,24 @@
-     def _get_origin(cls):
-         origins = super(AnalyticAccountEntry, cls)._get_origin()
-         return origins + ['account.invoice.line']
-+
-+    @fields.depends('origin')
-+    def on_change_with_company(self, name=None):
-+        pool = Pool()
-+        InvoiceLine = pool.get('account.invoice.line')
-+        company = super(AnalyticAccountEntry, self).on_change_with_company(
-+            name)
-+        if isinstance(self.origin, InvoiceLine):
-+            if self.origin.invoice:
-+                return self.origin.invoice.company.id
-+            elif self.origin.company:
-+                return self.origin.company.id
-+        return company
-+
-+    @classmethod
-+    def search_company(cls, name, clause):
-+        return ['OR',
-+            [('origin.company',) + tuple(clause[1:]) +
-+                tuple(('account.invoice.line',))],
-+            [('origin.invoice.company',) + tuple(clause[1:]) +
-+                tuple(('account.invoice.line',))]]
