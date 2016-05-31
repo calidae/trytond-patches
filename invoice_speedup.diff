@@ -1,7 +1,7 @@
-diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
---- a/trytond/trytond/modules/account_invoice/invoice.py	Tue Jul 07 16:46:50 2015 +0200
-+++ b/trytond/trytond/modules/account_invoice/invoice.py	Tue Jul 07 17:12:14 2015 +0200
-@@ -859,34 +859,35 @@
+diff -r c7607908611c trytond/trytond/modules/account_invoice/invoice.py
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Wed May 11 11:37:56 2016 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Tue May 31 10:28:56 2016 +0200
+@@ -890,34 +890,36 @@
          '''
          Return move line
          '''
@@ -17,18 +17,15 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +                line.amount_second_currency = Currency.compute(
                      self.company.currency, amount, self.currency)
 -            res['second_currency'] = self.currency.id
-+            line.amount_second_currency = -line.amount_second_currency
 +            line.second_currency = self.currency.id
          else:
 -            res['amount_second_currency'] = None
 -            res['second_currency'] = None
--        if amount <= 0:
--            res['debit'], res['credit'] = -amount, 0
 +            line.amount_second_currency = None
 +            line.second_currency = None
-+        if amount >= Decimal('0.0'):
-+            line.debit = Decimal('0.0')
-+            line.credit = amount
+         if amount <= 0:
+-            res['debit'], res['credit'] = -amount, 0
++            line.debit, line.credit = -amount, 0
          else:
 -            res['debit'], res['credit'] = 0, amount
 -        if res['amount_second_currency']:
@@ -36,8 +33,11 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 -                res['amount_second_currency'].copy_sign(
 -                    res['debit'] - res['credit']))
 -        res['account'] = self.account.id
-+            line.debit = - amount
-+            line.credit = Decimal('0.0')
++            line.debit, line.credit = 0, amount
++        if line.amount_second_currency:
++            line.amount_second_currency = (
++                line.amount_second_currency.copy_sign(
++                    line.debit - line.credit))
 +        line.account = self.account.id
          if self.account.party_required:
 -            res['party'] = self.party.id
@@ -48,7 +48,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +        line.maturity_date = date
 +        line.description = self.description
 +        return line
-
+ 
 -    def create_move(self):
 +    def get_move(self):
          '''
@@ -57,7 +57,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          '''
          pool = Pool()
          Move = pool.get('account.move')
-@@ -902,9 +903,9 @@
+@@ -933,9 +935,9 @@
          total = Decimal('0.0')
          total_currency = Decimal('0.0')
          for line in move_lines:
@@ -67,10 +67,10 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +            total += line.debit - line.credit
 +            if line.amount_second_currency:
 +                total_currency += line.amount_second_currency
-
+ 
          term_lines = self.payment_term.compute(total, self.company.currency,
              self.invoice_date)
-@@ -912,28 +913,23 @@
+@@ -943,28 +945,24 @@
          if not term_lines:
              term_lines = [(Date.today(), total)]
          for date, amount in term_lines:
@@ -86,10 +86,10 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 -            move_lines[-1]['amount_second_currency'] -= \
 +            move_lines[-1].amount_second_currency -= \
                  remainder_total_currency
--
+ 
          accounting_date = self.accounting_date or self.invoice_date
          period_id = Period.find(self.company.id, date=accounting_date)
-
+ 
 -        move, = Move.create([{
 -                    'journal': self.journal.id,
 -                    'period': period_id,
@@ -109,9 +109,9 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +        move.company = self.company
 +        move.lines = move_lines
          return move
-
+ 
      def set_number(self):
-@@ -970,10 +966,9 @@
+@@ -1001,10 +999,9 @@
          with Transaction().set_context(
                  date=self.invoice_date or Date.today()):
              number = Sequence.get_id(sequence.id)
@@ -121,38 +121,22 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 -                vals['invoice_date'] = Transaction().context['date']
 -        self.write([self], vals)
 +                self.invoice_date = Transaction().context['date']
-
+ 
      @classmethod
      def check_modify(cls, invoices):
-@@ -987,9 +982,12 @@
-                 cls.raise_user_error('modify_invoice', (invoice.rec_name,))
-
-     def get_rec_name(self, name):
--        return (self.number or unicode(self.id)
--            + (self.reference and (' ' + self.reference) or '')
--            + ' ' + self.party.rec_name)
-+        name = self.number or unicode(self.id)
-+        if self.reference:
-+            name += ' %s' % self.reference
-+        if self.party:
-+            name += ' %s' % self.party.rec_name
-+        return name
-
-     @classmethod
-     def search_rec_name(cls, name, clause):
-@@ -1033,7 +1031,7 @@
+@@ -1064,7 +1061,7 @@
              all_invoices += invoices
          update_tax = [i for i in all_invoices if i.state == 'draft']
          super(Invoice, cls).write(*args)
 -        if update_tax:
 +        if update_tax and not Transaction().context.get('skip_update_taxes'):
              cls.update_taxes(update_tax)
-
+ 
      @classmethod
-@@ -1201,18 +1199,16 @@
+@@ -1232,18 +1229,16 @@
          '''
          MoveLine = Pool().get('account.move.line')
-
+ 
 -        new_invoices = []
 -        for invoice in invoices:
 -            new_invoice, = cls.create([invoice._credit()])
@@ -171,9 +155,9 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
                              if not l.reconciliation])
 -        cls.update_taxes(new_invoices)
          return new_invoices
-
+ 
      @classmethod
-@@ -1232,10 +1228,16 @@
+@@ -1263,10 +1258,16 @@
      @ModelView.button
      @Workflow.transition('validated')
      def validate_invoice(cls, invoices):
@@ -188,13 +172,13 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +                to_write.extend(([invoice], invoice._save_values))
 +        if to_write:
 +            cls.write(*to_write)
-
+ 
      @classmethod
      @ModelView.button
-@@ -1243,14 +1245,29 @@
+@@ -1274,14 +1275,29 @@
      def post(cls, invoices):
          Move = Pool().get('account.move')
-
+ 
 -        moves = []
 +        to_create = []
          for invoice in invoices:
@@ -227,8 +211,8 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for invoice in invoices:
              if invoice.type == 'out':
                  invoice.print_invoice()
-@@ -1289,14 +1306,17 @@
-
+@@ -1320,14 +1336,17 @@
+ 
          cancel_moves = []
          delete_moves = []
 +        to_write = []
@@ -246,15 +230,15 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          if delete_moves:
              Move.delete(delete_moves)
          if cancel_moves:
-@@ -1852,6 +1872,7 @@
+@@ -1883,6 +1902,7 @@
      def _compute_taxes(self):
          pool = Pool()
          Currency = pool.get('currency.currency')
 +        TaxLine = pool.get('account.tax.line')
-
+ 
          res = []
          if self.type != 'line':
-@@ -1869,53 +1890,55 @@
+@@ -1900,53 +1920,56 @@
                          date=self.invoice.currency_date):
                      amount = Currency.compute(self.invoice.currency,
                          amount, self.invoice.company.currency)
@@ -269,7 +253,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +                tax_line.tax = tax['tax']
 +                res.append(tax_line)
          return res
-
+ 
      def get_move_line(self):
          '''
 -        Return a list of move lines values for invoice line
@@ -280,6 +264,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +        pool = Pool()
 +        Currency = pool.get('currency.currency')
 +        MoveLine = pool.get('account.move.line')
++
          if self.type != 'line':
              return []
 -        res['description'] = self.description
@@ -332,11 +317,11 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 -        return [res]
 +            line.tax_lines = computed_taxes
 +        return [line]
-
+ 
      def _credit(self):
          '''
-@@ -2131,47 +2154,50 @@
-
+@@ -2162,47 +2185,52 @@
+ 
      def get_move_line(self):
          '''
 -        Return a list of move lines values for invoice tax
@@ -348,10 +333,12 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +        Currency = pool.get('currency.currency')
 +        MoveLine = pool.get('account.move.line')
 +        TaxLine = pool.get('account.tax.line')
-+        line = MoveLine()
++
          if not self.amount:
              return []
 -        res['description'] = self.description
++
++        line = MoveLine()
 +        line.description = self.description
          if self.invoice.currency != self.invoice.company.currency:
              with Transaction().set_context(date=self.invoice.currency_date):
@@ -407,15 +394,15 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 +            tax_line.tax = self.tax
 +            line.tax_lines = [tax_line]
 +        return [line]
-
+ 
      def _credit(self):
          '''
-diff -r 0e69764f2826 trytond/trytond/modules/account_payment_type/invoice.py
---- a/trytond/trytond/modules/account_payment_type/invoice.py	Tue Jul 07 10:10:50 2015 +0200
-+++ b/trytond/trytond/modules/account_payment_type/invoice.py	Tue Jul 07 17:06:02 2015 +0200
+diff -r 7f31fc9f8199 trytond/trytond/modules/account_payment_type/invoice.py
+--- a/trytond/trytond/modules/account_payment_type/invoice.py	Tue May 03 00:35:20 2016 +0200
++++ b/trytond/trytond/modules/account_payment_type/invoice.py	Tue May 31 10:41:08 2016 +0200
 @@ -82,7 +82,7 @@
                      return self.company.party.customer_payment_type.id
-
+ 
      def _get_move_line(self, date, amount):
 -        res = super(Invoice, self)._get_move_line(date, amount)
 +        line = super(Invoice, self)._get_move_line(date, amount)
@@ -424,10 +411,10 @@ diff -r 0e69764f2826 trytond/trytond/modules/account_payment_type/invoice.py
 -        return res
 +            line.payment_type = self.payment_type
 +        return line
-diff -r 6429c9c53cb8 trytond/trytond/modules/account_bank/account.py
---- a/trytond/trytond/modules/account_bank/account.py	Tue May 05 14:36:02 2015 +0200
-+++ b/trytond/trytond/modules/account_bank/account.py	Tue Jul 07 15:36:26 2015 +0200
-@@ -179,10 +179,10 @@
+diff -r 60f1b8972c76 trytond/trytond/modules/account_bank/account.py
+--- a/trytond/trytond/modules/account_bank/account.py	Mon May 30 12:30:33 2016 +0200
++++ btrytond/trytond/modules/account_bank//account.py	Tue May 31 10:41:34 2016 +0200
+@@ -251,10 +251,10 @@
          '''
          Add account bank to move line when post invoice.
          '''
@@ -438,16 +425,24 @@ diff -r 6429c9c53cb8 trytond/trytond/modules/account_bank/account.py
 -        return res
 +            line.bank_account = self.bank_account
 +        return line
-
+ 
      @classmethod
-     def create(cls, vlist):
-diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
---- a/trytond/trytond/modules/analytic_invoice/invoice.py	Sun Mar 01 15:34:41 2015 +0100
-+++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Mon Nov 30 14:24:25 2015 +0100
-@@ -25,32 +25,33 @@
-
+     def compute_default_bank_account(cls, values):
+diff -r 5d64f58a9c9b trytond/trytond/modules/analytic_invoice/invoice.py
+--- a/trytond/trytond/modules/analytic_invoice/invoice.py	Wed May 11 11:48:47 2016 +0200
++++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Tue May 31 11:55:51 2016 +0200
+@@ -1,5 +1,7 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
++import datetime
++from trytond.model import fields
+ from trytond.pool import PoolMeta, Pool
+ 
+ from trytond.modules.analytic_account import AnalyticMixin
+@@ -25,32 +27,33 @@
+ 
          return result
-
+ 
 -    def get_analytic_entry(self, entry, value):
 -        analytic_entry = {}
 -        analytic_entry['name'] = self.description
@@ -470,11 +465,11 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 +        analytic_line.account = entry.account
 +        analytic_line.journal = self.invoice.journal
 +        analytic_line.date = (self.invoice.accounting_date
-+             or self.invoice.invoice_date)
++             or self.invoice.invoice_date or datetime.date.today())
 +        analytic_line.reference = self.invoice.reference
 +        analytic_line.party = self.invoice.party
 +        return analytic_line
-
+ 
      def get_move_line(self):
 -        values = super(InvoiceLine, self).get_move_line()
 +        lines = super(InvoiceLine, self).get_move_line()
@@ -495,6 +490,31 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 +                            line))
 +                line.analytic_lines = analytic_lines
 +        return lines
-
-
+ 
+ 
  class AnalyticAccountEntry:
+@@ -61,3 +64,24 @@
+     def _get_origin(cls):
+         origins = super(AnalyticAccountEntry, cls)._get_origin()
+         return origins + ['account.invoice.line']
++
++    @fields.depends('origin')
++    def on_change_with_company(self, name=None):
++        pool = Pool()
++        InvoiceLine = pool.get('account.invoice.line')
++        company = super(AnalyticAccountEntry, self).on_change_with_company(
++            name)
++        if isinstance(self.origin, InvoiceLine):
++            if self.origin.invoice:
++                return self.origin.invoice.company.id
++            elif self.origin.company:
++                return self.origin.company.id
++        return company
++
++    @classmethod
++    def search_company(cls, name, clause):
++        return ['OR',
++            [('origin.company',) + tuple(clause[1:]) +
++                tuple(('account.invoice.line',))],
++            [('origin.invoice.company',) + tuple(clause[1:]) +
++                tuple(('account.invoice.line',))]]
