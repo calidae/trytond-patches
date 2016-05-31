@@ -1,0 +1,15 @@
+diff -r d5292fbad2b1 trytond/model/modelstorage.py
+--- a/trytond/trytond/model/modelstorage.py	Tue May 31 16:02:48 2016 +0200
++++ b/trytond/trytond/model/modelstorage.py	Tue May 31 16:05:41 2016 +0200
+
+@@ -949,6 +949,10 @@
+                             domain,
+                             ])
+                 if set(relations) != set(finds):
++                    print "======= records:", records
++                    print "=== domain:", domain
++                    print "=== relations:", relations
++                    print "=== find:", finds
+                     cls.raise_user_error('domain_validation_record',
+                         error_args=cls._get_error_args(field.name))
+ 

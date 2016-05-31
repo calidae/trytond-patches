@@ -79,6 +79,7 @@ issue5370.diff
 issue4487.diff
 sale_move_done_rounding.diff
 issue25021002_70001.diff
+print_domain_warning.diff
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncomment in calfruitos
