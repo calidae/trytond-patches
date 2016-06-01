@@ -14,17 +14,6 @@ diff -r fea5b77cdd66 trytond/trytond/modules/account_asset/asset.xml
 +            <field name="rule_group" ref="rule_group_asset_line"/>
 +        </record>
 +
-+
-+        <record model="ir.rule.group" id="rule_group_asset_line">
-+            <field name="model" search="[('model', '=', 'account.asset.line')]"/>
-+            <field name="global_p" eval="True"/>
-+        </record>
-+        <record model="ir.rule" id="rule_asset_line1">
-+            <field name="domain" eval="[('asset.company', 'in', Eval('user', {}).get('companies', []))]" pyson="1"/>
-+            <field name="rule_group" ref="rule_group_asset_line"/>
-+        </record>
-+
-+
          <record model="ir.model.access" id="access_asset_line">
              <field name="model" search="[('model', '=', 'account.asset.line')]"/>
              <field name="perm_read" eval="False"/>
