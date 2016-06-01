@@ -1,7 +1,7 @@
 Index: trytond/trytond/protocols/dispatcher.py
 ===================================================================
---- a/trytond/protocols/dispatcher.py	2016-05-31 14:55:32.206305641 +0200
-+++ b/trytond/protocols/dispatcher.py	2016-05-31 14:55:32.202305641 +0200
+--- a/trytond/trytond/protocols/dispatcher.py	2016-05-31 14:55:32.206305641 +0200
++++ b/trytond/trytond/protocols/dispatcher.py	2016-05-31 14:55:32.202305641 +0200
 @@ -20,6 +20,8 @@
  from trytond.tools import is_instance_method
  from trytond.wsgi import app
@@ -40,7 +40,7 @@ Index: trytond/trytond/protocols/dispatcher.py
 Index: trytond/trytond/protocols/top.py
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ b/trytond/protocols/top.py	2016-05-31 14:55:32.202305641 +0200
++++ b/trytond/trytond/protocols/top.py	2016-05-31 14:55:32.202305641 +0200
 @@ -0,0 +1,94 @@
 +import random
 +import signal
