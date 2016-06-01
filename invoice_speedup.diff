@@ -1,7 +1,7 @@
-Index: nan40/trytond/trytond/modules/account_invoice/invoice.py
+Index: trytond/trytond/modules/account_invoice/invoice.py
 ===================================================================
---- nan40.orig/trytond/trytond/modules/account_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
-+++ nan40/trytond/trytond/modules/account_invoice/invoice.py	2016-05-31 15:12:13.266350897 +0200
+--- a/trytond/trytond/modules/account_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.py	2016-05-31 15:12:13.266350897 +0200
 @@ -890,34 +890,36 @@
          '''
          Return move line
@@ -398,10 +398,10 @@ Index: nan40/trytond/trytond/modules/account_invoice/invoice.py
  
      def _credit(self):
          '''
-Index: nan40/trytond/trytond/modules/account_payment_type/invoice.py
+Index: trytond/trytond/modules/account_payment_type/invoice.py
 ===================================================================
---- nan40.orig/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.270350897 +0200
-+++ nan40/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.266350897 +0200
+--- a/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ b/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.266350897 +0200
 @@ -82,7 +82,7 @@
                      return self.company.party.customer_payment_type.id
  
@@ -413,10 +413,10 @@ Index: nan40/trytond/trytond/modules/account_payment_type/invoice.py
 -        return res
 +            line.payment_type = self.payment_type
 +        return line
-Index: nan40/trytond/trytond/modules/account_bank/account.py
+Index: trytond/trytond/modules/account_bank/account.py
 ===================================================================
---- nan40.orig/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
-+++ nan40/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
+--- a/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
++++ b/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
 @@ -251,10 +251,10 @@
          '''
          Add account bank to move line when post invoice.
@@ -431,10 +431,10 @@ Index: nan40/trytond/trytond/modules/account_bank/account.py
  
      @classmethod
      def compute_default_bank_account(cls, values):
-Index: nan40/trytond/trytond/modules/analytic_invoice/invoice.py
+Index: trytond/trytond/modules/analytic_invoice/invoice.py
 ===================================================================
---- nan40.orig/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
-+++ nan40/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
+--- a/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ b/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
 @@ -26,32 +26,33 @@
  
          return result
