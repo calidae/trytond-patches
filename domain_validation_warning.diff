@@ -1,0 +1,37 @@
+diff -r bf7aea82d3bc trytond/trytond/model/modelstorage.py
+--- a/trytond/trytond/model/modelstorage.py	Thu Jun 02 16:17:59 2016 +0200
++++ b/trytond/trytond/model/modelstorage.py	Thu Jun 02 16:19:04 2016 +0200
+@@ -5,6 +5,7 @@
+ import time
+ import csv
+ import warnings
++import logging
+ 
+ from decimal import Decimal
+ from itertools import islice, ifilter, chain, izip
+@@ -28,6 +29,7 @@
+ from .descriptors import dualmethod
+ 
+ __all__ = ['ModelStorage', 'EvalEnvironment']
++logger = logging.getLogger(__name__)
+ 
+ 
+ def cache_size():
+@@ -960,8 +962,16 @@
+                                 domain,
+                                 ])
+                     if sub_relations != set(finds):
++                        error_args = cls._get_error_args(field.name)
++                        msg = cls.raise_user_error('domain_validation_record',
++                            error_args=error_args, raise_exception=False)
++                        msg += ' Records: '+ ', '.join(
++                            [r.rec_name for r in records])
++                        msg += ' Relations: '+', '.join(
++                            [r.rec_name for r in list(sub_relations)])
++                        logger.warn(msg)
+                         cls.raise_user_error('domain_validation_record',
+-                            error_args=cls._get_error_args(field.name))
++                            error_args=error_args)
+ 
+         field_names = set(field_names or [])
+         function_fields = {name for name, field in cls._fields.iteritems()
