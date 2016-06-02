@@ -1,0 +1,337 @@
+diff -r 8b7857967585 trytond/trytond/modules/production/__init__.py
+--- a/trytond/trytond/modules/production/__init__.py	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/__init__.py	Thu Jun 02 14:05:47 2016 +0200
+@@ -22,6 +22,7 @@
+         AssignFailed,
+         Product,
+         ProductBom,
++        ProductionLeadTime,
+         Location,
+         Move,
+         module='production', type_='model')
+diff -r 8b7857967585 trytond/trytond/modules/production/product.py
+--- a/trytond/trytond/modules/production/product.py	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/product.py	Thu Jun 02 14:05:47 2016 +0200
+@@ -1,10 +1,13 @@
+ #This file is part of Tryton.  The COPYRIGHT file at the top level of
+ #this repository contains the full copyright notices and license terms.
+-from trytond.model import ModelView, ModelSQL, fields
++from sql import Null
++from sql.conditionals import Case
++
++from trytond.model import ModelView, ModelSQL,  MatchMixin, fields
+ from trytond.pyson import Eval, Get, If, Bool
+ from trytond.pool import PoolMeta
+ 
+-__all__ = ['Product', 'ProductBom']
++__all__ = ['Product', 'ProductBom', 'ProductionLeadTime']
+ __metaclass__ = PoolMeta
+ 
+ 
+@@ -19,6 +22,14 @@
+                         'type', 'service').in_(['service', None]))),
+             },
+         depends=['type'])
++    lead_times = fields.One2Many('production.lead_time',
++        'product', 'Lead Times', order=[('sequence', 'ASC'), ('id', 'ASC')],
++        states={
++            'invisible': (Eval('type', 'service').in_(['service', None])
++                & (Eval('_parent_template', {}).get(
++                        'type', 'service').in_(['service', None]))),
++            },
++        depends=['type'])
+ 
+     @classmethod
+     def __setup__(cls):
+@@ -83,3 +94,34 @@
+     @classmethod
+     def search_rec_name(cls, name, clause):
+         return [('bom.rec_name',) + tuple(clause[1:])]
++
++
++class ProductionLeadTime(ModelSQL, ModelView, MatchMixin):
++    'Production Lead Time'
++    __name__ = 'production.lead_time'
++
++    product = fields.Many2One('product.product', 'Product',
++        ondelete='CASCADE', select=True, required=True,
++        domain=[
++            ('type', '!=', 'service'),
++            ])
++    sequence = fields.Integer('Sequence')
++    bom = fields.Many2One('production.bom', 'BOM', ondelete='CASCADE',
++        domain=[
++            ('output_products', '=', If(Bool(Eval('product')),
++                    Eval('product', -1),
++                    Get(Eval('_parent_product', {}), 'id', 0))),
++            ],
++        depends=['product'])
++    lead_time = fields.Float('Lead Time')
++
++    @classmethod
++    def __setup__(cls):
++        super(ProductionLeadTime, cls).__setup__()
++        cls._order.insert(0, ('product', 'ASC'))
++        cls._order.insert(0, ('sequence', 'ASC'))
++
++    @classmethod
++    def order_sequence(cls, tables):
++        table, _ = tables[None]
++        return [Case((table.sequence == Null, 0), else_=1), table.sequence]
+diff -r 8b7857967585 trytond/trytond/modules/production/product.xml
+--- a/trytond/trytond/modules/production/product.xml	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/product.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -26,5 +26,40 @@
+             <field name="inherit" ref="product.product_view_form"/>
+             <field name="name">product_form</field>
+         </record>
++
++        <record model="ir.ui.view" id="production_lead_time_view_list">
++            <field name="model">production.lead_time</field>
++            <field name="type">tree</field>
++            <field name="name">production_lead_time_list</field>
++        </record>
++
++        <record model="ir.ui.view"
++            id="production_lead_time_view_list_sequence">
++            <field name="model">production.lead_time</field>
++            <field name="type">tree</field>
++            <field name="name">production_lead_time_list_sequence</field>
++        </record>
++
++        <record model="ir.ui.view" id="production_lead_time_view_form">
++            <field name="model">production.lead_time</field>
++            <field name="type">form</field>
++            <field name="name">production_lead_time_form</field>
++        </record>
++
++        <record model="ir.model.access" id="access_production_lead_time">
++            <field name="model" search="[('model', '=', 'production.lead_time')]"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="False"/>
++            <field name="perm_create" eval="False"/>
++            <field name="perm_delete" eval="False"/>
++        </record>
++        <record model="ir.model.access" id="access_production_lead_time_admin">
++            <field name="model" search="[('model', '=', 'production.lead_time')]"/>
++            <field name="group" ref="group_production_admin"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="True"/>
++            <field name="perm_create" eval="True"/>
++            <field name="perm_delete" eval="True"/>
++        </record>
+     </data>
+ </tryton>
+diff -r 8b7857967585 trytond/trytond/modules/production/production.py
+--- a/trytond/trytond/modules/production/production.py	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/production.py	Thu Jun 02 14:05:47 2016 +0200
+@@ -2,11 +2,14 @@
+ #this repository contains the full copyright notices and license terms.
+ from decimal import Decimal
+ 
++from sql import Null
++
+ from trytond.model import ModelView, ModelSQL, Workflow, fields
+ from trytond.wizard import Wizard, StateTransition, StateView, Button
+ from trytond.pyson import Eval, Bool, If, Id
+ from trytond.pool import Pool
+ from trytond.transaction import Transaction
++from trytond import backend
+ from trytond.config import config
+ DIGITS = config.getint('digits', 'unit_price_digits', 4)
+ 
+@@ -37,6 +40,17 @@
+             'readonly': Eval('state').in_(['cancel', 'done']),
+             },
+         depends=['state'])
++    planned_start_date = fields.Date('Planned Start Date',
++        states={
++            'readonly': ~Eval('state').in_(['request', 'draft']),
++            'required': Bool(Eval('planned_date')),
++            },
++        depends=['state', 'planned_date'])
++    effective_start_date = fields.Date('Effective Start Date',
++        states={
++            'readonly': Eval('state').in_(['cancel', 'running', 'done']),
++            },
++        depends=['state'])
+     company = fields.Many2One('company.company', 'Company', required=True,
+         states={
+             'readonly': ~Eval('state').in_(['request', 'draft']),
+@@ -196,6 +210,21 @@
+                 'assign_force': {},
+                 })
+ 
++    @classmethod
++    def __register__(cls, module_name):
++        TableHandler = backend.get('TableHandler')
++        cursor = Transaction().cursor
++        sql_table = cls.__table__()
++
++        super(Production, cls).__register__(module_name)
++
++        # Migration backport from 4.1 (issueissue5560): fill planned_start_date
++        cursor.execute(*sql_table.update(
++                [sql_table.planned_start_date],
++                [sql_table.planned_date],
++                where=(sql_table.planned_start_date == Null)
++                & (sql_table.planned_date != Null)))
++
+     @staticmethod
+     def default_state():
+         return 'draft'
+@@ -219,6 +248,17 @@
+     def default_company():
+         return Transaction().context.get('company')
+ 
++    @fields.depends('planned_date', 'product', 'bom')
++    def on_change_with_planned_start_date(self, pattern=None):
++        if self.planned_date and self.product:
++            if pattern is None:
++                pattern = {}
++            pattern.setdefault('bom', self.bom.id if self.bom else None)
++            for line in self.product.lead_times:
++                if line.match(pattern):
++                    return self.planned_date - line.lead_time
++        return self.planned_date
++
+     def _move(self, from_location, to_location, company, product, uom,
+             quantity):
+         Move = Pool().get('stock.move')
+@@ -505,7 +545,7 @@
+ 
+     def _get_move_planned_date(self):
+         "Return the planned dates for input and output moves"
+-        return self.planned_date, self.planned_date
++        return self.planned_start_date, self.planned_date
+ 
+     def _set_move_planned_date(self):
+         "Set planned date of moves for the shipments"
+@@ -560,7 +600,11 @@
+     def run(cls, productions):
+         pool = Pool()
+         Move = pool.get('stock.move')
++        Date = pool.get('ir.date')
+         Move.do([m for p in productions for m in p.inputs])
++        cls.write([p for p in productions if not p.effective_start_date], {
++                'effective_start_date': Date.today(),
++                })
+ 
+     @classmethod
+     @ModelView.button
+diff -r 8b7857967585 trytond/trytond/modules/production/stock.py
+--- a/trytond/trytond/modules/production/stock.py	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/stock.py	Thu Jun 02 14:05:47 2016 +0200
+@@ -36,7 +36,7 @@
+ 
+     def set_effective_date(self):
+         if not self.effective_date and self.production_input:
+-            self.effective_date = self.production_input.effective_date
++            self.effective_date = self.production_input.effective_start_date
+         if not self.effective_date and self.production_output:
+             self.effective_date = self.production_output.effective_date
+         super(Move, self).set_effective_date()
+diff -r 8b7857967585 trytond/trytond/modules/production/view/product_form.xml
+--- a/trytond/trytond/modules/production/view/product_form.xml	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/view/product_form.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -5,5 +5,7 @@
+     <xpath expr="/form/field[@name='description']" position="after">
+         <field name="boms" colspan="6"
+             view_ids="production.product-bom_view_list_sequence"/>
++        <field name="lead_times" colspan="4"
++            view_ids="production.production_lead_time_view_list_sequence"/>
+     </xpath>
+ </data>
+diff -r 8b7857967585 trytond/trytond/modules/production/view/production_calendar.xml
+--- a/trytond/trytond/modules/production/view/production_calendar.xml	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/view/production_calendar.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -1,7 +1,9 @@
+ <?xml version="1.0"?>
+ <!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+ this repository contains the full copyright notices and license terms. -->
+-<calendar string="Productions" dtstart="planned_date">
++<calendar string="Productions"
++    dtstart="planned_start_date"
++    dtend="planned_date">
+     <field name="code"/>
+     <field name="product"/>
+     <field name="reference"/>
+diff -r 8b7857967585 trytond/trytond/modules/production/view/production_form.xml
+--- a/trytond/trytond/modules/production/view/production_form.xml	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/view/production_form.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -8,8 +8,8 @@
+     <field name="code"/>
+     <label name="planned_date"/>
+     <field name="planned_date"/>
+-    <label name="effective_date"/>
+-    <field name="effective_date"/>
++    <label name="planned_start_date"/>
++    <field name="planned_start_date"/>
+     <label name="product"/>
+     <field name="product"/>
+     <label name="bom"/>
+@@ -31,6 +31,10 @@
+             <field name="warehouse"/>
+             <label name="location"/>
+             <field name="location"/>
++            <label name="effective_date"/>
++            <field name="effective_date"/>
++            <label name="effective_start_date"/>
++            <field name="effective_start_date"/>
+             <label name="cost"/>
+             <field name="cost"/>
+         </page>
+diff -r 8b7857967585 trytond/trytond/modules/production/view/production_lead_time_form.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/production/view/production_lead_time_form.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -0,0 +1,15 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<form string="Production Lead Time">
++    <label name="product"/>
++    <field name="product" colspan="3"/>
++    <label name="sequence"/>
++    <field name="sequence"/>
++    <newline/>
++    <label name="bom"/>
++    <field name="bom" widget="selection"/>
++    <newline/>
++    <label name="lead_time"/>
++    <field name="lead_time"/>
++</form>
+diff -r 8b7857967585 trytond/trytond/modules/production/view/production_lead_time_list.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/production/view/production_lead_time_list.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -0,0 +1,8 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<tree string="Production Lead Times">
++    <field name="product"/>
++    <field name="bom"/>
++    <field name="lead_time"/>
++</tree>
+diff -r 8b7857967585 trytond/trytond/modules/production/view/production_lead_time_list_sequence.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/production/view/production_lead_time_list_sequence.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -0,0 +1,7 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<tree string="Production Lead Times" sequence="sequence" editable="bottom">
++    <field name="bom" widget="selection"/>
++    <field name="lead_time"/>
++</tree>
+diff -r 8b7857967585 trytond/trytond/modules/production/view/production_list.xml
+--- a/trytond/trytond/modules/production/view/production_list.xml	Thu Jun 02 13:10:13 2016 +0200
++++ b/trytond/trytond/modules/production/view/production_list.xml	Thu Jun 02 14:05:47 2016 +0200
+@@ -7,7 +7,7 @@
+     <field name="product"/>
+     <field name="quantity"/>
+     <field name="uom"/>
++    <field name="planned_start_date"/>
+     <field name="planned_date"/>
+-    <field name="effective_date"/>
+     <field name="state"/>
+ </tree>
