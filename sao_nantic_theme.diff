@@ -1,0 +1,148 @@
+diff -r 18637f34d00c public_data/sao/index.html
+--- a/public_data/sao/index.html	Fri May 20 10:34:17 2016 +0200
++++ b/public_data/sao/index.html	Thu Jun 02 09:26:22 2016 +0200
+@@ -25,6 +25,7 @@
+         <script type="text/javascript" src="dist/tryton-sao.min.js"></script>
+         <link rel="stylesheet" type="text/css" href="dist/tryton-sao.min.css"
+         media="screen"/>
++        <link rel="stylesheet" type="text/css" href="theme/nantic/tryton-nantic.css" media="screen"/>
+         <script type="text/javascript">
+             if (typeof Sao == 'undefined') {
+                 document.write(unescape('%3cscript type="text/javascript" src="dist/tryton-sao.js"%3e%3c/script%3e'));
+@@ -33,22 +34,24 @@
+         </script>
+         </head>
+         <body>
+-        <nav class="navbar navbar-default" role="navigation" style="margin-bottom: 1px;">
++        <nav class="navbar navbar-default navbar-main" role="navigation" style="margin-bottom: 1px;">
+             <div class="container-fluid">
+-                <div class="navbar-header">
++                <div class="navbar-header navbar-header-main">
+                     <button type="button" class="navbar-toggle collapsed"
+                         data-toggle="collapse" data-target="#user_menu_collapse">
+                         <span class="icon-bar"></span>
+                         <span class="icon-bar"></span>
+                         <span class="icon-bar"></span>
+                     </button>
+-                    <a class="navbar-brand" href="#">Tryton</a>
+-                    <p class="pull-left visible-xs visible-sm navbar-text">
+-                        <button type="button" class="btn btn-primary btn-xs"
+-                            data-toggle="offcanvas">
+-                            Toggle menu
+-                        </button>
+-                    </p>
++                    <a class="navbar-brand" href="#">
++                        <img alt="Tryton Nan·TIC" src="theme/nantic/logo-w.png" class="logo">
++                   </a>
++                    <button id="toggle-menu" type="button" class="navbar-toggle collapsed"
++                        data-toggle="offcanvas">
++                        <span class="icon-bar"></span>
++                        <span class="icon-bar"></span>
++                        <span class="icon-bar"></span>
++                    </button>
+                 </div>
+                 <div class="collapse navbar-collapse" id="user_menu_collapse">
+                     <ul class="nav navbar-nav">
+@@ -81,13 +84,16 @@
+                         jQuery('.row-offcanvas').toggleClass('active');
+                         });
+                     jQuery('#tabs').on('ready', function() {
+-                        if (jQuery(this).find('> .nav-tabs').children().length) {
+-                            jQuery('.row-offcanvas').removeClass('active');
+-                        } else {
+-                            jQuery('.row-offcanvas').addClass('active');
+-                        }
++                        if ($(window).width() < 991) {
++                            if (jQuery(this).find('> .nav-tabs').children().length) {
++                                jQuery('.row-offcanvas').removeClass('active');
++                            } else {
++                                jQuery('.row-offcanvas').addClass('active');
++                            }
++                         }
+                     });
+                     Sao.login();
++                    jQuery('#toggle-menu').hide();
+                     });
+         </script>
+     </body>
+diff -r 18637f34d00c public_data/sao/offcanvas.css
+--- a/public_data/sao/offcanvas.css	Fri May 20 10:34:17 2016 +0200
++++ b/public_data/sao/offcanvas.css	Thu Jun 02 09:26:22 2016 +0200
+@@ -2,6 +2,47 @@
+  * Off Canvas
+  * --------------------------------------------------
+  */
++@media screen and (min-width: 991px) {
++  .row-offcanvas {
++    position: relative;
++    -webkit-transition: all .25s ease-out;
++         -o-transition: all .25s ease-out;
++            transition: all .25s ease-out;
++  }
++
++  .row-offcanvas-right {
++    right: 0;
++  }
++
++  .row-offcanvas-left {
++    left: 0;
++  }
++
++  .row-offcanvas-right
++  .sidebar-offcanvas {
++    right: calc(-20% + 7px);
++  }
++
++  .row-offcanvas-left
++  .sidebar-offcanvas {
++    left: calc(-20% + 7.5px);
++  }
++
++  .row-offcanvas-right.active {
++    right: calc(20% + 7.5px);
++  }
++
++  .row-offcanvas-left.active {
++    left: calc(20% + 7.5px);
++  }
++
++  .sidebar-offcanvas {
++    position: absolute;
++    top: 0;
++    width: 20%;
++  }
++}
++
+ @media screen and (max-width: 991px) {
+   .row-offcanvas {
+     position: relative;
+diff -r 18637f34d00c public_data/sao/src/sao.js
+--- a/public_data/sao/src/sao.js	Fri May 20 10:34:17 2016 +0200
++++ b/public_data/sao/src/sao.js	Thu Jun 02 09:26:22 2016 +0200
+@@ -255,6 +255,7 @@
+             }).then(Sao.get_preferences).then(function(preferences) {
+                 Sao.menu(preferences);
+                 Sao.user_menu(preferences);
++                Sao.toggle_menu();
+             });
+     };
+ 
+@@ -266,6 +267,7 @@
+             jQuery('#menu').children().remove();
+             document.title = 'Tryton';
+             session.do_logout().always(Sao.login);
++            $("#toggle-menu").hide();
+         });
+     };
+ 
+@@ -294,6 +296,10 @@
+         }).click(Sao.logout).append(Sao.i18n.gettext('Logout')));
+     };
+ 
++    Sao.toggle_menu = function() {
++        $("#toggle-menu").show();
++    };
++
+     Sao.menu = function(preferences) {
+         var decoder = new Sao.PYSON.Decoder();
+         var action = decoder.decode(preferences.pyson_menu);
