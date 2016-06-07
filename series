@@ -41,6 +41,7 @@ analytic_sale.diff
 analytic_purchase.diff
 tax_active_invisible.diff
 account_product_rules.diff
+issue5558.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
