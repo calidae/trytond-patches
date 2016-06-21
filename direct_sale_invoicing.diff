@@ -1,0 +1,22 @@
+diff -r 198974b41315 sale.py
+--- a/trytond/trytond/modules/sale/sale.py	Tue Jun 21 15:24:23 2016 +0200
++++ b/trytond/trytond/modules/sale/sale.py	Tue Jun 21 15:25:27 2016 +0200
+@@ -1366,11 +1366,17 @@
+ 
+         skip_ids = set(l.id for i in self.sale.invoices_recreated
+             for l in i.lines)
++        is_in_invoice = Transaction().context.get('in_invoice', False)
+         for old_invoice_line in self.invoice_lines:
+             if old_invoice_line.type != 'line':
+                 continue
++            if is_in_invoice and 'out_' in old_invoice_line.invoice_type:
++                continue
++            elif not is_in_invoice and 'in_' in old_invoice_line.invoice_type:
++                continue
+             if old_invoice_line.id not in skip_ids:
+-                sign = (1.0 if invoice_type == old_invoice_line.invoice_type
++                sign = (1.0
++                    if invoice_type[3:] in old_invoice_line.invoice_type
+                     else -1.0)
+                 quantity -= Uom.compute_qty(old_invoice_line.unit,
+                     sign * old_invoice_line.quantity, self.unit)
