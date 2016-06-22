@@ -1,0 +1,574 @@
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/locale/ca_ES.po
+--- a/trytond/trytond/modules/stock/locale/ca_ES.po	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/locale/ca_ES.po	Wed Jun 22 17:43:56 2016 +0200
+@@ -1,4 +1,4 @@
+-# 
++#
+ msgid ""
+ msgstr "Content-Type: text/plain; charset=utf-8\n"
+ 
+@@ -43,6 +43,10 @@
+ "No es pot canviar la ubicació \"%s\" amb moviments existents a un tipus que "
+ "no suporta moviments."
+ 
++msgctxt "error:stock.location:"
++msgid "The Storage location must be unique."
++msgstr "La ubicació interna ha de ser única."
++
+ msgctxt "error:stock.move:"
+ msgid "Internal move quantity must be positive"
+ msgstr "La quantitat de moviment intern ha de ser positiva."
+@@ -202,6 +206,10 @@
+ msgid "ID"
+ msgstr "ID"
+ 
++msgctxt "field:stock.configuration,inventory_sequence:"
++msgid "Inventory Sequence"
++msgstr "Seqüència inventari"
++
+ msgctxt "field:stock.configuration,rec_name:"
+ msgid "Name"
+ msgstr "Nom"
+@@ -218,6 +226,10 @@
+ msgid "Internal Shipment Sequence"
+ msgstr "Seqüència d'albarà intern"
+ 
++msgctxt "field:stock.configuration,shipment_internal_transit:"
++msgid "Internal Shipment Transit"
++msgstr "Trànsit albarans interns"
++
+ msgctxt "field:stock.configuration,shipment_out_return_sequence:"
+ msgid "Customer Return Shipment Sequence"
+ msgstr "Seqüència d'albarà devolució client"
+@@ -266,6 +278,10 @@
+ msgid "Lost and Found"
+ msgstr "Perdut/trobat"
+ 
++msgctxt "field:stock.inventory,number:"
++msgid "Number"
++msgstr "Número"
++
+ msgctxt "field:stock.inventory,rec_name:"
+ msgid "Name"
+ msgstr "Nom"
+@@ -410,6 +426,10 @@
+ msgid "Location type"
+ msgstr "Tipus d'ubicació"
+ 
++msgctxt "field:stock.location,warehouse:"
++msgid "Warehouse"
++msgstr "Magatzem"
++
+ msgctxt "field:stock.location,write_date:"
+ msgid "Write Date"
+ msgstr "Data modificació"
+@@ -418,6 +438,46 @@
+ msgid "Write User"
+ msgstr "Usuari modificació"
+ 
++msgctxt "field:stock.location.lead_time,create_date:"
++msgid "Create Date"
++msgstr "Data creació"
++
++msgctxt "field:stock.location.lead_time,create_uid:"
++msgid "Create User"
++msgstr "Usuari creació"
++
++msgctxt "field:stock.location.lead_time,id:"
++msgid "ID"
++msgstr "ID"
++
++msgctxt "field:stock.location.lead_time,lead_time:"
++msgid "Lead Time"
++msgstr "Temps demora"
++
++msgctxt "field:stock.location.lead_time,rec_name:"
++msgid "Name"
++msgstr "Nom"
++
++msgctxt "field:stock.location.lead_time,sequence:"
++msgid "Sequence"
++msgstr "Seqüència"
++
++msgctxt "field:stock.location.lead_time,warehouse_from:"
++msgid "Warehouse From"
++msgstr "Des del magatzem"
++
++msgctxt "field:stock.location.lead_time,warehouse_to:"
++msgid "Warehouse To"
++msgstr "Al magatzem"
++
++msgctxt "field:stock.location.lead_time,write_date:"
++msgid "Write Date"
++msgstr "Data modificació"
++
++msgctxt "field:stock.location.lead_time,write_uid:"
++msgid "Write User"
++msgstr "Usuari modificació"
++
+ msgctxt "field:stock.move,company:"
+ msgid "Company"
+ msgstr "Empresa"
+@@ -822,6 +882,10 @@
+ msgid "Effective Date"
+ msgstr "Data efectiva"
+ 
++msgctxt "field:stock.shipment.internal,effective_start_date:"
++msgid "Effective Start Date"
++msgstr "Data inici efectiva"
++
+ msgctxt "field:stock.shipment.internal,from_location:"
+ msgid "From Location"
+ msgstr "Des de la ubicació"
+@@ -830,14 +894,26 @@
+ msgid "ID"
+ msgstr "ID"
+ 
++msgctxt "field:stock.shipment.internal,incoming_moves:"
++msgid "Incoming Moves"
++msgstr "Moviments d'entrada"
++
+ msgctxt "field:stock.shipment.internal,moves:"
+ msgid "Moves"
+ msgstr "Moviments"
+ 
++msgctxt "field:stock.shipment.internal,outgoing_moves:"
++msgid "Outgoing Moves"
++msgstr "Moviments de sortida"
++
+ msgctxt "field:stock.shipment.internal,planned_date:"
+ msgid "Planned Date"
+ msgstr "Data estimada"
+ 
++msgctxt "field:stock.shipment.internal,planned_start_date:"
++msgid "Planned Start Date"
++msgstr "Data inici planificada"
++
+ msgctxt "field:stock.shipment.internal,rec_name:"
+ msgid "Name"
+ msgstr "Nom"
+@@ -854,6 +930,10 @@
+ msgid "To Location"
+ msgstr "A la ubicació"
+ 
++msgctxt "field:stock.shipment.internal,transit_location:"
++msgid "Transit Location"
++msgstr "Ubicació trànsit"
++
+ msgctxt "field:stock.shipment.internal,write_date:"
+ msgid "Write Date"
+ msgstr "Data modificació"
+@@ -1096,6 +1176,10 @@
+ msgid "Locations"
+ msgstr "Ubicacions"
+ 
++msgctxt "model:ir.action,name:act_location_lead_time_form"
++msgid "Location Lead Times"
++msgstr "Temps demora ubicació"
++
+ msgctxt "model:ir.action,name:act_location_quantity_tree"
+ msgid "Locations"
+ msgstr "Ubicacions"
+@@ -1275,6 +1359,11 @@
+ msgstr "Esborrany"
+ 
+ msgctxt ""
++"model:ir.action.act_window.domain,name:act_shipment_internal_form_domain_shipped"
++msgid "Shipped"
++msgstr "Enviat"
++
++msgctxt ""
+ "model:ir.action.act_window.domain,name:act_shipment_internal_form_domain_waiting"
+ msgid "Waiting"
+ msgstr "En espera"
+@@ -1319,6 +1408,10 @@
+ msgid "Received"
+ msgstr "Rebut"
+ 
++msgctxt "model:ir.sequence,name:sequence_inventory"
++msgid "Inventory"
++msgstr "Inventari"
++
+ msgctxt "model:ir.sequence,name:sequence_shipment_in"
+ msgid "Supplier Shipment"
+ msgstr "Albarà de proveïdor"
+@@ -1339,6 +1432,10 @@
+ msgid "Customer Return Shipment"
+ msgstr "Albarà devolució client"
+ 
++msgctxt "model:ir.sequence.type,name:sequence_type_inventory"
++msgid "Inventory"
++msgstr "Inventari"
++
+ msgctxt "model:ir.sequence.type,name:sequence_type_shipment_in"
+ msgid "Supplier Shipment"
+ msgstr "Albarà de proveïdor"
+@@ -1371,6 +1468,10 @@
+ msgid "Locations"
+ msgstr "Ubicacions"
+ 
++msgctxt "model:ir.ui.menu,name:menu_location_lead_time_form"
++msgid "Location Lead Times"
++msgstr "Temps demora ubicació"
++
+ msgctxt "model:ir.ui.menu,name:menu_location_tree"
+ msgid "Locations"
+ msgstr "Ubicacions"
+@@ -1471,10 +1572,18 @@
+ msgid "Supplier"
+ msgstr "Proveïdor"
+ 
++msgctxt "model:stock.location,name:location_transit"
++msgid "Transit"
++msgstr "Trànsit"
++
+ msgctxt "model:stock.location,name:location_warehouse"
+ msgid "Warehouse"
+ msgstr "Magatzem"
+ 
++msgctxt "model:stock.location.lead_time,name:"
++msgid "Location Lead Time"
++msgstr "Temps demora ubicació"
++
+ msgctxt "model:stock.move,name:"
+ msgid "Stock Move"
+ msgstr "Moviment d'estoc"
+@@ -1920,6 +2029,10 @@
+ msgstr "Esborrany"
+ 
+ msgctxt "selection:stock.shipment.internal,state:"
++msgid "Shipped"
++msgstr "Enviat"
++
++msgctxt "selection:stock.shipment.internal,state:"
+ msgid "Waiting"
+ msgstr "En espera"
+ 
+@@ -1980,6 +2093,14 @@
+ msgstr "Productes"
+ 
+ msgctxt "view:stock.configuration:"
++msgid "Inventory"
++msgstr "Inventari"
++
++msgctxt "view:stock.configuration:"
++msgid "Shipments"
++msgstr "Albarans"
++
++msgctxt "view:stock.configuration:"
+ msgid "Stock Configuration"
+ msgstr "Configuració d'estoc"
+ 
+@@ -2015,6 +2136,14 @@
+ msgid "Inventory"
+ msgstr "Inventari"
+ 
++msgctxt "view:stock.location.lead_time:"
++msgid "Location Lead Time"
++msgstr "Temps demora ubicació"
++
++msgctxt "view:stock.location.lead_time:"
++msgid "Location Lead Times"
++msgstr "Temps demora ubicació"
++
+ msgctxt "view:stock.location:"
+ msgid "Location"
+ msgstr "Ubicació"
+@@ -2172,6 +2301,10 @@
+ msgstr "Albarans interns"
+ 
+ msgctxt "view:stock.shipment.internal:"
++msgid "Ship"
++msgstr "Envia"
++
++msgctxt "view:stock.shipment.internal:"
+ msgid "Wait"
+ msgstr "En espera"
+ 
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/locale/es_ES.po
+--- a/trytond/trytond/modules/stock/locale/es_ES.po	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/locale/es_ES.po	Wed Jun 22 17:43:56 2016 +0200
+@@ -1,4 +1,4 @@
+-# 
++#
+ msgid ""
+ msgstr "Content-Type: text/plain; charset=utf-8\n"
+ 
+@@ -40,6 +40,10 @@
+ "No puede cambiar la ubicación \"%s\" con movimientos a otra ubicación que no"
+ " soporte movimientos."
+ 
++msgctxt "error:stock.location:"
++msgid "The Storage location must be unique."
++msgstr "La ubicación interna debe ser única."
++
+ msgctxt "error:stock.move:"
+ msgid "Internal move quantity must be positive"
+ msgstr "La cantidad del movimiento interno debe ser positiva."
+@@ -195,6 +199,10 @@
+ msgid "ID"
+ msgstr "ID"
+ 
++msgctxt "field:stock.configuration,inventory_sequence:"
++msgid "Inventory Sequence"
++msgstr "Secuéncia inventario"
++
+ msgctxt "field:stock.configuration,rec_name:"
+ msgid "Name"
+ msgstr "Nombre"
+@@ -211,6 +219,10 @@
+ msgid "Internal Shipment Sequence"
+ msgstr "Secuencia de albarán interno"
+ 
++msgctxt "field:stock.configuration,shipment_internal_transit:"
++msgid "Internal Shipment Transit"
++msgstr "Tránsito albaranes internos"
++
+ msgctxt "field:stock.configuration,shipment_out_return_sequence:"
+ msgid "Customer Return Shipment Sequence"
+ msgstr "Secuencia de albarán devolución cliente"
+@@ -259,6 +271,10 @@
+ msgid "Lost and Found"
+ msgstr "Perdido/encontrado"
+ 
++msgctxt "field:stock.inventory,number:"
++msgid "Number"
++msgstr "Número"
++
+ msgctxt "field:stock.inventory,rec_name:"
+ msgid "Name"
+ msgstr "Nombre"
+@@ -403,6 +419,10 @@
+ msgid "Location type"
+ msgstr "Tipo de ubicación"
+ 
++msgctxt "field:stock.location,warehouse:"
++msgid "Warehouse"
++msgstr "Almacén"
++
+ msgctxt "field:stock.location,write_date:"
+ msgid "Write Date"
+ msgstr "Fecha modificación"
+@@ -411,6 +431,46 @@
+ msgid "Write User"
+ msgstr "Usuario modificación"
+ 
++msgctxt "field:stock.location.lead_time,create_date:"
++msgid "Create Date"
++msgstr "Fecha creación"
++
++msgctxt "field:stock.location.lead_time,create_uid:"
++msgid "Create User"
++msgstr "Usuario creación"
++
++msgctxt "field:stock.location.lead_time,id:"
++msgid "ID"
++msgstr "ID"
++
++msgctxt "field:stock.location.lead_time,lead_time:"
++msgid "Lead Time"
++msgstr "Tiempo demora"
++
++msgctxt "field:stock.location.lead_time,rec_name:"
++msgid "Name"
++msgstr "Nombre"
++
++msgctxt "field:stock.location.lead_time,sequence:"
++msgid "Sequence"
++msgstr "Secuencia"
++
++msgctxt "field:stock.location.lead_time,warehouse_from:"
++msgid "Warehouse From"
++msgstr "Des del almacén"
++
++msgctxt "field:stock.location.lead_time,warehouse_to:"
++msgid "Warehouse To"
++msgstr "Hacia al almacén"
++
++msgctxt "field:stock.location.lead_time,write_date:"
++msgid "Write Date"
++msgstr "Fecha modificación"
++
++msgctxt "field:stock.location.lead_time,write_uid:"
++msgid "Write User"
++msgstr "Usuario modificación"
++
+ msgctxt "field:stock.move,company:"
+ msgid "Company"
+ msgstr "Empresa"
+@@ -815,6 +875,10 @@
+ msgid "Effective Date"
+ msgstr "Fecha efectiva"
+ 
++msgctxt "field:stock.shipment.internal,effective_start_date:"
++msgid "Effective Start Date"
++msgstr "Fecha inicio estimada"
++
+ msgctxt "field:stock.shipment.internal,from_location:"
+ msgid "From Location"
+ msgstr "Desde ubicación"
+@@ -823,14 +887,26 @@
+ msgid "ID"
+ msgstr "ID"
+ 
++msgctxt "field:stock.shipment.internal,incoming_moves:"
++msgid "Incoming Moves"
++msgstr "Movimientos de entrada"
++
+ msgctxt "field:stock.shipment.internal,moves:"
+ msgid "Moves"
+ msgstr "Movimientos"
+ 
++msgctxt "field:stock.shipment.internal,outgoing_moves:"
++msgid "Outgoing Moves"
++msgstr "Movimientos de salida"
++
+ msgctxt "field:stock.shipment.internal,planned_date:"
+ msgid "Planned Date"
+ msgstr "Fecha estimada"
+ 
++msgctxt "field:stock.shipment.internal,planned_start_date:"
++msgid "Planned Start Date"
++msgstr "Fecha inicio estimada"
++
+ msgctxt "field:stock.shipment.internal,rec_name:"
+ msgid "Name"
+ msgstr "Nombre"
+@@ -847,6 +923,10 @@
+ msgid "To Location"
+ msgstr "A ubicación"
+ 
++msgctxt "field:stock.shipment.internal,transit_location:"
++msgid "Transit Location"
++msgstr "Ubicación en tránsito"
++
+ msgctxt "field:stock.shipment.internal,write_date:"
+ msgid "Write Date"
+ msgstr "Fecha modificación"
+@@ -1089,6 +1169,10 @@
+ msgid "Locations"
+ msgstr "Configuración de ubicaciones"
+ 
++msgctxt "model:ir.action,name:act_location_lead_time_form"
++msgid "Location Lead Times"
++msgstr "Tiempo demora ubicación"
++
+ msgctxt "model:ir.action,name:act_location_quantity_tree"
+ msgid "Locations"
+ msgstr "Configuración de ubicaciones"
+@@ -1268,6 +1352,11 @@
+ msgstr "Borrador"
+ 
+ msgctxt ""
++"model:ir.action.act_window.domain,name:act_shipment_internal_form_domain_shipped"
++msgid "Shipped"
++msgstr "Enviado"
++
++msgctxt ""
+ "model:ir.action.act_window.domain,name:act_shipment_internal_form_domain_waiting"
+ msgid "Waiting"
+ msgstr "En espera"
+@@ -1312,6 +1401,10 @@
+ msgid "Received"
+ msgstr "Recibido"
+ 
++msgctxt "model:ir.sequence,name:sequence_inventory"
++msgid "Inventory"
++msgstr "Inventario"
++
+ msgctxt "model:ir.sequence,name:sequence_shipment_in"
+ msgid "Supplier Shipment"
+ msgstr "Albarán proveedor"
+@@ -1332,6 +1425,10 @@
+ msgid "Customer Return Shipment"
+ msgstr "Albarán devolución cliente"
+ 
++msgctxt "model:ir.sequence.type,name:sequence_type_inventory"
++msgid "Inventory"
++msgstr "Inventario"
++
+ msgctxt "model:ir.sequence.type,name:sequence_type_shipment_in"
+ msgid "Supplier Shipment"
+ msgstr "Albarán proveedor"
+@@ -1364,6 +1461,10 @@
+ msgid "Locations"
+ msgstr "Ubicaciones"
+ 
++msgctxt "model:ir.ui.menu,name:menu_location_lead_time_form"
++msgid "Location Lead Times"
++msgstr "Tiempos demora ubicación"
++
+ msgctxt "model:ir.ui.menu,name:menu_location_tree"
+ msgid "Locations"
+ msgstr "Ubicaciones"
+@@ -1464,10 +1565,18 @@
+ msgid "Supplier"
+ msgstr "Proveedor"
+ 
++msgctxt "model:stock.location,name:location_transit"
++msgid "Transit"
++msgstr "Tránsito"
++
+ msgctxt "model:stock.location,name:location_warehouse"
+ msgid "Warehouse"
+ msgstr "Almacén"
+ 
++msgctxt "model:stock.location.lead_time,name:"
++msgid "Location Lead Time"
++msgstr "Tiempo demora ubicación"
++
+ msgctxt "model:stock.move,name:"
+ msgid "Stock Move"
+ msgstr "Movimiento de stock"
+@@ -1913,6 +2022,10 @@
+ msgstr "Borrador"
+ 
+ msgctxt "selection:stock.shipment.internal,state:"
++msgid "Shipped"
++msgstr "Enviado"
++
++msgctxt "selection:stock.shipment.internal,state:"
+ msgid "Waiting"
+ msgstr "En espera"
+ 
+@@ -1973,6 +2086,14 @@
+ msgstr "Productos"
+ 
+ msgctxt "view:stock.configuration:"
++msgid "Inventory"
++msgstr "Inventario"
++
++msgctxt "view:stock.configuration:"
++msgid "Shipments"
++msgstr "Albaranes"
++
++msgctxt "view:stock.configuration:"
+ msgid "Stock Configuration"
+ msgstr "Configuración stock"
+ 
+@@ -2008,6 +2129,14 @@
+ msgid "Inventory"
+ msgstr "Inventario"
+ 
++msgctxt "view:stock.location.lead_time:"
++msgid "Location Lead Time"
++msgstr "Tiempo demora ubicación"
++
++msgctxt "view:stock.location.lead_time:"
++msgid "Location Lead Times"
++msgstr "Tiempo demora ubicación"
++
+ msgctxt "view:stock.location:"
+ msgid "Location"
+ msgstr "Ubicación"
+@@ -2165,6 +2294,10 @@
+ msgstr "Albaranes internos"
+ 
+ msgctxt "view:stock.shipment.internal:"
++msgid "Ship"
++msgstr "Enviar"
++
++msgctxt "view:stock.shipment.internal:"
+ msgid "Wait"
+ msgstr "En espera"
+ 
