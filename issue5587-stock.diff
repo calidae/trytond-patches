@@ -1,0 +1,809 @@
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/__init__.py
+--- a/trytond/trytond/modules/stock/__init__.py	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/__init__.py	Wed Jun 22 16:09:23 2016 +0200
+@@ -16,6 +16,7 @@
+         Location,
+         Party,
+         ProductsByLocationsStart,
++        LocationLeadTime,
+         Move,
+         ShipmentIn,
+         ShipmentInReturn,
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/configuration.py
+--- a/trytond/trytond/modules/stock/configuration.py	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/configuration.py	Wed Jun 22 16:09:23 2016 +0200
+@@ -39,6 +39,10 @@
+                     [Eval('context', {}).get('company', -1), None]),
+                 ('code', '=', 'stock.shipment.internal'),
+                 ], required=True))
++    shipment_internal_transit = fields.Property(fields.Many2One(
++            'stock.location', 'Internal Shipment Transit', domain=[
++                ('type', '=', 'storage'),
++                ], required=True))
+     inventory_sequence = fields.Property(fields.Many2One(
+             'ir.sequence', 'Inventory Sequence', domain=[
+                 ('company', 'in',
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/location.py
+--- a/trytond/trytond/modules/stock/location.py	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/location.py	Wed Jun 22 16:09:23 2016 +0200
+@@ -2,16 +2,18 @@
+ #this repository contains the full copyright notices and license terms.
+ import datetime
+ from decimal import Decimal
+-from trytond.model import ModelView, ModelSQL, fields
++from sql import Null
++from sql.conditionals import Case
++from trytond.model import ModelView, ModelSQL, MatchMixin, fields
+ from trytond.wizard import Wizard, StateView, Button, StateAction
+ from trytond import backend
+-from trytond.pyson import Not, Bool, Eval, Equal, PYSONEncoder, Date
++from trytond.pyson import Not, Bool, Eval, In, Equal, PYSONEncoder, Date
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
+ from trytond.tools import grouped_slice
+ 
+ __all__ = ['Location', 'Party', 'ProductsByLocationsStart',
+-    'ProductsByLocations']
++    'ProductsByLocations', 'LocationLeadTime']
+ __metaclass__ = PoolMeta
+ 
+ STATES = {
+@@ -48,6 +50,12 @@
+     left = fields.Integer('Left', required=True, select=True)
+     right = fields.Integer('Right', required=True, select=True)
+     childs = fields.One2Many("stock.location", "parent", "Children")
++    warehouse = fields.Function(fields.Many2One('stock.location', 'Warehouse',
++            states={
++                'invisible': Not(In(Eval('type'), ['storage', 'view']))
++                },
++            depends=['type']),
++        'get_warehouse', searcher='search_warehouse')
+     input_location = fields.Many2One(
+         "stock.location", "Input", states={
+             'invisible': Not(Equal(Eval('type'), 'warehouse')),
+@@ -96,6 +104,10 @@
+     def __setup__(cls):
+         super(Location, cls).__setup__()
+         cls._order.insert(0, ('name', 'ASC'))
++        cls._sql_constraints += [
++            ('storage_location_unique', 'UNIQUE(storage_location)',
++                'The Storage location must be unique.'),
++            ]
+         cls._error_messages.update({
+                 'invalid_type_for_moves': ('Location "%s" with existing moves '
+                     'cannot be changed to a type that does not support moves.'
+@@ -337,6 +349,66 @@
+             res.append(new_location)
+         return res
+ 
++    @fields.depends('type', 'parent')
++    def on_change_with_warehouse(self, name=None):
++        if (not self.id or self.type not in ('storage', 'view') or
++                not self.parent):
++            return None
++        return self.parent.warehouse and self.parent.warehouse.id or None
++
++    @classmethod
++    def get_warehouse(cls, instances, name):
++        warehouse_per_location = {}
++        for warehouse in cls.search([('type', '=', 'warehouse')]):
++            warehouse_per_location[warehouse.storage_location.id] = (
++                warehouse.id)
++            warehouse_per_location[warehouse.input_location.id] = (
++                warehouse.id)
++            warehouse_per_location[warehouse.output_location.id] = (
++                warehouse.id)
++        res = {}
++        for location in instances:
++            res[location.id] = None
++            if location.type not in ('storage', 'view'):
++                continue
++            child_location_ids = []
++            current_location = location
++            while current_location:
++                child_location_ids.append(current_location.id)
++                if location.type not in ('storage', 'view'):
++                    warehouse_per_location.update(
++                        {}.fromkeys(child_location_ids, None))
++                    break
++                if current_location.id in warehouse_per_location:
++                    warehouse_id = warehouse_per_location[current_location.id]
++                    res[location.id] = warehouse_id
++                    warehouse_per_location.update(
++                        {}.fromkeys(child_location_ids, warehouse_id))
++                    break
++                current_location = current_location.parent
++        return res
++
++    @classmethod
++    def search_warehouse(cls, name, clause):
++        warehouse_child_locations = cls.search([
++            ('parent.type', '=', 'warehouse'),
++            ('type', '=', 'storage'),
++            ('parent', clause[1], clause[2]),
++            ])
++        found_warehouse_ids = []
++        storage_location_ids = []
++        for location in warehouse_child_locations:
++            storage_location_ids.append(location.id)
++            found_warehouse_ids.append(location.parent.id)
++
++        warehouse_location_ids = []
++        for location in cls.search([
++                ('parent', 'child_of', storage_location_ids),
++                ]):
++            if location.warehouse.id in found_warehouse_ids:
++                warehouse_location_ids.append(location.id)
++        return [('id', 'in', warehouse_location_ids)]
++
+ 
+ class Party:
+     __name__ = 'party.party'
+@@ -400,3 +472,37 @@
+         action['name'] += ' - (%s) @ %s' % (
+             ','.join(l.name for l in locations), date)
+         return action, {}
++
++
++class LocationLeadTime(ModelSQL, ModelView, MatchMixin):
++    'Location Lead Time'
++    __name__ = 'stock.location.lead_time'
++
++    sequence = fields.Integer('Sequence')
++    warehouse_from = fields.Many2One('stock.location', 'Warehouse From',
++        ondelete='CASCADE',
++        domain=[
++            ('type', '=', 'warehouse'),
++            ])
++    warehouse_to = fields.Many2One('stock.location', 'Warehouse To',
++        ondelete='CASCADE',
++        domain=[
++            ('type', '=', 'warehouse'),
++            ])
++    lead_time = fields.Float('Lead Time', digits=(16, 2))
++
++    @classmethod
++    def __setup__(cls):
++        super(LocationLeadTime, cls).__setup__()
++        cls._order.insert(0, ('sequence', 'ASC'))
++
++    @classmethod
++    def order_sequence(cls, tables):
++        table, _ = tables[None]
++        return [Case((table.sequence == Null, 0), else_=1), table.sequence]
++
++    @classmethod
++    def get_lead_time(cls, pattern):
++        for record in cls.search([]):
++            if record.match(pattern):
++                return record.lead_time
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/location.xml
+--- a/trytond/trytond/modules/stock/location.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/location.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -121,6 +121,56 @@
+             <field name="name">products_by_locations_start_form</field>
+         </record>
+ 
++        <record model="ir.ui.view" id="location_lead_time_view_list">
++            <field name="model">stock.location.lead_time</field>
++            <field name="type">tree</field>
++            <field name="name">location_lead_time_list</field>
++        </record>
++
++        <record model="ir.ui.view" id="location_lead_time_view_form">
++            <field name="model">stock.location.lead_time</field>
++            <field name="type">form</field>
++            <field name="name">location_lead_time_form</field>
++        </record>
++
++        <record model="ir.action.act_window" id="act_location_lead_time_form">
++            <field name="name">Location Lead Times</field>
++            <field name="res_model">stock.location.lead_time</field>
++        </record>
++        <record model="ir.action.act_window.view"
++            id="act_location_lead_time_form_view1">
++            <field name="sequence" eval="10"/>
++            <field name="view" ref="location_lead_time_view_list"/>
++            <field name="act_window" ref="act_location_lead_time_form"/>
++        </record>
++        <record model="ir.action.act_window.view"
++            id="act_location_lead_time_form_view2">
++            <field name="sequence" eval="20"/>
++            <field name="view" ref="location_lead_time_view_form"/>
++            <field name="act_window" ref="act_location_lead_time_form"/>
++        </record>
++
++        <menuitem parent="menu_location_form"
++            action="act_location_lead_time_form"
++            id="menu_location_lead_time_form"/>
++
++        <record model="ir.model.access" id="access_location_lead_time">
++            <field name="model"
++                search="[('model', '=', 'stock.location.lead_time')]"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="False"/>
++            <field name="perm_create" eval="False"/>
++            <field name="perm_delete" eval="False"/>
++        </record>
++        <record model="ir.model.access" id="access_location_lead_time_admin">
++            <field name="model"
++                search="[('model', '=', 'stock.location.lead_time')]"/>
++            <field name="group" ref="group_stock_admin"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="True"/>
++            <field name="perm_create" eval="True"/>
++            <field name="perm_delete" eval="True"/>
++        </record>
+     </data>
+     <data noupdate="1">
+         <!-- Default locations -->
+@@ -161,6 +211,10 @@
+             <field name="name">Lost and Found</field>
+             <field name="type">lost_found</field>
+         </record>
++        <record model="stock.location" id="location_transit">
++            <field name="name">Transit</field>
++            <field name="type">storage</field>
++        </record>
+ 
+         <record model="ir.property" id="property_supplier_location">
+             <field name="field"
+@@ -174,5 +228,12 @@
+                            ('name', '=', 'customer_location')]"/>
+             <field name="value" eval="'stock.location,' + str(ref('location_customer'))"/>
+         </record>
++
++        <record model="ir.property" id="property_shipment_internal_transit">
++            <field name="field"
++                   search="[('model.model', '=', 'stock.configuration'),
++                           ('name', '=', 'shipment_internal_transit')]"/>
++            <field name="value" eval="'stock.location,' + str(ref('location_transit'))"/>
++        </record>
+     </data>
+ </tryton>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/shipment.py
+--- a/trytond/trytond/modules/stock/shipment.py	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/shipment.py	Wed Jun 22 16:09:23 2016 +0200
+@@ -3,7 +3,9 @@
+ import operator
+ import itertools
+ import datetime
+-from sql import Table
++from collections import defaultdict
++
++from sql import Table, Null
+ from sql.functions import Overlay, Position
+ from sql.aggregate import Max
+ from sql.operators import Concat
+@@ -1774,6 +1776,17 @@
+         states={
+             'readonly': Not(Equal(Eval('state'), 'draft')),
+             }, depends=['state'])
++    effective_start_date = fields.Date('Effective Start Date',
++        states={
++            'readonly': Eval('state').in_(['cancel', 'shipped', 'done']),
++            },
++        depends=['state'])
++    planned_start_date = fields.Date('Planned Start Date',
++        states={
++            'readonly': ~Eval('state').in_(['draft']),
++            'required': Bool(Eval('planned_date')),
++            },
++        depends=['state'])
+     company = fields.Many2One('company.company', 'Company', required=True,
+         states={
+             'readonly': Not(Equal(Eval('state'), 'draft')),
+@@ -1803,30 +1816,86 @@
+             }, domain=[
+             ('type', 'in', ['storage', 'lost_found']),
+             ], depends=['state'])
++    transit_location = fields.Function(fields.Many2One('stock.location',
++            'Transit Location'), 'on_change_with_transit_location')
+     moves = fields.One2Many('stock.move', 'shipment', 'Moves',
+         states={
+             'readonly': (Eval('state').in_(['cancel', 'assigned', 'done'])
+                 | ~Eval('from_location') | ~Eval('to_location')),
++            'invisible': (Bool(Eval('transit_location'))
++                & (Eval('state') != 'draft')),
+             },
+         domain=[
+             If(Eval('state') == 'draft', [
+                     ('from_location', '=', Eval('from_location')),
+                     ('to_location', '=', Eval('to_location')),
+-                    ], [
++                    ],
++                If(~Eval('transit_location'),
++                    [
++                        ('from_location', 'child_of',
++                            [Eval('from_location', -1)], 'parent'),
++                        ('to_location', 'child_of',
++                            [Eval('to_location', -1)], 'parent'),
++                        ],
++                    ['OR',
++                        [
++                            ('from_location', 'child_of',
++                                [Eval('from_location', -1)], 'parent'),
++                            ('to_location', '=', Eval('transit_location')),
++                            ],
++                        [
++                            ('from_location', '=', Eval('transit_location')),
++                            ('to_location', 'child_of',
++                                [Eval('to_location', -1)], 'parent'),
++                            ],
++                        ])),
++            ('company', '=', Eval('company')),
++            ],
++        depends=['state', 'from_location', 'to_location', 'transit_location',
++            'company'])
++    outgoing_moves = fields.Function(fields.One2Many('stock.move', 'shipment',
++            'Outgoing Moves',
++            domain=[
++                ('from_location', 'child_of', [Eval('from_location', -1)],
++                    'parent'),
++                If(~Eval('transit_location'),
++                    ('to_location', 'child_of', [Eval('to_location', -1)],
++                        'parent'),
++                    ('to_location', '=', Eval('transit_location'))),
++                ],
++            states={
++                'readonly': Eval('state').in_(
++                    ['assigned', 'shipped', 'done', 'cancel']),
++                'invisible': (~Eval('transit_location')
++                    | (Eval('state') == 'draft')),
++                },
++            depends=['from_location', 'to_location', 'transit_location',
++                'state']),
++        'get_outgoing_moves', setter='set_moves')
++    incoming_moves = fields.Function(fields.One2Many('stock.move', 'shipment',
++            'Incoming Moves',
++            domain=[
++                If(~Eval('transit_location'),
+                     ('from_location', 'child_of', [Eval('from_location', -1)],
+                         'parent'),
+-                    ('to_location', 'child_of', [Eval('to_location', -1)],
+-                        'parent'),
+-                    ]),
+-            ('company', '=', Eval('company')),
+-            ],
+-        depends=['state', 'from_location', 'to_location', 'planned_date',
+-            'company'])
++                    ('from_location', '=', Eval('transit_location'))),
++                ('to_location', 'child_of', [Eval('to_location', -1)],
++                    'parent'),
++                ],
++            states={
++                'readonly': Eval('state').in_(['done', 'cancel']),
++                'invisible': (~Eval('transit_location')
++                    | (Eval('state') == 'draft')),
++                },
++            depends=['from_location', 'to_location', 'transit_location',
++                'state']),
++        'get_incoming_moves', setter='set_moves')
+     state = fields.Selection([
+         ('draft', 'Draft'),
+         ('cancel', 'Canceled'),
+         ('assigned', 'Assigned'),
+         ('waiting', 'Waiting'),
++        ('shipped', 'Shipped'),
+         ('done', 'Done'),
+         ], 'State', readonly=True)
+ 
+@@ -1842,7 +1911,9 @@
+                 ('draft', 'waiting'),
+                 ('waiting', 'waiting'),
+                 ('waiting', 'assigned'),
++                ('assigned', 'shipped'),
+                 ('assigned', 'done'),
++                ('shipped', 'done'),
+                 ('waiting', 'draft'),
+                 ('assigned', 'waiting'),
+                 ('draft', 'cancel'),
+@@ -1852,7 +1923,7 @@
+                 ))
+         cls._buttons.update({
+                 'cancel': {
+-                    'invisible': Eval('state').in_(['cancel', 'done']),
++                    'invisible': Eval('state').in_(['cancel', 'shipped', 'done']),
+                     },
+                 'draft': {
+                     'invisible': ~Eval('state').in_(['cancel', 'waiting']),
+@@ -1869,8 +1940,15 @@
+                             'tryton-clear',
+                             'tryton-go-next')),
+                     },
++                'ship': {
++                    'invisible': ((Eval('state') != 'assigned') |
++                        ~Eval('transit_location')),
++                    },
+                 'done': {
+-                    'invisible': Eval('state') != 'assigned',
++                    'invisible': If(
++                        ~Eval('transit_location'),
++                        Eval('state') != 'assigned',
++                        Eval('state') != 'shipped'),
+                     },
+                 'assign_wizard': {
+                     'invisible': Eval('state') != 'waiting',
+@@ -1924,6 +2002,13 @@
+                             where=red_sql))
+             table.not_null_action('company', action='add')
+ 
++        # Migration from 4.0: fill planned_start_date
++        cursor.execute(*sql_table.update(
++                [sql_table.planned_start_date],
++                [sql_table.planned_date],
++                where=(sql_table.planned_start_date == Null)
++                & (sql_table.planned_date != Null)))
++
+         # Add index on create_date
+         table = TableHandler(cursor, cls, module_name)
+         table.index_action('create_date', action='add')
+@@ -1936,6 +2021,59 @@
+     def default_company():
+         return Transaction().context.get('company')
+ 
++    @fields.depends('planned_date', 'planned_start_date')
++    def on_change_with_transit_location(self, name=None):
++        pool = Pool()
++        Config = pool.get('stock.configuration')
++        if self.planned_date != self.planned_start_date:
++            return Config(1).shipment_internal_transit.id
++
++    @fields.depends('planned_date', 'from_location', 'to_location')
++    def on_change_with_planned_start_date(self, pattern=None):
++        pool = Pool()
++        LocationLeadTime = pool.get('stock.location.lead_time')
++        if self.planned_date:
++            if pattern is None:
++                pattern = {}
++            pattern.setdefault('warehouse_from',
++                self.from_location.warehouse.id
++                if self.from_location and self.from_location.warehouse
++                else None)
++            pattern.setdefault('warehouse_to',
++                self.to_location.warehouse.id
++                if self.to_location and self.to_location.warehouse
++                else None)
++            lead_time = LocationLeadTime.get_lead_time(pattern)
++            if lead_time:
++                return self.planned_date - lead_time
++        return self.planned_date
++
++    def get_outgoing_moves(self, name):
++        if not self.transit_location:
++            return [m.id for m in self.moves]
++        moves = []
++        for move in self.moves:
++            if move.to_location == self.transit_location:
++                moves.append(move.id)
++        return moves
++
++    def get_incoming_moves(self, name):
++        if not self.transit_location:
++            return [m.id for m in self.moves]
++        moves = []
++        for move in self.moves:
++            if move.from_location == self.transit_location:
++                moves.append(move.id)
++        return moves
++
++    @classmethod
++    def set_moves(cls, shipments, name, value):
++        if not value:
++            return
++        cls.write(shipments, {
++                'moves': value,
++                })
++
+     @classmethod
+     def create(cls, vlist):
+         pool = Pool()
+@@ -1961,12 +2099,73 @@
+         super(ShipmentInternal, cls).delete(shipments)
+ 
+     @classmethod
++    def copy(cls, shipments, default=None):
++        pool = Pool()
++        Move = pool.get('stock.move')
++
++        if default is None:
++            default = {}
++        else:
++            default = default.copy()
++        default['outgoing_moves'] = None
++        default['incoming_moves'] = None
++        default['moves'] = None
++        default.setdefault('number')
++        copies = super(ShipmentInternal, cls).copy(shipments, default=default)
++        for shipment, copy in zip(shipments, copies):
++            Move.copy(shipment.outgoing_moves, default={
++                    'shipment': str(copy),
++                    'from_location': shipment.from_location.id,
++                    'to_location': shipment.to_location.id,
++                    'planned_date': shipment.planned_date,
++                    })
++        return copies
++
++    @classmethod
++    def _sync_moves(cls, shipments):
++        'Synchronise incoming moves with outgoing moves'
++        pool = Pool()
++        Move = pool.get('stock.move')
++        Uom = pool.get('product.uom')
++        to_delete = []
++        to_write = []
++        for shipment in shipments:
++            product_qty = defaultdict(lambda: 0)
++            for move in shipment.outgoing_moves:
++                if move.state == 'cancel':
++                    continue
++                product_qty[move.product] += Uom.compute_qty(
++                    move.uom, move.quantity, move.product.default_uom,
++                    round=False)
++
++            for move in shipment.incoming_moves:
++                if move.state == 'cancel':
++                    continue
++                if product_qty[move.product] <= 0:
++                    to_delete.append(move)
++                else:
++                    quantity = Uom.compute_qty(
++                        move.uom, move.quantity, move.product.default_uom,
++                        round=False)
++                    quantity = min(product_qty[move.product], quantity)
++                    move.quantity = Uom.compute_qty(
++                        move.product.default_uom, quantity, move.uom)
++                    product_qty[move.product] -= quantity
++                    to_write.extend(([move], move._save_values))
++        if to_write:
++            Move.write(*to_write)
++        if to_delete:
++            Move.delete([m.id for m in to_delete])
++
++    @classmethod
+     @ModelView.button
+     @Workflow.transition('draft')
+     def draft(cls, shipments):
+         Move = Pool().get('stock.move')
+         # First reset state to draft to allow update from and to location
+         Move.draft([m for s in shipments for m in s.moves])
++        Move.delete([m for s in shipments for m in s.moves
++                if m.from_location == s.transit_location])
+         for shipment in shipments:
+             Move.write([m for m in shipment.moves
+                     if m.state != 'done'], {
+@@ -1981,25 +2180,65 @@
+     def wait(cls, shipments):
+         Move = Pool().get('stock.move')
+         Move.draft([m for s in shipments for m in s.moves])
++
++        direct = []
++        transit = []
+         for shipment in shipments:
++            if not shipment.transit_location:
++                direct.append(shipment)
++            else:
++                transit.append(shipment)
++
++        for shipment in direct:
+             for move in shipment.moves:
+                 if move.state != 'done':
+                     move.planned_date = shipment.planned_date
+                     move.save()
+ 
++        to_write = []
++        for shipment in transit:
++            moves = [m for m in shipment.moves
++                if m.state != 'done'
++                and m.from_location != shipment.transit_location
++                and m.to_location != shipment.transit_location]
++            Move.copy(moves, default={
++                    'from_location': shipment.transit_location.id,
++                    'planned_date': shipment.planned_date,
++                    })
++            to_write.append(moves)
++            to_write.append({
++                    'to_location': shipment.transit_location.id,
++                    'planned_date': shipment.planned_start_date,
++                    })
++        if to_write:
++            Move.write(*to_write)
++        cls._sync_moves(transit)
++
+     @classmethod
+     @Workflow.transition('assigned')
+     def assign(cls, shipments):
+         pass
+ 
+     @classmethod
++    @Workflow.transition('shipped')
++    def ship(cls, shipments):
++        pool = Pool()
++        Move = pool.get('stock.move')
++        Date = pool.get('ir.date')
++        Move.do([m for s in shipments for m in s.outgoing_moves])
++        cls._sync_moves(shipments)
++        cls.write([s for s in shipments if not s.effective_start_date], {
++                'effective_start_date': Date.today(),
++                })
++
++    @classmethod
+     @ModelView.button
+     @Workflow.transition('done')
+     def done(cls, shipments):
+         pool = Pool()
+         Move = pool.get('stock.move')
+         Date = pool.get('ir.date')
+-        Move.do([m for s in shipments for m in s.moves])
++        Move.do([m for s in shipments for m in s.incoming_moves])
+         cls.write([s for s in shipments if not s.effective_date], {
+                 'effective_date': Date.today(),
+                 })
+@@ -2020,7 +2259,7 @@
+     @ModelView.button
+     def assign_try(cls, shipments):
+         Move = Pool().get('stock.move')
+-        to_assign = [m for s in shipments for m in s.moves
++        to_assign = [m for s in shipments for m in s.outgoing_moves
+             if m.from_location.type != 'lost_found']
+         if not to_assign or Move.assign_try(to_assign):
+             cls.assign(shipments)
+@@ -2032,7 +2271,7 @@
+     @ModelView.button
+     def assign_force(cls, shipments):
+         Move = Pool().get('stock.move')
+-        Move.assign([m for s in shipments for m in s.moves])
++        Move.assign([m for s in shipments for m in s.outgoing_moves])
+         cls.assign(shipments)
+ 
+ 
+@@ -2054,7 +2293,7 @@
+         if not shipment_id:
+             return []
+         shipment = ShipmentInternal(shipment_id)
+-        return [x.id for x in shipment.moves if x.state == 'draft']
++        return [x.id for x in shipment.outgoing_moves if x.state == 'draft']
+ 
+ 
+ class AssignShipmentInternal(Wizard):
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/shipment.xml
+--- a/trytond/trytond/modules/stock/shipment.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/shipment.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -251,6 +251,13 @@
+             <field name="act_window" ref="act_shipment_internal_form"/>
+         </record>
+         <record model="ir.action.act_window.domain"
++            id="act_shipment_internal_form_domain_shipped">
++            <field name="name">Shipped</field>
++            <field name="sequence" eval="40"/>
++            <field name="domain">[('state', '=', 'shipped')]</field>
++            <field name="act_window" ref="act_shipment_internal_form"/>
++        </record>
++        <record model="ir.action.act_window.domain"
+             id="act_shipment_internal_form_domain_all">
+             <field name="name">All</field>
+             <field name="sequence" eval="9999"/>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/configuration_form.xml
+--- a/trytond/trytond/modules/stock/view/configuration_form.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/view/configuration_form.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -13,6 +13,8 @@
+     <field name="shipment_out_return_sequence"/>
+     <label name="shipment_internal_sequence"/>
+     <field name="shipment_internal_sequence"/>
++    <label name="shipment_internal_transit"/>
++    <field name="shipment_internal_transit"/>
+     <separator id="inventory" colspan="4" string="Inventory"/>
+     <label name="inventory_sequence"/>
+     <field name="inventory_sequence"/>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/location_form.xml
+--- a/trytond/trytond/modules/stock/view/location_form.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/view/location_form.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -12,6 +12,8 @@
+     <field name="active"/>
+     <label name="type"/>
+     <field name="type"/>
++    <label name="warehouse"/>
++    <field name="warehouse"/>
+     <newline/>
+     <label name="address"/>
+     <field name="address"/>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/location_lead_time_form.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/stock/view/location_lead_time_form.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -0,0 +1,13 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<form string="Location Lead Time" col="6">
++    <label name="warehouse_from"/>
++    <field name="warehouse_from"/>
++    <label name="warehouse_to"/>
++    <field name="warehouse_to"/>
++    <label name="sequence"/>
++    <field name="sequence"/>
++    <label name="lead_time"/>
++    <field name="lead_time"/>
++</form>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/location_lead_time_list.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/stock/view/location_lead_time_list.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -0,0 +1,8 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<tree string="Location Lead Times" sequence="sequence" editable="bottom">
++    <field name="warehouse_from"/>
++    <field name="warehouse_to"/>
++    <field name="lead_time"/>
++</tree>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/location_list.xml
+--- a/trytond/trytond/modules/stock/view/location_list.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/view/location_list.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -5,5 +5,6 @@
+     <field name="name"/>
+     <field name="code"/>
+     <field name="type"/>
++    <field name="warehouse"/>
+     <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/location_tree.xml
+--- a/trytond/trytond/modules/stock/view/location_tree.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/view/location_tree.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -5,6 +5,7 @@
+     <field name="name"/>
+     <field name="code"/>
+     <field name="type"/>
++    <field name="warehouse"/>
+     <field name="active" tree_invisible="1"/>
+     <field name="parent" tree_invisible="1"/>
+     <field name="childs" tree_invisible="1"/>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/shipment_internal_form.xml
+--- a/trytond/trytond/modules/stock/view/shipment_internal_form.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/view/shipment_internal_form.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -12,18 +12,33 @@
+     <field name="to_location"/>
+     <label name="planned_date"/>
+     <field name="planned_date"/>
++    <label name="planned_start_date"/>
++    <field name="planned_start_date"/>
+     <label name="effective_date"/>
+     <field name="effective_date"/>
++    <label name="effective_start_date"/>
++    <field name="effective_start_date"/>
+     <label name="company"/>
+     <field name="company"/>
+-    <field name="moves"  colspan="4"/>
++    <notebook colspan="4">
++        <page name="moves">
++            <field name="moves"  colspan="4"/>
++        </page>
++        <page name="outgoing_moves">
++            <field name="outgoing_moves" colspan="4"/>
++        </page>
++        <page name="incoming_moves">
++            <field name="incoming_moves" colspan="4"/>
++        </page>
++    </notebook>
+     <label name="state"/>
+     <field name="state"/>
+-    <group col="5" colspan="2" id="buttons">
++    <group col="6" colspan="2" id="buttons">
+         <button string="Cancel" name="cancel" icon="tryton-cancel"/>
+         <button string="Draft" name="draft"/>
+         <button string="Wait" name="wait"/>
+         <button string="Assign" name="assign_wizard" icon="tryton-go-next"/>
++        <button string="Ship" name="ship" icon="tryton-ok"/>
+         <button string="Done" name="done" icon="tryton-ok"/>
+     </group>
+ </form>
+diff -r da3bbc1a1ccc trytond/trytond/modules/stock/view/shipment_internal_tree.xml
+--- a/trytond/trytond/modules/stock/view/shipment_internal_tree.xml	Wed Jun 22 11:28:23 2016 +0200
++++ b/trytond/trytond/modules/stock/view/shipment_internal_tree.xml	Wed Jun 22 16:09:23 2016 +0200
+@@ -4,6 +4,7 @@
+ <tree string="Internal Shipments">
+     <field name="code"/>
+     <field name="reference"/>
++    <field name="planned_start_date"/>
+     <field name="planned_date"/>
+     <field name="effective_date"/>
+     <field name="from_location"/>
