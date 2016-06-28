@@ -1,0 +1,13 @@
+# Change not accepted by Ced
+diff -r 4dbfeeacd3c3 payment.py
+--- a/trytond/trytond/modules/account_payment_clearing/payment.py	Wed Apr 06 23:34:47 2016 +0200
++++ b/trytond/trytond/modules/account_payment_clearing/payment.py	Tue Jun 28 11:48:39 2016 +0200
+@@ -99,6 +99,8 @@
+         else:
+             counterpart.debit, counterpart.credit = self.amount, 0
+         counterpart.account = self.journal.clearing_account
++        counterpart.party = (self.line.party
++            if self.journal.clearing_account.party_required else None)
+         counterpart.amount_second_currency = self.line.amount_second_currency
+         counterpart.second_currency = self.line.second_currency
+         move.lines = (line, counterpart)
