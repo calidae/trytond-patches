@@ -6,7 +6,6 @@ analytic_sale.diff
 babi_multiprocess.diff
 country.diff
 domain_field.diff
-do_not_lock_on_assign_try.diff
 fix_rounding_in_sync_inventory_to_outgoing.patch
 fix_wizard_copy.diff
 invoice_speedup.diff
@@ -33,3 +32,4 @@ tax_active_invisible.diff
 top.diff
 sao_nantic_theme.diff
 domain_validation_warning.diff
+#do_not_lock_on_assign_try.diff
