@@ -1,0 +1,18 @@
+diff -r 58883026cd88 party.py
+--- a/trytond/trytond/modules/party/party.py	Wed Dec 23 00:08:49 2015 +0100
++++ b/trytond/trytond/modules/party/party.py	Tue Jul 12 16:30:39 2016 +0200
+@@ -346,10 +346,11 @@
+                 if identifier.type != 'eu_vat':
+                     continue
+                 try:
+-                    if not vat.check_vies(identifier.code):
++                    res = vat.check_vies(identifier.code)
++                    if res and 'valid' in res and res['valid']:
++                        parties_succeed.append(party.id)
++                    else:
+                         parties_failed.append(party.id)
+-                    else:
+-                        parties_succeed.append(party.id)
+                 except Exception, e:
+                     if hasattr(e, 'faultstring') \
+                             and hasattr(e.faultstring, 'find'):
