@@ -1,0 +1,25 @@
+diff -r e7e4b88cb575 shipment.py
+--- a/trytond/trytond/modules/stock/shipment.py	Mon Jul 04 22:52:10 2016 +0200
++++ b/trytond/trytond/modules/stock/shipment.py	Fri Jul 08 13:10:17 2016 +0200
+@@ -1219,15 +1219,15 @@
+             for move in shipment.outgoing_moves:
+                 if move.state == 'cancel':
+                     continue
+-                if outgoing_qty.get(move.product.id, 0.0) > 0.0:
+-                    exc_qty = Uom.compute_qty(move.product.default_uom,
+-                            outgoing_qty[move.product.id], move.uom)
++                exc_qty = Uom.compute_qty(move.product.default_uom,
++                        outgoing_qty[move.product.id], move.uom)
++                quantity = max(0.0, move.uom.round(move.quantity - exc_qty))
++                if quantity > 0.0:
+                     removed_qty = Uom.compute_qty(move.uom,
+                         min(exc_qty, move.quantity), move.product.default_uom,
+                         round=False)
+-                    if write:
+-                        Move.write([move], {
+-                                'quantity': max(0.0, move.quantity - exc_qty),
++                    Move.write([move], {
++                            'quantity': quantity,
+                                 })
+                     outgoing_qty[move.product.id] -= removed_qty
+ 
