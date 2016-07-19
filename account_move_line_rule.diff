@@ -1,4 +1,4 @@
-diff -r 3ca378e51e78 move.xml
+diff -r 3ca378e51e78 trytond/trytond/modules/account/move.xml
 --- a/trytond/trytond/modules/account/move.xml	Wed May 11 11:23:24 2016 +0200
 +++ b/trytond/trytond/modules/account/move.xml	Wed Jul 13 16:53:40 2016 +0200
 @@ -285,6 +285,15 @@
