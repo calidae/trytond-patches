@@ -1,7 +1,6 @@
-Index: trytond/trytond/protocols/dispatcher.py
-===================================================================
---- a/trytond/trytond/protocols/dispatcher.py	2016-05-31 14:55:32.206305641 +0200
-+++ b/trytond/trytond/protocols/dispatcher.py	2016-05-31 14:55:32.202305641 +0200
+diff -r 2283822f1703 trytond/protocols/dispatcher.py
+--- a/trytond/protocols/dispatcher.py	Sat Jun 18 12:04:45 2016 +0200
++++ b/trytond/protocols/dispatcher.py	Fri Jul 22 00:08:30 2016 +0200
 @@ -20,6 +20,8 @@
  from trytond.tools import is_instance_method
  from trytond.wsgi import app
@@ -11,15 +10,22 @@ Index: trytond/trytond/protocols/dispatcher.py
  logger = logging.getLogger(__name__)
  
  ir_configuration = Table('ir_configuration')
-@@ -203,6 +205,16 @@
+@@ -192,6 +205,23 @@
          with Transaction().start(pool.database_name, user,
                  readonly=rpc.readonly) as transaction:
              Cache.clean(pool.database_name)
++            if backend.name() == 'postgresql':
++                cursor = transaction.connection.cursor()
++                cursor.execute("SELECT pg_backend_pid()")
++                database_pid = cursor.fetchone()[0]
++            else:
++                database_pid = '-'
 +            action_id = top.add({
 +                    'host': request.host,
 +                    'port': '',
 +                    'protocol': '',
 +                    'database_name': pool.database_name,
++                    'database_pid': database_pid,
 +                    'user': user,
 +                    'object_name': obj.__name__,
 +                    'method': method,
@@ -28,7 +34,7 @@ Index: trytond/trytond/protocols/dispatcher.py
              try:
                  c_args, c_kwargs, transaction.context, transaction.timestamp \
                      = rpc.convert(obj, *args, **kwargs)
-@@ -230,6 +242,8 @@
+@@ -219,6 +249,8 @@
              except Exception:
                  logger.error(log_message, *log_args, exc_info=True)
                  raise
@@ -102,8 +108,8 @@ Index: trytond/trytond/protocols/top.py
 +    if current_actions:
 +       key = current_actions.keys()[0]
 +       header = sorted(current_actions[key].keys())
-+       header = ('id', 'database_name', 'user', 'protocol', 'host', 'port',
-+           'timestamp', 'elapsed', 'object_name', 'method', 'args')
++       header = ('id', 'database_name', 'database_pid', 'user', 'protocol', 'host',
++           'port', 'timestamp', 'elapsed', 'object_name', 'method', 'args')
 +       table = []
 +       table.append([x.upper() for x in header])
 +
