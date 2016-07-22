@@ -1,6 +1,6 @@
 diff -r 2283822f1703 trytond/protocols/dispatcher.py
---- a/trytond/protocols/dispatcher.py	Sat Jun 18 12:04:45 2016 +0200
-+++ b/trytond/protocols/dispatcher.py	Fri Jul 22 00:08:30 2016 +0200
+--- a/trytond/trytond/protocols/dispatcher.py	Sat Jun 18 12:04:45 2016 +0200
++++ b/trytond/trytond/protocols/dispatcher.py	Fri Jul 22 00:08:30 2016 +0200
 @@ -20,6 +20,8 @@
  from trytond.tools import is_instance_method
  from trytond.wsgi import app
