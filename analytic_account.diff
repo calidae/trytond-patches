@@ -1,0 +1,119 @@
+# HG changeset patch
+# User Sergi Almacellas Abellana <sergi@koolpi.com>
+Add company domain
+
+
+issue5104
+
+review19141003
+
+Index: trytond/trytond/modules/analytic_account/account.py
+===================================================================
+
+diff -r 86eaf56137aa account.py
+--- a/trytond/trytond/modules/analytic_account/account.py    Wed Dec 23 00:19:29 2015 +0100
++++ b/trytond/trytond/modules/analytic_account/account.py    Wed Jul 27 13:50:42 2016 +0200
+@@ -22,7 +22,7 @@
+     name = fields.Char('Name', required=True, translate=True, select=True)
+     code = fields.Char('Code', select=True)
+     active = fields.Boolean('Active', select=True)
+-    company = fields.Many2One('company.company', 'Company')
++    company = fields.Many2One('company.company', 'Company', required=True)
+     currency = fields.Many2One('currency.currency', 'Currency', required=True)
+     currency_digits = fields.Function(fields.Integer('Currency Digits'),
+         'on_change_with_currency_digits')
+@@ -32,12 +32,16 @@
+         ('normal', 'Normal'),
+         ], 'Type', required=True)
+     root = fields.Many2One('analytic_account.account', 'Root', select=True,
+-        domain=[('parent', '=', None)],
++        domain=[
++             ('company', '=', Eval('company')),
++             ('parent', '=', None),
++             ('type', '=', 'root'),
++             ],
+         states={
+             'invisible': Eval('type') == 'root',
+             'required': Eval('type') != 'root',
+             },
+-        depends=['type'])
++        depends=['company', 'type'])
+     parent = fields.Many2One('analytic_account.account', 'Parent', select=True,
+         domain=[('parent', 'child_of', Eval('root'))],
+         states={
+@@ -312,6 +316,7 @@
+
+         root_accounts = cls.search([
+                 ('parent', '=', None),
++                ('company', '=', Transaction().context.get('company', -1)),
+                 ])
+         for account in root_accounts:
+             name = 'analytic_account_' + str(account.id)
+@@ -328,7 +333,8 @@
+                 res[name]['relation'] = cls.__name__
+                 res[name]['domain'] = PYSONEncoder().encode([
+                     ('root', '=', account.id),
+-                    ('type', '=', 'normal')])
++                    ('type', '=', 'normal'),
++                    ('company', '=', account.company.id)])
+         return res
+
+
+diff -r 86eaf56137aa account.xml
+--- a/trytond/trytond/modules/analytic_account/account.xml   Wed Dec 23 00:19:29 2015 +0100
++++ b/trytond/trytond/modules/analytic_account/account.xml   Wed Jul 27 13:50:42 2016 +0200
+@@ -109,5 +109,14 @@
+             <field name="type">form</field>
+             <field name="name">open_chart_start_form</field>
+         </record>
++
++        <record model="ir.rule.group" id="rule_group_account">
++            <field name="model" search="[('model', '=', 'analytic_account.account')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_account1">
++            <field name="domain">[('company', '=', user.company.id if user.company else None)]</field>
++            <field name="rule_group" ref="rule_group_account"/>
++        </record>
+     </data>
+ </tryton>
+diff -r 86eaf56137aa line.py
+--- a/trytond/trytond/modules/analytic_account/line.py   Wed Dec 23 00:19:29 2015 +0100
++++ b/trytond/trytond/modules/analytic_account/line.py   Wed Jul 27 13:50:42 2016 +0200
+@@ -25,7 +25,7 @@
+     currency_digits = fields.Function(fields.Integer('Currency Digits'),
+         'on_change_with_currency_digits')
+     company = fields.Function(fields.Many2One('company.company', 'Company'),
+-        'on_change_with_company')
++        'on_change_with_company', searcher='search_company')
+     account = fields.Many2One('analytic_account.account', 'Account',
+             required=True, select=True, domain=[
+             ('type', '!=', 'view'),
+@@ -104,6 +104,10 @@
+         if self.move_line:
+             return self.move_line.account.company.id
+
++    @classmethod
++    def search_company(cls, name, clause):
++        return [('move_line.account.company',) + tuple(clause[1:])]
++
+     @staticmethod
+     def query_get(table):
+         '''
+diff -r 86eaf56137aa line.xml
+--- a/trytond/trytond/modules/analytic_account/line.xml  Wed Dec 23 00:19:29 2015 +0100
++++ b/trytond/trytond/modules/analytic_account/line.xml  Wed Jul 27 13:50:42 2016 +0200
+@@ -67,5 +67,13 @@
+             <field name="name">move_line_form</field>
+         </record>
+
++        <record model="ir.rule.group" id="rule_group_account_line">
++            <field name="model" search="[('model', '=', 'analytic_account.line')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_account_line1">
++            <field name="domain">[('company', '=', user.company.id if user.company else None)]</field>
++            <field name="rule_group" ref="rule_group_account_line"/>
++        </record>
+     </data>
+ </tryton>
