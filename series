@@ -43,8 +43,8 @@ issue6951002_20001.diff
 stock_supply_production-performance-improvement.diff
 stock_supply-provisioning-location.diff
 
-# companyia obligatoria a l'analitica
-analytic_account.diff
+# Uncomment in TEB: companyia obligatoria a l'analitica
+# analytic_account.diff
 
 top.diff
 issue15211002-sale-confirmed-to-done.diff
