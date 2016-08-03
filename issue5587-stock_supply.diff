@@ -1,7 +1,19 @@
-diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/__init__.py
---- a/trytond/trytond/modules/stock_supply/__init__.py	Wed Jun 22 16:17:37 2016 +0200
-+++ b/trytond/trytond/modules/stock_supply/__init__.py	Wed Jun 22 17:05:42 2016 +0200
-@@ -21,6 +21,7 @@
+exporting patch:
+# HG changeset patch
+# User Cédric Krier <ced@b2ck.com>
+# Date 1466498284 -7200
+#      Tue Jun 21 10:38:04 2016 +0200
+# Node ID 2debb3c826595328cfe844ebcf6c19339a548831
+# Parent  2755f1104ac029ea8f01fee42fa3ffa3177e99c8
+Manage lead time when generating internal shipments
+
+issue5587
+review25331003
+
+diff -r 2755f1104ac0 -r 2debb3c82659 __init__.py
+--- a/trytond/trytond/modules/stock_supply/__init__.py	Tue Jun 21 10:11:57 2016 +0200
++++ b/trytond/trytond/modules/stock_supply/__init__.py	Tue Jun 21 10:38:04 2016 +0200
+@@ -18,6 +18,7 @@
          ShipmentInternal,
          CreateShipmentInternalStart,
          Location,
@@ -9,9 +21,9 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/__init__.py
          module='stock_supply', type_='model')
      Pool.register(
          CreatePurchaseRequest,
-diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/location.py
---- a/trytond/trytond/modules/stock_supply/location.py	Wed Jun 22 16:17:37 2016 +0200
-+++ b/trytond/trytond/modules/stock_supply/location.py	Wed Jun 22 17:05:42 2016 +0200
+diff -r 2755f1104ac0 -r 2debb3c82659 location.py
+--- a/trytond/trytond/modules/stock_supply/location.py	Tue Jun 21 10:11:57 2016 +0200
++++ b/trytond/trytond/modules/stock_supply/location.py	Tue Jun 21 10:38:04 2016 +0200
 @@ -1,11 +1,13 @@
  # This file is part of Tryton.  The COPYRIGHT file at the top level of
  # this repository contains the full copyright notices and license terms.
@@ -42,21 +54,21 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/location.py
 +        'Return the biggest lead time'
 +        lead_times = cls.search([])
 +        if lead_times:
-+            return datetime.timedelta(max(r.lead_time for r in lead_times))
++            return max(r.lead_time for r in lead_times)
 +        else:
 +            return datetime.timedelta(0)
-diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
---- a/trytond/trytond/modules/stock_supply/shipment.py	Wed Jun 22 16:17:37 2016 +0200
-+++ b/trytond/trytond/modules/stock_supply/shipment.py	Wed Jun 22 17:05:42 2016 +0200
+diff -r 2755f1104ac0 -r 2debb3c82659 shipment.py
+--- a/trytond/trytond/modules/stock_supply/shipment.py	Tue Jun 21 10:11:57 2016 +0200
++++ b/trytond/trytond/modules/stock_supply/shipment.py	Tue Jun 21 10:38:04 2016 +0200
 @@ -1,5 +1,7 @@
- #This file is part of Tryton.  The COPYRIGHT file at the top level of
- #this repository contains the full copyright notices and license terms.
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
 +import datetime
 +
  from sql import Table
  from sql.functions import Overlay, Position
  
-@@ -51,8 +53,11 @@
+@@ -50,8 +52,11 @@
          Date = pool.get('ir.date')
          User = pool.get('res.user')
          Move = pool.get('stock.move')
@@ -68,7 +80,7 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
          # fetch quantities on order points
          order_points = OrderPoint.search([
              ('type', '=', 'internal'),
-@@ -80,60 +85,68 @@
+@@ -79,61 +84,68 @@
          else:
              product_ids = id2product.keys()
              product_ids.sort()
@@ -116,13 +128,13 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 -                from_location=from_location,
 -                to_location=to_location,
 -                planned_date=today,
--                moves=[],
 -                )
+-            shipment_moves = []
 -            for move in moves:
 -                product_id, qty = move
 -                product = id2product.setdefault(
 -                    product_id, Product(product_id))
--                shipment.moves.append(Move(
+-                shipment_moves.append(Move(
 -                        from_location=from_location,
 -                        to_location=to_location,
 -                        planned_date=today,
@@ -131,6 +143,7 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 -                        uom=product.default_uom,
 -                        company=user_record.company,
 -                        ))
+-            shipment.moves = shipment_moves
 -            shipment.save()
 -            shipments.append(shipment)
 +            # Create a list of moves to create
@@ -185,7 +198,7 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 +                    shipment.on_change_with_planned_start_date())
 +                shipments.append(shipment)
 +            date += datetime.timedelta(1)
-+        shipments = cls.create([s._save_values for s in shipments])
++        cls.save(shipments)
          cls.wait(shipments)
          return shipments
  
