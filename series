@@ -23,7 +23,6 @@ issue5154.diff
 issue6021003_1.diff
 issue6341003_1.diff
 logging_jsonrpc_exeption.diff
-purchase_fix_get_move_done_rounding.diff
 stock_supply_production-performance-improvement.diff
 tax_active_invisible.diff
 domain_validation_warning.diff
