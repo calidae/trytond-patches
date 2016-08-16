@@ -6,7 +6,6 @@ analytic_sale.diff
 babi_multiprocess.diff
 country.diff
 domain_field.diff
-stock_lot_fix_rounding_in_sync_inventory_to_outgoing.patch
 fix_wizard_copy.diff
 invoice_speedup.diff
 issue10091002_1.diff
