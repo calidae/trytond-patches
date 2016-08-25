@@ -1,6 +1,6 @@
 diff -r 694d32df45f1 inventory.py
---- a/trytond/trytond/modules/stock/inventory.py	Wed Jun 17 12:08:14 2015 +0200
-+++ b/trytond/trytond/modules/stock/inventory.py	Wed Jun 17 12:14:25 2015 +0200
+--- a/trytond/trytond/modules/stock/inventory.py	Thu Aug 25 09:46:13 2016 +0200
++++ b/trytond/trytond/modules/stock/inventory.py	Thu Aug 25 10:05:12 2016 +0200
 @@ -1,6 +1,6 @@
  #This file is part of Tryton.  The COPYRIGHT file at the top level
  #of this repository contains the full copyright notices and license terms.
@@ -11,7 +11,7 @@ diff -r 694d32df45f1 inventory.py
  from trytond.transaction import Transaction
 @@ -166,7 +166,12 @@
          return new_inventories
- 
+
      @staticmethod
 -    def complete_lines(inventories):
 +    def grouping():
@@ -23,19 +23,22 @@ diff -r 694d32df45f1 inventory.py
          '''
          Complete or update the inventories
          '''
-@@ -174,25 +179,21 @@
+@@ -174,6 +179,7 @@
          Line = pool.get('stock.inventory.line')
          Product = pool.get('product.product')
- 
+
 +        grouping = cls.grouping()
          to_create = []
          for inventory in inventories:
+             # Once done computation is wrong because include created moves
+@@ -181,21 +187,16 @@
+                 continue
              # Compute product quantities
              with Transaction().set_context(stock_date_end=inventory.date):
 -                pbl = Product.products_by_location([inventory.location.id])
 +                pbl = Product.products_by_location(
 +                    [inventory.location.id], grouping=grouping)
- 
+
              # Index some data
 -            product2uom = {}
              product2type = {}
@@ -44,7 +47,7 @@ diff -r 694d32df45f1 inventory.py
 -                product2uom[product.id] = product.default_uom.id
                  product2type[product.id] = product.type
                  product2consumable[product.id] = product.consumable
- 
+
 -            product_qty = {}
 -            for (location, product), quantity in pbl.iteritems():
 -                product_qty[product] = (quantity, product2uom[product])
@@ -52,7 +55,7 @@ diff -r 694d32df45f1 inventory.py
              # Update existing lines
              for line in inventory.lines:
                  if not (line.product.active and
-@@ -200,26 +201,28 @@
+@@ -203,26 +204,27 @@
                          and not line.product.consumable):
                      Line.delete([line])
                      continue
@@ -60,7 +63,6 @@ diff -r 694d32df45f1 inventory.py
 -                    quantity, uom_id = product_qty.pop(line.product.id)
 -                elif line.product.id in product2uom:
 -                    quantity, uom_id = 0.0, product2uom[line.product.id]
-+
 +                key = (inventory.location.id,) + line.unique_key
 +                if key in pbl:
 +                    quantity = pbl.pop(key)
@@ -71,7 +73,7 @@ diff -r 694d32df45f1 inventory.py
 +                values = line.update_values4complete(quantity)
                  if values:
                      Line.write([line], values)
- 
+
              # Create lines if needed
 -            for product_id in product_qty:
 +            for key, quantity in pbl.iteritems():
@@ -91,8 +93,8 @@ diff -r 694d32df45f1 inventory.py
                  to_create.append(values)
          if to_create:
              Line.create(to_create)
-@@ -310,7 +313,13 @@
- 
+@@ -313,7 +315,13 @@
+
      @property
      def unique_key(self):
 -        return (self.product,)
@@ -103,13 +105,13 @@ diff -r 694d32df45f1 inventory.py
 +                value = value.id
 +            key.append(value)
 +        return tuple(key)
- 
+
      @classmethod
      def cancel_move(cls, lines):
-@@ -349,31 +358,27 @@
+@@ -352,31 +360,27 @@
              origin=self,
              )
- 
+
 -    def update_values4complete(self, quantity, uom_id):
 +    def update_values4complete(self, quantity):
          '''
@@ -127,7 +129,7 @@ diff -r 694d32df45f1 inventory.py
          if self.quantity == self.expected_quantity:
              values['quantity'] = max(quantity, 0.0)
          return values
- 
+
      @classmethod
 -    def create_values4complete(cls, product_id, inventory, quantity, uom_id):
 +    def create_values4complete(cls, inventory, quantity):
@@ -142,15 +144,15 @@ diff -r 694d32df45f1 inventory.py
 -            'uom': uom_id,
          }
 diff -r 694d32df45f1 tests/scenario_stock_inventory.rst
---- a/trytond/trytond/modules/stock/tests/scenario_stock_inventory.rst	Wed Jun 17 12:08:14 2015 +0200
-+++ b/trytond/trytond/modules/stock/tests/scenario_stock_inventory.rst	Wed Jun 17 12:14:25 2015 +0200
+--- a/trytond/trytond/modules/stock/tests/scenario_stock_inventory.rst	Thu Aug 25 09:46:13 2016 +0200
++++ b/trytond/trytond/modules/stock/tests/scenario_stock_inventory.rst	Thu Aug 25 10:05:12 2016 +0200
 @@ -64,13 +64,11 @@
      >>> storage_loc, = Location.find([('code', '=', 'STO')])
      >>> customer_loc, = Location.find([('code', '=', 'CUS')])
- 
+
 -Create product::
 +Create products::
- 
+
      >>> ProductUom = Model.get('product.uom')
      >>> ProductTemplate = Model.get('product.template')
 -    >>> Product = Model.get('product.product')
@@ -177,9 +179,9 @@ diff -r 694d32df45f1 tests/scenario_stock_inventory.rst
 +    >>> template2.cost_price_method = 'average'
 +    >>> template2.save()
 +    >>> product2, = template2.products
- 
+
  Fill storage::
- 
+
 @@ -96,7 +104,19 @@
      >>> incoming_move.company = company
      >>> incoming_move.unit_price = Decimal('100')
@@ -199,7 +201,7 @@ diff -r 694d32df45f1 tests/scenario_stock_inventory.rst
 +    >>> incoming_move.unit_price = Decimal('70')
 +    >>> incoming_move.currency = company.currency
      >>> incoming_move.click('do')
- 
+
  Create an inventory::
 @@ -106,28 +126,81 @@
      >>> inventory.location = storage_loc
@@ -281,9 +283,9 @@ diff -r 694d32df45f1 tests/scenario_stock_inventory.rst
 +    >>> line_p2.reload()
 +    >>> len(line_p2.moves)
 +    0
- 
+
  Empty storage::
- 
+
 -    >>> StockMove = Model.get('stock.move')
      >>> outgoing_move = StockMove()
      >>> outgoing_move.product = product
@@ -296,7 +298,7 @@ diff -r 694d32df45f1 tests/scenario_stock_inventory.rst
 @@ -137,6 +210,19 @@
      >>> outgoing_move.currency = currency
      >>> outgoing_move.click('do')
- 
+
 +    >>> outgoing_move = StockMove()
 +    >>> outgoing_move.product = product2
 +    >>> outgoing_move.uom = kg
@@ -311,5 +313,5 @@ diff -r 694d32df45f1 tests/scenario_stock_inventory.rst
 +    >>> outgoing_move.click('do')
 +
  Create an inventory that should be empty after completion::
- 
+
      >>> Inventory = Model.get('stock.inventory')
