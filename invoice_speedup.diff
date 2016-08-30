@@ -413,24 +413,6 @@ Index: trytond/trytond/modules/account_payment_type/invoice.py
 -        return res
 +            line.payment_type = self.payment_type
 +        return line
-Index: trytond/trytond/modules/account_bank/account.py
-===================================================================
---- a/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
-+++ b/trytond/trytond/modules/account_bank/account.py	2016-05-31 15:12:13.270350897 +0200
-@@ -251,10 +251,10 @@
-         '''
-         Add account bank to move line when post invoice.
-         '''
--        res = super(Invoice, self)._get_move_line(date, amount)
-+        line = super(Invoice, self)._get_move_line(date, amount)
-         if self.bank_account:
--            res['bank_account'] = self.bank_account
--        return res
-+            line.bank_account = self.bank_account
-+        return line
- 
-     @classmethod
-     def compute_default_bank_account(cls, values):
 Index: trytond/trytond/modules/analytic_invoice/invoice.py
 ===================================================================
 --- a/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
