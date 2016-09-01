@@ -21,7 +21,7 @@ diff -r 0cd556f1c82c account.py
 +from trytond.pyson import Eval, If, PYSONEncoder, PYSONDecoder
  from trytond.transaction import Transaction
  from trytond.pool import Pool
- 
+
 @@ -22,7 +22,7 @@
      name = fields.Char('Name', required=True, translate=True, select=True)
      code = fields.Char('Code', select=True)
@@ -74,13 +74,13 @@ diff -r 0cd556f1c82c account.py
          'on_change_with_required')
 +    company = fields.Function(fields.Many2One('company.company', 'Company'),
 +        'on_change_with_company', searcher='search_company')
- 
+
      @classmethod
      def __register__(cls, module_name):
 @@ -386,12 +394,27 @@
              return self.root.mandatory
          return False
- 
+
 +    @classmethod
 +    def default_company(cls):
 +        return Transaction().context.get('company')
@@ -92,9 +92,9 @@ diff -r 0cd556f1c82c account.py
 +    def search_company(cls, name, clause):
 +        raise NotImplementedError()
 +
- 
+
  class AnalyticMixin(ModelSQL):
- 
+
      analytic_accounts = fields.One2Many('analytic.account.entry', 'origin',
          'Analytic Accounts',
          size=Eval('analytic_accounts_size', 0),
@@ -108,7 +108,7 @@ diff -r 0cd556f1c82c account.py
 @@ -427,13 +450,19 @@
                          where=entry.selection == selection_id))
              handler.drop_column('analytic_accounts')
- 
+
 -    @staticmethod
 -    def default_analytic_accounts():
 +    @classmethod
@@ -120,7 +120,7 @@ diff -r 0cd556f1c82c account.py
 +    def default_analytic_accounts(cls):
          pool = Pool()
          AnalyticAccount = pool.get('analytic_account.account')
- 
+
          accounts = []
 -        root_accounts = AnalyticAccount.search([
 +        root_accounts = AnalyticAccount.search(
@@ -131,7 +131,7 @@ diff -r 0cd556f1c82c account.py
 @@ -443,11 +472,14 @@
                      })
          return accounts
- 
+
 -    @staticmethod
 -    def default_analytic_accounts_size():
 +    @classmethod
@@ -143,7 +143,7 @@ diff -r 0cd556f1c82c account.py
 +            cls.analytic_accounts_domain() + [
 +                    ('type', '=', 'root'),
 +                    ]))
- 
+
      @classmethod
      def get_analytic_accounts_size(cls, records, name):
 @@ -464,12 +496,17 @@
@@ -165,37 +165,6 @@ diff -r 0cd556f1c82c account.py
              if not mandatory_roots <= analytic_roots:
                  cls.raise_user_error('root_account', {
                          'name': analytic.rec_name,
-diff -r 0cd556f1c82c account.xml
---- a/trytond/trytond/modules/analytic_account/account.xml	Sun Mar 13 16:19:22 2016 +0100
-+++ b/trytond/trytond/modules/analytic_account/account.xml	Tue Apr 26 18:24:04 2016 +0200
-@@ -124,5 +124,27 @@
-             <field name="type">tree</field>
-             <field name="name">analytic_account_entry_tree</field>
-         </record>
-+
-+        <record model="ir.rule.group" id="rule_group_account">
-+            <field name="model" search="[('model', '=', 'analytic_account.account')]"/>
-+            <field name="global_p" eval="True"/>
-+        </record>
-+        <record model="ir.rule" id="rule_account1">
-+            <field name="domain"
-+                eval="[('company', '=', Eval('user', {}).get('company', None))]"
-+                pyson="1"/>
-+            <field name="rule_group" ref="rule_group_account"/>
-+        </record>
-+
-+        <record model="ir.rule.group" id="rule_group_account_entry">
-+            <field name="model" search="[('model', '=', 'analytic.account.entry')]"/>
-+            <field name="global_p" eval="True"/>
-+        </record>
-+        <record model="ir.rule" id="rule_account_entry1">
-+            <field name="domain"
-+                eval="[('company', '=', Eval('user', {}).get('company', None))]"
-+                pyson="1"/>
-+            <field name="rule_group" ref="rule_group_account_entry"/>
-+        </record>
-     </data>
- </tryton>
 diff -r 0cd556f1c82c line.py
 --- a/trytond/trytond/modules/analytic_account/line.py	Sun Mar 13 16:19:22 2016 +0100
 +++ b/trytond/trytond/modules/analytic_account/line.py	Tue Apr 26 18:24:04 2016 +0200
@@ -211,7 +180,7 @@ diff -r 0cd556f1c82c line.py
 @@ -104,6 +104,10 @@
          if self.move_line:
              return self.move_line.account.company.id
- 
+
 +    @classmethod
 +    def search_company(cls, name, clause):
 +        return [('move_line.account.company',) + tuple(clause[1:])]
