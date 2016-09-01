@@ -49,7 +49,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +        line.maturity_date = date
 +        line.description = self.description
 +        return line
- 
+
 -    def create_move(self):
 +    def get_move(self):
          '''
@@ -68,7 +68,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +            total += line.debit - line.credit
 +            if line.amount_second_currency:
 +                total_currency += line.amount_second_currency
- 
+
          term_lines = self.payment_term.compute(total, self.company.currency,
              self.invoice_date)
 @@ -943,28 +945,24 @@
@@ -87,10 +87,10 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 -            move_lines[-1]['amount_second_currency'] -= \
 +            move_lines[-1].amount_second_currency -= \
                  remainder_total_currency
- 
+
          accounting_date = self.accounting_date or self.invoice_date
          period_id = Period.find(self.company.id, date=accounting_date)
- 
+
 -        move, = Move.create([{
 -                    'journal': self.journal.id,
 -                    'period': period_id,
@@ -110,7 +110,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +        move.company = self.company
 +        move.lines = move_lines
          return move
- 
+
      def set_number(self):
 @@ -1001,10 +999,9 @@
          with Transaction().set_context(
@@ -122,7 +122,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 -                vals['invoice_date'] = Transaction().context['date']
 -        self.write([self], vals)
 +                self.invoice_date = Transaction().context['date']
- 
+
      @classmethod
      def check_modify(cls, invoices):
 @@ -1064,7 +1061,7 @@
@@ -132,12 +132,12 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 -        if update_tax:
 +        if update_tax and not Transaction().context.get('skip_update_taxes'):
              cls.update_taxes(update_tax)
- 
+
      @classmethod
 @@ -1232,18 +1229,16 @@
          '''
          MoveLine = Pool().get('account.move.line')
- 
+
 -        new_invoices = []
 -        for invoice in invoices:
 -            new_invoice, = cls.create([invoice._credit()])
@@ -156,7 +156,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
                              if not l.reconciliation])
 -        cls.update_taxes(new_invoices)
          return new_invoices
- 
+
      @classmethod
 @@ -1263,10 +1258,16 @@
      @ModelView.button
@@ -173,13 +173,13 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +                to_write.extend(([invoice], invoice._save_values))
 +        if to_write:
 +            cls.write(*to_write)
- 
+
      @classmethod
      @ModelView.button
 @@ -1274,14 +1275,29 @@
      def post(cls, invoices):
          Move = Pool().get('account.move')
- 
+
 -        moves = []
 +        to_create = []
          for invoice in invoices:
@@ -213,7 +213,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
              if invoice.type == 'out':
                  invoice.print_invoice()
 @@ -1320,14 +1336,17 @@
- 
+
          cancel_moves = []
          delete_moves = []
 +        to_write = []
@@ -236,7 +236,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
          pool = Pool()
          Currency = pool.get('currency.currency')
 +        TaxLine = pool.get('account.tax.line')
- 
+
          res = []
          if self.type != 'line':
 @@ -1900,53 +1920,56 @@
@@ -254,7 +254,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +                tax_line.tax = tax['tax']
 +                res.append(tax_line)
          return res
- 
+
      def get_move_line(self):
          '''
 -        Return a list of move lines values for invoice line
@@ -318,11 +318,11 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 -        return [res]
 +            line.tax_lines = computed_taxes
 +        return [line]
- 
+
      def _credit(self):
          '''
 @@ -2162,47 +2185,52 @@
- 
+
      def get_move_line(self):
          '''
 -        Return a list of move lines values for invoice tax
@@ -395,7 +395,7 @@ Index: trytond/trytond/modules/account_invoice/invoice.py
 +            tax_line.tax = self.tax
 +            line.tax_lines = [tax_line]
 +        return [line]
- 
+
      def _credit(self):
          '''
 Index: trytond/trytond/modules/account_payment_type/invoice.py
@@ -404,7 +404,7 @@ Index: trytond/trytond/modules/account_payment_type/invoice.py
 +++ b/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.266350897 +0200
 @@ -82,7 +82,7 @@
                      return self.company.party.customer_payment_type.id
- 
+
      def _get_move_line(self, date, amount):
 -        res = super(Invoice, self)._get_move_line(date, amount)
 +        line = super(Invoice, self)._get_move_line(date, amount)
@@ -415,12 +415,20 @@ Index: trytond/trytond/modules/account_payment_type/invoice.py
 +        return line
 Index: trytond/trytond/modules/analytic_invoice/invoice.py
 ===================================================================
---- a/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
-+++ b/trytond/trytond/modules/analytic_invoice/invoice.py	2016-05-31 15:12:13.270350897 +0200
-@@ -26,32 +26,33 @@
- 
+--- a/trytond/trytond/modules/analytic_invoice/invoice.py	2016-09-01 12:04:30.270350897 +0200
++++ b/trytond/trytond/modules/analytic_invoice/invoice.py	2016-09-01 12:04:30.270350897 +0200
+@@ -1,5 +1,7 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
++import datetime
++
+ from trytond.model import fields
+ from trytond.pool import PoolMeta, Pool
+
+@@ -26,32 +28,33 @@
+
          return result
- 
+
 -    def get_analytic_entry(self, entry, value):
 -        analytic_entry = {}
 -        analytic_entry['name'] = self.description
@@ -447,7 +455,7 @@ Index: trytond/trytond/modules/analytic_invoice/invoice.py
 +        analytic_line.reference = self.invoice.reference
 +        analytic_line.party = self.invoice.party
 +        return analytic_line
- 
+
      def get_move_line(self):
 -        values = super(InvoiceLine, self).get_move_line()
 +        lines = super(InvoiceLine, self).get_move_line()
@@ -468,6 +476,6 @@ Index: trytond/trytond/modules/analytic_invoice/invoice.py
 +                            line))
 +                line.analytic_lines = analytic_lines
 +        return lines
- 
- 
+
+
  class AnalyticAccountEntry:
