@@ -1,0 +1,19 @@
+diff -r 85075f5d13d9 move.py
+--- a/trytond/trytond/modules/stock/move.py	Fri Sep 02 12:37:52 2016 +0200
++++ b/trytond/trytond/modules/stock/move.py	Fri Sep 02 12:40:48 2016 +0200
+@@ -795,6 +795,7 @@
+             locations = Location.search([
+                     ('parent', 'child_of',
+                         [x.from_location.id for x in moves]),
++                    ('type', 'not in', ['warehouse', 'view']),
+                     ])
+         else:
+             locations = list(set((m.from_location for m in moves)))
+@@ -824,6 +825,7 @@
+             if with_childs:
+                 childs = Location.search([
+                         ('parent', 'child_of', [move.from_location.id]),
++                        ('type', 'not in', ['warehouse', 'view']),
+                         ])
+             else:
+                 childs = [move.from_location]
