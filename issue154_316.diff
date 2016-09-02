@@ -1,7 +1,16 @@
-diff -r ae376b988766 product.py
---- .a/trytond/trytond/modules/purchase/product.py	Mon Oct 20 15:02:51 2014 +0200
-+++ .b/trytond/trytond/modules/purchase/product.py	Mon Nov 03 13:24:24 2014 +0100
-@@ -132,11 +132,14 @@
+Index: nan40/trytond/trytond/modules/purchase/product.py
+===================================================================
+--- nan40.orig/trytond/trytond/modules/purchase/product.py	2016-08-25 08:42:15.677350593 +0200
++++ nan40/trytond/trytond/modules/purchase/product.py	2016-08-25 08:43:59.133348740 +0200
+@@ -116,6 +116,7 @@
+         ProductSupplier = pool.get('purchase.product_supplier')
+         ProductSupplierPrice = pool.get('purchase.product_supplier.price')
+ 
++        print "dins de get_purchase_price"
+         today = Date.today()
+         context = Transaction().context
+         prices = {}
+@@ -141,11 +142,15 @@
              for product_supplier in product.product_suppliers:
                  if product_supplier.match(pattern):
                      pattern = ProductSupplierPrice.get_pattern()
@@ -12,6 +21,7 @@ diff -r ae376b988766 product.py
 -                            default_currency = product_supplier.currency
 +                    price = product.get_supplier_price(product_supplier,
 +                        quantity, uom, pattern)
++                    print price
 +                    if price is not None:
 +                        prices[product.id] = price
 +                        default_uom = product.purchase_uom
@@ -21,17 +31,18 @@ diff -r ae376b988766 product.py
                      break
              prices[product.id] = Uom.compute_price(
                  default_uom, prices[product.id], uom)
-@@ -147,6 +150,13 @@
+@@ -156,6 +161,14 @@
                          prices[product.id], currency, round=False)
          return prices
-
+ 
 +    def get_supplier_price(self, product_supplier, quantity, uom, pattern):
++        print "dins get_supplier_price"
 +        res = None
 +        for price in product_supplier.prices:
 +            if price.match(quantity, uom, pattern):
 +                res = price.unit_price
 +        return res
 +
-
+ 
  class ProductSupplier(ModelSQL, ModelView, MatchMixin):
      'Product Supplier'

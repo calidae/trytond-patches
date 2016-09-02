@@ -1,0 +1,138 @@
+Index: nan40/trytond/trytond/protocols/top.py
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ nan40/trytond/trytond/protocols/top.py	2016-08-25 08:42:24.005350444 +0200
+@@ -0,0 +1,94 @@
++import random
++import signal
++import locale
++import faulthandler
++from operator import itemgetter
++from datetime import datetime
++
++current_actions = {}
++action_id = 0
++
++# Start Printing Tables
++# http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
++
++# Usage:
++# 1. Gets which PID trytond run
++# 2. sudo kill -s SIGUSR1 PID
++# 3. See results in trytond logs
++
++def format_num(num):
++    """Format a number according to given places.
++        Adds commas, etc. Will truncate floats into ints!"""
++
++    try:
++        inum = int(num)
++        return locale.format("%.*f", (0, inum), True)
++
++    except (ValueError, TypeError):
++        return str(num)
++
++def get_max_width(table, index):
++    """Get the maximum width of the given column index"""
++    return max([len(format_num(row[index])) for row in table])
++
++def pprint_table(table):
++    """
++    Prints out a table of data, padded for alignment
++    @param table: The table to print. A list of lists.
++    Each row must have the same number of columns.
++    """
++    col_paddings = []
++
++    for i in range(len(table[0])):
++        col_paddings.append(get_max_width(table, i))
++
++    for row in table:
++        # left col
++        print row[0].ljust(col_paddings[0] + 1),
++        # rest of the cols
++        for i in range(1, len(row)):
++            col = format_num(row[i]).ljust(col_paddings[i] + 2)
++            print col,
++        print
++
++# End Printing Tables
++
++def signal_user_handler(signal, frame):
++    print '-' * 30
++    if current_actions:
++       key = current_actions.keys()[0]
++       header = sorted(current_actions[key].keys())
++       header = ('id', 'database_name', 'user', 'protocol', 'host', 'port',
++           'timestamp', 'elapsed', 'object_name', 'method', 'args')
++       table = []
++       table.append([x.upper() for x in header])
++
++       for action in sorted(current_actions.values(), key=itemgetter('timestamp')):
++           row = []
++           for key in header:
++                value = action.get(key, '')
++                if key == 'elapsed':
++                   value = (datetime.now() - action['timestamp']).total_seconds()
++                if isinstance(value, datetime):
++                   value = value.ctime()
++                row.append(value)
++           table.append(row)
++       pprint_table(table)
++       print '=' * 30
++
++signal.signal(signal.SIGUSR1, signal_user_handler)
++faulthandler.register(signal.SIGUSR2)
++
++def add(value):
++    action_id = new_id()
++    value['timestamp'] = datetime.now()
++    value['elapsed'] = None
++    value['id'] = str(action_id)
++    current_actions[action_id] = value
++    return action_id
++
++def remove(action_id):
++    del current_actions[action_id]
++
++def new_id():
++    return random.randint(0, 999999)
+Index: nan40/trytond/trytond/protocols/dispatcher.py
+===================================================================
+--- nan40.orig/trytond/trytond/protocols/dispatcher.py	2016-08-25 08:42:24.009350443 +0200
++++ nan40/trytond/trytond/protocols/dispatcher.py	2016-08-25 08:42:24.005350444 +0200
+@@ -20,6 +20,8 @@
+ from trytond.tools import is_instance_method
+ from trytond.wsgi import app
+ 
++import top
++
+ logger = logging.getLogger(__name__)
+ 
+ ir_configuration = Table('ir_configuration')
+@@ -203,6 +205,16 @@
+         with Transaction().start(pool.database_name, user,
+                 readonly=rpc.readonly) as transaction:
+             Cache.clean(pool.database_name)
++            action_id = top.add({
++                    'host': request.host,
++                    'port': '',
++                    'protocol': '',
++                    'database_name': pool.database_name,
++                    'user': user,
++                    'object_name': obj.__name__,
++                    'method': method,
++                    'args': repr(args)[:30],
++                    })
+             try:
+                 c_args, c_kwargs, transaction.context, transaction.timestamp \
+                     = rpc.convert(obj, *args, **kwargs)
+@@ -230,6 +242,8 @@
+             except Exception:
+                 logger.error(log_message, *log_args, exc_info=True)
+                 raise
++            finally:
++                top.remove(action_id)
+             # Need to commit to unlock SQLite database
+             transaction.commit()
+             Cache.resets(pool.database_name)
