@@ -482,3 +482,15 @@ diff -r 95d77335bdd5 trytond/trytond/modules/analytic_invoice/invoice.py
 
 
  class AnalyticAccountEntry:
+diff -r 1e0126fa9337 account.py
+--- a/trytond/trytond/modules/account_bank/account.py	Fri Sep 02 18:36:30 2016 +0200
++++ b/trytond/trytond/modules/account_bank/account.py	Mon Sep 05 15:05:08 2016 +0200
+@@ -248,7 +248,7 @@
+         '''
+         line = super(Invoice, self)._get_move_line(date, amount)
+         if self.bank_account:
+-            line['bank_account'] = self.bank_account
++            line.bank_account = self.bank_account
+         return line
+ 
+     @classmethod
