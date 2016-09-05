@@ -479,3 +479,20 @@ Index: trytond/trytond/modules/analytic_invoice/invoice.py
 
 
  class AnalyticAccountEntry:
+diff -r a6900727fc63 account.py
+--- a/trytond/trytond/modules/account_bank/account.py	Fri Sep 02 18:35:53 2016 +0200
++++ b/trytond/trytond/modules/account_bank/account.py	Mon Sep 05 14:57:00 2016 +0200
+@@ -250,10 +250,10 @@
+         '''
+         Add account bank to move line when post invoice.
+         '''
+-        res = super(Invoice, self)._get_move_line(date, amount)
++        line = super(Invoice, self)._get_move_line(date, amount)
+         if self.bank_account:
+-            res['bank_account'] = self.bank_account
+-        return res
++            line.bank_account = self.bank_account
++        return line
+ 
+     @classmethod
+     def compute_default_bank_account(cls, values):
