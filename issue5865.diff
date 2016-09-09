@@ -1,0 +1,64 @@
+diff -r ad9170e4838b trytond/trytond/ir/trigger.py
+--- a/trytond/trytond/ir/trigger.py	Tue Aug 30 14:38:04 2016 +0200
++++ b/trytond/trytond/ir/trigger.py	Fri Sep 09 13:36:56 2016 +0200
+@@ -6,7 +6,7 @@
+ from sql.aggregate import Count, Max
+ 
+ from ..model import ModelView, ModelSQL, fields, EvalEnvironment, Check
+-from ..pyson import Eval, PYSONDecoder
++from ..pyson import Eval, PYSONDecoder, PYSONEncoder
+ from ..tools import grouped_slice
+ from .. import backend
+ from ..tools import reduce_ids
+@@ -42,6 +42,7 @@
+     condition = fields.Char('Condition', required=True,
+         help='A PYSON statement evaluated with record represented by '
+         '"self"\nIt triggers the action if true.')
++    condition_eval = fields.Char('Condition Eval')
+     limit_number = fields.Integer('Limit Number', required=True,
+         help='Limit the number of call to "Action Function" by records.\n'
+         '0 for no limit.')
+@@ -70,6 +71,10 @@
+                     'valid PYSON expression on trigger "%(trigger)s".'),
+                 })
+         cls._order.insert(0, ('name', 'ASC'))
++        cls._buttons.update({
++            'convert_condition': {
++                },
++            })
+ 
+     @classmethod
+     def __register__(cls, module_name):
+@@ -144,6 +149,19 @@
+             self.on_time = False
+ 
+     @classmethod
++    @ModelView.button
++    def convert_condition(cls, triggers):
++        to_write = []
++        for trigger in triggers:
++            if trigger.condition_eval:
++                to_write.extend([[trigger], {
++                    'condition': PYSONEncoder().encode(
++                        eval(trigger.condition_eval)),
++                    }])
++        if to_write:
++            cls.write(*to_write)
++
++    @classmethod
+     def get_triggers(cls, model_name, mode):
+         """
+         Return triggers for a model and a mode
+diff -r ad9170e4838b trytond/trytond/ir/view/trigger_form.xml
+--- a/trytond/trytond/ir/view/trigger_form.xml	Tue Aug 30 14:38:04 2016 +0200
++++ b/trytond/trytond/ir/view/trigger_form.xml	Fri Sep 09 13:36:56 2016 +0200
+@@ -18,6 +18,9 @@
+         <label name="on_delete"/>
+         <field name="on_delete" xexpand="0"/>
+     </group>
++    <label name="condition_eval"/>
++    <field name="condition_eval" colspan="2"/>
++    <button name="convert_condition" string="Convert" icon="tryton-ok"/>
+     <label name="condition"/>
+     <field name="condition" colspan="3"/>
+     <label name="limit_number"/>
