@@ -1,0 +1,20 @@
+diff -r 87910e39714c trytond/trytond/modules/sale_stock_quantity/sale.py
+--- a/trytond/trytond/modules/sale_stock_quantity/sale.py	Mon Nov 02 16:42:57 2015 +0100
++++ b/trytond/trytond/modules/sale_stock_quantity/sale.py	Thu Sep 15 23:08:34 2016 +0200
+@@ -34,14 +34,9 @@
+         cls._check_stock_quantity(sales)
+ 
+     @classmethod
+-    @ModelView.button
+-    @Workflow.transition('confirmed')
+-    def confirm(cls, sales):
+-        super(Sale, cls).confirm(sales)
+-        cls._check_stock_quantity(sales)
+-
+-    @classmethod
+     def _check_stock_quantity(cls, sales):
++        if Transaction().context.get('without_warning', False):
++            return
+         for sale in sales:
+             sale.check_stock_quantity()
+ 
