@@ -1,0 +1,35 @@
+# HG changeset patch
+# User Ralf Peschke <rpit58@gmail.com>
+# Date 1451565066 -3600
+#      Thu Dec 31 13:31:06 2015 +0100
+# Node ID 327570b091513f57dee4f7496c94348298ed7729
+# Parent  203168118615383810f0a349dcf4c006f70f501f
+Set product on invoice line with cost method 'shipment'
+
+issue5196
+review19711002
+
+diff -r 203168118615 -r 327570b09151 trytond/trytond/modules/sale_shipment_cost/stock.py
+--- a/trytond/trytond/modules/sale_shipment_cost/stock.py	Sun Dec 13 14:58:50 2015 +0100
++++ b/trytond/trytond/modules/sale_shipment_cost/stock.py	Thu Dec 31 13:31:06 2015 +0100
+@@ -89,6 +89,7 @@
+         invoice_line = InvoiceLine()
+         product = self.carrier.carrier_product
+         invoice_line.type = 'line'
++        invoice_line.product = product
+ 
+         party = invoice.party
+         party_context = {}
+diff -r 203168118615 -r 327570b09151 trytond/trytond/modules/sale_shipment_cost/tests/scenario_sale_shipment_cost.rst
+--- a/trytond/trytond/modules/sale_shipment_cost/tests/scenario_sale_shipment_cost.rst	Sun Dec 13 14:58:50 2015 +0100
++++ b/trytond/trytond/modules/sale_shipment_cost/tests/scenario_sale_shipment_cost.rst	Thu Dec 31 13:31:06 2015 +0100
+@@ -176,6 +176,9 @@
+ 
+     >>> sale.reload()
+     >>> invoice, = sale.invoices
++    >>> sorted([l.product for l in invoice.lines]) == \
++    ...     sorted([product, carrier_product])
++    True
+     >>> invoice.untaxed_amount
+     Decimal('83.00')
+ 
