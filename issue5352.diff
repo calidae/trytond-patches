@@ -1,0 +1,36 @@
+diff -r f951d8e59233 trytond/trytond/modules/sale_shipment_cost/sale.py
+--- a/trytond/trytond/modules/sale_shipment_cost/sale.py	Mon May 02 17:16:59 2016 +0200
++++ b/trytond/trytond/modules/sale_shipment_cost/sale.py	Fri Sep 16 12:21:55 2016 +0200
+@@ -127,22 +127,16 @@
+         cost_line.unit_price = cost_line.amount = cost
+         return cost_line
+ 
+-    def create_shipment(self, shipment_type):
+-        Shipment = Pool().get('stock.shipment.out')
+-
+-        shipments = super(Sale, self).create_shipment(shipment_type)
+-        if shipment_type == 'out' and shipments and self.carrier:
+-            for shipment in shipments:
+-                shipment.carrier = self.carrier
+-                with Transaction().set_context(
+-                        shipment.get_carrier_context()):
+-                    cost, currency_id = self.carrier.get_sale_price()
+-                Shipment.write([shipment], {
+-                        'carrier': self.carrier.id,
+-                        'cost': cost,
+-                        'cost_currency': currency_id,
+-                        })
+-        return shipments
++    def _get_shipment_sale(self, Shipment, key):
++        shipment = super(Sale, self)._get_shipment_sale(Shipment, key)
++        if shipment.__name__ == 'stock.shipment.out' and self.carrier:
++            shipment.carrier = self.carrier
++            with Transaction().set_context(
++                    shipment.get_carrier_context()):
++                cost, currency_id = self.carrier.get_sale_price()
++            shipment.cost = cost
++            shipment.cost_currency = currency_id
++        return shipment
+ 
+     def create_invoice(self):
+         pool = Pool()
