@@ -95,7 +95,6 @@ fix_rounding_in_sync_inventory_to_outgoing.patch
 #purchase_fix_get_move_done_rounding.diff
 #multicompany_cron.diff
 025476_5154_5155_5456_optimize_move_write_assign.diff
-#do_not_lock_on_assign_try.diff
 #limit_invoices_in_creit_note_action_by_domain.diff
 move_do_batch_write.diff
 issue10433002_60001.diff
@@ -116,3 +115,4 @@ issue5587-stock.diff
 account_payment_clearing-set_party.diff
 issue4912.diff
 issue5847.diff
+lock_stock_move.diff
