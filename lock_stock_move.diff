@@ -1,0 +1,24 @@
+diff -r 1714b4be593f trytond/trytond/modules/stock/move.py
+--- a/trytond/trytond/modules/stock/move.py	Tue Sep 20 16:27:51 2016 +0200
++++ b/trytond/trytond/modules/stock/move.py	Tue Sep 20 16:29:45 2016 +0200
+@@ -778,6 +778,10 @@
+             return to_pick
+         return to_pick
+ 
++    @staticmethod
++    def lock_stock_move():
++        return True
++
+     @classmethod
+     def assign_try(cls, moves, with_childs=True, grouping=('product',)):
+         '''
+@@ -791,7 +795,8 @@
+         Date = pool.get('ir.date')
+         Location = pool.get('stock.location')
+ 
+-        Transaction().database.lock(Transaction().connection, cls._table)
++        if cls.lock_stock_move():
++            Transaction().database.lock(Transaction().connection, cls._table)
+ 
+         if with_childs:
+             locations = Location.search([
