@@ -23,8 +23,6 @@ invoice_speedup.diff
 babi_multiprocess.diff
 domain_field.diff
 issue18481003_1.diff
-issue4950_stock.diff
-issue4950_sale.diff
 issue4986.diff
 issue16661002_1.diff
 issue19491002_1.diff
