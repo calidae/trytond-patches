@@ -7,19 +7,35 @@ issue5104
 
 review17991002
 
-Index: trytond/trytond/modules/analytic_sale/sale.py
-===================================================================
-
---- a/trytond/trytond/modules/analytic_sale/sale.py
-+++ b/trytond/trytond/modules/analytic_sale/sale.py
-@@ -1,5 +1,6 @@
+diff -r 1241acbd3ec3 sale.py
+--- a/trytond/trytond/modules/analytic_sale/sale.py	Wed May 11 11:56:32 2016 +0200
++++ b/trytond/trytond/modules/analytic_sale/sale.py	Wed Sep 28 14:49:23 2016 +0200
+@@ -1,6 +1,8 @@
  # This file is part of Tryton.  The COPYRIGHT file at the top level of
  # this repository contains the full copyright notices and license terms.
 +from trytond.model import fields
  from trytond.pool import Pool, PoolMeta
++from trytond.pyson import Eval, If
 
  from trytond.modules.analytic_account import AnalyticMixin
-@@ -32,3 +33,22 @@
+
+@@ -10,6 +12,15 @@
+ class SaleLine(AnalyticMixin):
+     __name__ = 'sale.line'
+
++    @classmethod
++    def __setup__(cls):
++        super(SaleLine, cls).__setup__()
++        cls.analytic_accounts.domain = [
++            ('company', '=', If(~Eval('_parent_sale', {}),
++                    Eval('context', {}).get('company', -1),
++                    Eval('_parent_sale', {}).get('company', -1))),
++            ]
++
+     def get_invoice_line(self):
+         pool = Pool()
+         AnalyticAccountEntry = pool.get('analytic.account.entry')
+@@ -32,3 +43,21 @@
      def _get_origin(cls):
          origins = super(AnalyticAccountEntry, cls)._get_origin()
          return origins + ['sale.line']
@@ -30,16 +46,14 @@ Index: trytond/trytond/modules/analytic_sale/sale.py
 +        SaleLine = pool.get('sale.line')
 +        company = super(AnalyticAccountEntry, self).on_change_with_company(
 +            name)
-+        if isinstance(self.origin, SaleLine):
-+            if self.origin.sale:
-+                return self.origin.sale.company.id
++        if isinstance(self.origin, SaleLine) and self.origin.sale:
++            company = self.origin.sale.company.id
 +        return company
 +
 +    @classmethod
 +    def search_company(cls, name, clause):
-+        domain = super(AnalyticAccountEntry, cls).search_company(name, clause)
++        domain = super(AnalyticAccountEntry, cls).search_company(name, clause),
 +        return ['OR',
 +            domain,
-+            [('origin.sale.company',) + tuple(clause[1:]) +
-+                tuple(('sale.line',))]]
-
++            ('origin.sale.company',) + tuple(clause[1:]) + ('sale.line',),
++            ]
