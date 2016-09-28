@@ -109,7 +109,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          return move
 
      def set_number(self):
-@@ -936,11 +933,10 @@
+@@ -936,11 +933,12 @@
          with Transaction().set_context(
                  date=self.invoice_date or Date.today()):
              number = Sequence.get_id(sequence.id)
@@ -120,6 +120,8 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 -                vals['invoice_date'] = Transaction().context['date']
 -        self.write([self], vals)
 +                self.invoice_date = Transaction().context['date']
++        for line in self.lines:
++            line.invoice = self
 
      @classmethod
      def check_modify(cls, invoices):
@@ -492,5 +494,5 @@ diff -r 1e0126fa9337 account.py
 -            line['bank_account'] = self.bank_account
 +            line.bank_account = self.bank_account
          return line
- 
+
      @classmethod
