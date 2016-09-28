@@ -1,4 +1,8 @@
 account_move_line_rule.diff
+analytic_account.diff
+analytic_invoice.diff
+analytic_sale.diff
+analytic_purchase.diff
 issue154_316.diff
 issue10467.diff
 issue130_392_10919.diff
@@ -33,10 +37,6 @@ issue23901002_1.diff
 issue17881002_1.diff
 workflow-performance.diff
 account_chart_speedup.diff
-analytic_account.diff
-analytic_invoice.diff
-analytic_sale.diff
-analytic_purchase.diff
 tax_active_invisible.diff
 account_product_rules.diff
 issue5558.diff
