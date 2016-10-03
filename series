@@ -116,3 +116,4 @@ account_payment_clearing-set_party.diff
 issue4912.diff
 issue5847.diff
 lock_stock_move.diff
+stock_inventory_consumables.diff
