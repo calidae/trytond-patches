@@ -37,5 +37,6 @@ issue5847.diff
 issue5352.diff
 lock_stock_move.diff
 issue5937.diff
+stock_inventory_consumables.diff
 
 locale.diff
