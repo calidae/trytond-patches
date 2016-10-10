@@ -1,0 +1,39 @@
+# HG changeset patch
+# User Cédric Krier <ced@b2ck.com>
+# Date 1422395984 -3600
+#      Tue Jan 27 22:59:44 2015 +0100
+# Node ID 235cd8552529b1292d39c03db4979b511a8f00b3
+# Parent  fc108ac4b8719bf7c497aaeebf50e0eb281b01b7
+Remove AS in GROUP BY of compute quantity query
+
+It is not allowed to use alias output in the GROUP BY clause.
+
+issue4495
+review11811002
+
+diff -r a637b5773cf7 move.py
+--- a/trytond/trytond/modules/stock/move.py	Mon Oct 10 15:27:06 2016 +0200
++++ b/trytond/trytond/modules/stock/move.py	Mon Oct 10 15:28:08 2016 +0200
+@@ -1107,10 +1107,11 @@
+         # One that sums incoming moves towards locations, one that sums
+         # outgoing moves and one for the period cache.  UNION ALL is used
+         # because we already know that there will be no duplicates.
+-        move_keys = [Column(move, key).as_(key) for key in grouping]
++        move_keys_alias = [Column(move, key).as_(key) for key in grouping]
++        move_keys = [Column(move, key) for key in grouping]
+         query = from_.select(move.to_location.as_('location'),
+             Sum(move.internal_quantity).as_('quantity'),
+-            *move_keys,
++            *move_keys_alias,
+             where=state_date_clause
+             & where
+             & move.to_location.in_(location_query)
+@@ -1120,7 +1121,7 @@
+             group_by=[move.to_location] + move_keys)
+         query = Union(query, from_.select(move.from_location.as_('location'),
+                 (-Sum(move.internal_quantity)).as_('quantity'),
+-                *move_keys,
++                *move_keys_alias,
+                 where=state_date_clause
+                 & where
+                 & move.from_location.in_(location_query)
