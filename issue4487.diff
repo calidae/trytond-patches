@@ -12,7 +12,7 @@ review10071002
 diff -r cd0f2a2c1c88 -r a505376e449a trytond/trytond/model/modelview.py
 --- a/trytond/trytond/model/modelview.py	Tue Jan 20 18:48:46 2015 +0100
 +++ b/trytond/trytond/model/modelview.py	Wed Jan 21 19:50:39 2015 +0100
-@@ -307,19 +307,20 @@
+@@ -307,16 +307,17 @@
 
          # Remove field without read access
          for field in fields_to_remove:
@@ -29,11 +29,8 @@ diff -r cd0f2a2c1c88 -r a505376e449a trytond/trytond/model/modelview.py
 +                    parent.remove(element)
 +                elif type == 'form':
                      element.tag = 'label'
-                     colspan = element.attrib.get('colspan')
                      element.attrib.clear()
                      element.attrib['id'] = 'hidden %s-%s' % (field, i)
-                     if colspan is not None:
-                         element.attrib['colspan'] = colspan
 -                elif type == 'tree':
 -                    parent = element.getparent()
 -                    parent.remove(element)
