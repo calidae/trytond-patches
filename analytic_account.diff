@@ -190,3 +190,53 @@ diff -r 4563c00a165b line.py
      @staticmethod
      def query_get(table):
          '''
+ diff -r 4563c00a165b trytond/trytond/modules/analytic_account/account.xml
+ --- a/trytond/trytond/modules/analytic_account/account.xml	Mon Nov 02 15:30:50 2015 +0100
+ +++ b/trytond/trytond/modules/analytic_account/account.xml	Mon Nov 14 12:18:34 2016 +0100
+ @@ -124,5 +124,27 @@
+              <field name="type">tree</field>
+              <field name="name">analytic_account_entry_tree</field>
+          </record>
+ +
+ +        <record model="ir.rule.group" id="rule_group_account">
+ +            <field name="model" search="[('model', '=', 'analytic_account.account')]"/>
+ +            <field name="global_p" eval="True"/>
+ +        </record>
+ +        <record model="ir.rule" id="rule_account1">
+ +            <field name="domain"
+ +                eval="[('company', '=', Eval('user', {}).get('company', None))]"
+ +                pyson="1"/>
+ +            <field name="rule_group" ref="rule_group_account"/>
+ +        </record>
+ +
+ +        <record model="ir.rule.group" id="rule_group_account_entry">
+ +            <field name="model" search="[('model', '=', 'analytic.account.entry')]"/>
+ +            <field name="global_p" eval="True"/>
+ +        </record>
+ +        <record model="ir.rule" id="rule_account_entry1">
+ +            <field name="domain"
+ +                eval="[('company', '=', Eval('user', {}).get('company', None))]"
+ +                pyson="1"/>
+ +            <field name="rule_group" ref="rule_group_account_entry"/>
+ +        </record>
+      </data>
+  </tryton>
+ diff -r 4563c00a165b line.xml
+ --- a/line.xml	Mon Nov 02 15:30:50 2015 +0100
+ +++ b/trytond/trytond/modules/analytic_account/line.xml	Mon Nov 14 12:18:34 2016 +0100
+ @@ -67,5 +67,15 @@
+              <field name="name">move_line_form</field>
+          </record>
+
+ +        <record model="ir.rule.group" id="rule_group_account_line">
+ +            <field name="model" search="[('model', '=', 'analytic_account.line')]"/>
+ +            <field name="global_p" eval="True"/>
+ +        </record>
+ +        <record model="ir.rule" id="rule_account_line1">
+ +            <field name="domain"
+ +                eval="[('company', '=', Eval('user', {}).get('company', None))]"
+ +                pyson="1"/>
+ +            <field name="rule_group" ref="rule_group_account_line"/>
+ +        </record>
+      </data>
+  </tryton>
