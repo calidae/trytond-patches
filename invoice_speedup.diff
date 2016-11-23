@@ -134,7 +134,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 
      @classmethod
      def check_modify(cls, invoices):
-@@ -1109,7 +1105,7 @@
+@@ -1106,7 +1102,7 @@
              all_invoices += invoices
          update_tax = [i for i in all_invoices if i.state == 'draft']
          super(Invoice, cls).write(*args)
@@ -143,7 +143,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
              cls.update_taxes(update_tax)
 
      @classmethod
-@@ -1340,18 +1336,16 @@
+@@ -1337,18 +1333,16 @@
          '''
          MoveLine = Pool().get('account.move.line')
 
@@ -167,25 +167,39 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          return new_invoices
 
      @classmethod
-@@ -1371,10 +1365,16 @@
+@@ -1368,10 +1362,30 @@
      @ModelView.button
      @Workflow.transition('validated')
      def validate_invoice(cls, invoices):
-+        to_write = []
++        Move = Pool().get('account.move')
++
++        to_create = []
          for invoice in invoices:
              if invoice.type in ('in_invoice', 'in_credit_note'):
                  invoice.set_number()
 -                invoice.create_move()
 +                move = invoice.get_move()
 +                if move != invoice.move:
-+                    invoice.move = invoice.get_move()
-+                to_write.extend(([invoice], invoice._save_values))
++                    to_create.append(move._save_values)
++        invoices2move = {}
++        if to_create:
++            moves = Move.create(to_create)
++            for move in moves:
++                invoices2move[move.origin.id] = move.id
++
++        to_write = []
++        for invoice in invoices:
++            values = invoice._save_values
++            if invoice.id in invoices2move:
++                values['move'] = invoices2move[invoice.id]
++            if values:
++                to_write.extend(([invoice], values))
 +        if to_write:
 +            cls.write(*to_write)
 
      @classmethod
      @ModelView.button
-@@ -1382,14 +1382,29 @@
+@@ -1379,14 +1393,29 @@
      def post(cls, invoices):
          Move = Pool().get('account.move')
 
@@ -221,7 +235,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for invoice in invoices:
              if invoice.type in ('out_invoice', 'out_credit_note'):
                  invoice.print_invoice()
-@@ -1428,14 +1443,17 @@
+@@ -1425,14 +1454,17 @@
 
          cancel_moves = []
          delete_moves = []
@@ -240,7 +254,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          if delete_moves:
              Move.delete(delete_moves)
          if cancel_moves:
-@@ -1754,8 +1772,7 @@
+@@ -1751,8 +1783,7 @@
          context = self.invoice.get_tax_context()
          taxes_keys = []
          with Transaction().set_context(**context):
@@ -250,7 +264,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for tax in taxes:
              key, _ = Invoice._compute_tax(tax, self.invoice.type)
              taxes_keys.append(key)
-@@ -2003,14 +2020,14 @@
+@@ -2000,14 +2031,14 @@
          pool = Pool()
          Tax = pool.get('account.tax')
          Currency = pool.get('currency.currency')
@@ -267,7 +281,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
          for tax in taxes:
              if self.invoice.type in ('out_invoice', 'in_invoice'):
                  base_code_id = (tax['tax'].invoice_base_code.id
-@@ -2025,59 +2042,61 @@
+@@ -2022,59 +2053,61 @@
                          date=self.invoice.currency_date):
                      amount = Currency.compute(self.invoice.currency,
                          amount, self.invoice.company.currency)
@@ -360,7 +374,7 @@ diff -r 3681a54fda0a trytond/trytond/modules/account_invoice/invoice.py
 
      def _credit(self):
          '''
-@@ -2293,53 +2312,56 @@
+@@ -2294,53 +2327,56 @@
 
      def get_move_line(self):
          '''
