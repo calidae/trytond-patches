@@ -39,13 +39,16 @@ diff -r 649b0805fa93 trytond/protocols/dispatcher.py
 diff -r 649b0805fa93 trytond/protocols/top.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
 +++ b/trytond/trytond/protocols/top.py	Sun Apr 19 03:18:20 2015 +0200
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,94 @@
 +import random
 +import signal
 +import locale
 +import faulthandler
 +from operator import itemgetter
 +from datetime import datetime
++from trytond.config import config as config_
++
++APM = config_.getboolean('optional', 'apm', default=True)
 +
 +current_actions = {}
 +action_id = 0
@@ -113,8 +116,9 @@ diff -r 649b0805fa93 trytond/protocols/top.py
 +       pprint_table(table)
 +       print '=' * 30
 +
-+signal.signal(signal.SIGUSR1, signal_user_handler)
-+faulthandler.register(signal.SIGUSR2)
++if APM:
++    signal.signal(signal.SIGUSR1, signal_user_handler)
++    faulthandler.register(signal.SIGUSR2)
 +
 +
 +def add(value):
