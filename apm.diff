@@ -1,7 +1,7 @@
 diff -r 2283822f1703 trytond/protocols/apm.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
 +++ b/trytond/trytond/protocols/apm.py	Sun Aug 07 01:55:37 2016 +0200
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,313 @@
 +# encoding: utf-8
 +#
 +# apm.py aims to be an utility to extend Tryton with Application
@@ -35,7 +35,7 @@ diff -r 2283822f1703 trytond/protocols/apm.py
 +# As you can see, you can choose between 'vmprof' or 'profile' (cProfile is
 +# used), but the former is much faster. See the corresponding docs on the
 +# features and limitations of each one.
-+# 
++#
 +# *_condition options define, by using a python expression when should the
 +# profiler be started (they are overhead so most probably you don't want to
 +# start it with all transactions), when to store the profile, and when to log
@@ -75,6 +75,7 @@ diff -r 2283822f1703 trytond/protocols/apm.py
 +current_actions = {}
 +action_id = 0
 +
++apm = config.getboolean('apm', 'apm', default=True)
 +profiler = config.get('apm', 'profiler')
 +profiler_start_condition = config.get('apm', 'profiler_start_condition')
 +profiler_store_condition = config.get('apm', 'profiler_store_condition')
@@ -284,9 +285,9 @@ diff -r 2283822f1703 trytond/protocols/apm.py
 +            remove(action_id)
 +    return result
 +
-+
-+signal.signal(signal.SIGUSR1, signal_user_handler)
-+faulthandler.register(signal.SIGUSR2)
++if apm:
++    signal.signal(signal.SIGUSR1, signal_user_handler)
++    faulthandler.register(signal.SIGUSR2)
 +
 +def add(value):
 +    action_id = random.randint(0, 999999)
@@ -320,11 +321,11 @@ diff -r 2283822f1703 trytond/protocols/dispatcher.py
 @@ -20,6 +20,8 @@
  from trytond.tools import is_instance_method
  from trytond.wsgi import app
- 
+
 +import apm
 +
  logger = logging.getLogger(__name__)
- 
+
  ir_configuration = Table('ir_configuration')
 @@ -195,18 +197,8 @@
              try:
