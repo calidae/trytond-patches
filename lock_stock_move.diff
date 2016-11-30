@@ -18,7 +18,7 @@ diff -r 711fca08fbae trytond/trytond/modules/stock/move.py
  
 -        Transaction().cursor.lock(cls._table)
 +        if cls.lock_stock_move():
-+            Transaction().cursor.lock(cls._table)
++            Transaction().cursor.lock('stock_period')
  
          if with_childs:
              locations = Location.search([
