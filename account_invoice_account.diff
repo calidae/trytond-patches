@@ -1,7 +1,17 @@
 diff -r 454ff0629121 account.py
 --- a/trytond/trytond/modules/account_invoice/account.py	Tue Nov 08 18:47:58 2016 +0100
-+++ b/trytond/trytond/modules/account_invoice/account.py	Fri Dec 02 12:31:52 2016 +0100
-@@ -335,4 +335,5 @@
++++ b/trytond/trytond/modules/account_invoice/account.py	Sat Dec 03 08:10:22 2016 +0100
+@@ -323,7 +323,8 @@
+                 ('move', 'in', list(move_ids)),
+                 ('account', 'in', list(account_ids)),
+                 ])
+-        Invoice.process(invoices)
++        if invoices:
++            Invoice.process(invoices)
+         return reconciliations
+ 
+     @classmethod
+@@ -335,4 +336,5 @@
                  ('move', 'in', list(move_ids)),
                  ])
          super(Reconciliation, cls).delete(reconciliations)
