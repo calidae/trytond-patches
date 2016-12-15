@@ -50,7 +50,6 @@ party_check_vies.diff
 #024726_account_bank_remove_company.diff
 #024726_account_payment_type_remove_company.diff
 #stock_lot_improve_sync_inventory_to_outgoing.diff
-#stock_lot_fix_pick_product_without_outgoing_moves.diff
 #purchase_fix_get_move_done_rounding.diff
 #multicompany_cron.diff
 #025476_5154_5155_5456_optimize_move_write_assign.diff
