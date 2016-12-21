@@ -466,7 +466,7 @@ diff -r da3bbc1a1ccc trytond/trytond/modules/stock/shipment.py
 +                else None)
 +            lead_time = LocationLeadTime.get_lead_time(pattern)
 +            if lead_time:
-+                return self.planned_date - lead_time
++                return self.planned_date - datetime.timedelta(days=lead_time)
 +        return self.planned_date
 +
 +    def get_outgoing_moves(self, name):
