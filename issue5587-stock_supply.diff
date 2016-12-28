@@ -20,12 +20,12 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/location.py
  from trytond.pool import PoolMeta
  from trytond.model import fields
  from trytond.pyson import Eval
- 
- 
+
+
 -__all__ = ['Location']
 +__all__ = ['Location', 'LocationLeadTime']
- 
- 
+
+
  class Location:
 @@ -23,3 +25,17 @@
              ],
@@ -55,7 +55,7 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 +
  from sql import Table
  from sql.functions import Overlay, Position
- 
+
 @@ -51,8 +53,11 @@
          Date = pool.get('ir.date')
          User = pool.get('res.user')
@@ -68,7 +68,7 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
          # fetch quantities on order points
          order_points = OrderPoint.search([
              ('type', '=', 'internal'),
-@@ -80,60 +85,68 @@
+@@ -80,62 +85,73 @@
          else:
              product_ids = id2product.keys()
              product_ids.sort()
@@ -76,7 +76,7 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 -        with Transaction().set_context(forecast=True, stock_date_end=today):
 -            pbl = Product.products_by_location(id2location.keys(),
 -                product_ids, with_childs=True)
- 
+
 -        # Create a list of move to create
 -        moves = {}
 -        for location in id2location.itervalues():
@@ -94,14 +94,15 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 -                if qty < min_qty:
 -                    key = (provisioning_location.id, location.id, product_id)
 -                    moves[key] = max_qty - qty
-+        shipments = []
++        internal_shipments = []
 +        date = today
 +        end_date = date + lead_time
 +        while date <= end_date:
++            shipments = []
 +            with Transaction().set_context(forecast=True, stock_date_end=date):
 +                pbl = Product.products_by_location(id2location.keys(),
 +                    product_ids, with_childs=True)
- 
+
 -        # Group moves by {from,to}_location
 -        to_create = {}
 -        for key, qty in moves.iteritems():
@@ -133,6 +134,8 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 -                        ))
 -            shipment.save()
 -            shipments.append(shipment)
+-        cls.wait(shipments)
+-        return shipments
 +            # Create a list of moves to create
 +            moves = {}
 +            for location in id2location.itervalues():
@@ -185,7 +188,11 @@ diff -r 9a0b5b830df9 trytond/trytond/modules/stock_supply/shipment.py
 +                    shipment.on_change_with_planned_start_date())
 +                shipments.append(shipment)
 +            date += datetime.timedelta(1)
-+        shipments = cls.create([s._save_values for s in shipments])
-         cls.wait(shipments)
-         return shipments
- 
++            if shipments:
++                shipments = cls.create([s._save_values for s in shipments])
++                cls.wait(shipments)
++                internal_shipments += shipments
++        return internal_shipments
+
+
+ class CreateShipmentInternalStart(ModelView):
