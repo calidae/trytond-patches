@@ -44,7 +44,7 @@ stock_supply_production-performance-improvement.diff
 stock_supply-provisioning-location.diff
 
 # Uncomment in TEB: companyia obligatoria a l'analitica
-# analytic_account.diff
+analytic_account.diff
 
 top.diff
 issue15211002-sale-confirmed-to-done.diff
@@ -91,6 +91,7 @@ fix_rounding_in_sync_inventory_to_outgoing.patch
 #024726_account_bank_remove_company.diff
 #024726_account_payment_type_remove_company.diff
 #stock_lot_improve_sync_inventory_to_outgoing.diff
+#stock_lot_fix_pick_product_without_outgoing_moves.diff
 #purchase_fix_get_move_done_rounding.diff
 #multicompany_cron.diff
 025476_5154_5155_5456_optimize_move_write_assign.diff
@@ -118,6 +119,5 @@ lock_stock_move.diff
 stock_inventory_consumables.diff
 issue4495_5945.diff
 account_invoice_account.diff
-
-
 issue4384.diff
+issue4322-account_payment_sepa.diff
