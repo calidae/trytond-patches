@@ -1,0 +1,16 @@
+diff -r dd969de519a8 trytond/trytond/model/modelsql.py
+--- a/trytond/trytond/model/modelsql.py	Mon Nov 28 15:54:24 2016 +0100
++++ b/trytond/trytond/model/modelsql.py	Mon Jan 30 22:32:48 2017 +0100
+@@ -304,10 +304,10 @@
+                     cls.raise_user_error('foreign_model_missing',
+                         error_args=error_args)
+         for name, _, error in cls._sql_constraints:
+-            if name in str(exception):
++            if name in exception.message:
+                 cls.raise_user_error(error)
+         for name, error in cls._sql_error_messages.iteritems():
+-            if name in str(exception):
++            if name in exception.message:
+                 cls.raise_user_error(error)
+
+     @classmethod

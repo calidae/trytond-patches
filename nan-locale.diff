@@ -1,0 +1,24 @@
+diff -r 6e2341a690a7 trytond/trytond/modules/stock/locale/ca.po
+--- a/trytond/trytond/modules/stock/locale/ca.po	Mon Nov 28 16:40:14 2016 +0100
++++ b/trytond/trytond/modules/stock/locale/ca.po	Mon Jan 30 22:39:45 2017 +0100
+@@ -1914,7 +1914,7 @@
+ 
+ msgctxt "selection:stock.location,type:"
+ msgid "Drop"
+-msgstr "Rebuig"
++msgstr "Dipòsit"
+ 
+ msgctxt "selection:stock.location,type:"
+ msgid "Lost and Found"
+diff -r 6e2341a690a7 trytond/trytond/modules/stock/locale/es.po
+--- a/trytond/trytond/modules/stock/locale/es.po	Mon Nov 28 16:40:14 2016 +0100
++++ b/trytond/trytond/modules/stock/locale/es.po	Mon Jan 30 22:39:45 2017 +0100
+@@ -1907,7 +1907,7 @@
+ 
+ msgctxt "selection:stock.location,type:"
+ msgid "Drop"
+-msgstr "Desecho"
++msgstr "Dipósito"
+ 
+ msgctxt "selection:stock.location,type:"
+ msgid "Lost and Found"

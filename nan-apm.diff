@@ -1,0 +1,349 @@
+diff -r 2283822f1703 trytond/trytond/protocols/apm.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/protocols/apm.py	Sun Aug 07 01:55:37 2016 +0200
+@@ -0,0 +1,313 @@
++# encoding: utf-8
++#
++# apm.py aims to be an utility to extend Tryton with Application
++# Performance Monitoring functionalities.
++#
++# For it to work you'll need to add some parameters to the configuration file.
++#
++# Here you have all available options:
++#
++# ------------------------
++#
++# [apm]
++# directory = /var/lib/tryton/apm
++#
++# profiler = vmprof
++# # vmprof options. See:
++# # https://vmprof.readthedocs.io/en/latest/vmprof.html#module-level-functions
++# # vmprof_period: Frequency of vmprof checks in milliseconds
++# vmprof_period = 0.99 # Frequency in milliseconds
++# vmprof_memory = True
++# vmprof_lines = True
++#
++# #profiler = profile
++#
++# profiler_start_condition = True
++# profiler_store_condition = elapsed > 0.1
++# log_condition = elapsed > 0.005
++#
++# ------------------------
++#
++# As you can see, you can choose between 'vmprof' or 'profile' (cProfile is
++# used), but the former is much faster. See the corresponding docs on the
++# features and limitations of each one.
++#
++# *_condition options define, by using a python expression when should the
++# profiler be started (they are overhead so most probably you don't want to
++# start it with all transactions), when to store the profile, and when to log
++# transactions (in $directory/transactions.log).
++#
++# In order to see the profiles created by vmprof you should use:
++#
++# $ vmprofshow $directory/profiles/$transactionid
++#
++# In order to see the profiles created by profile you can use a script like
++# this (profiles are saved just like vmprof as
++# $directory/profiles/$transactionid):
++#
++# #!/usr/bin/env python
++# import sys
++# import pstats
++# stats = pstats.Stats(sys.argv[1]).sort_stats('cumulative')
++# stats.print_stats()
++#
++import os
++import sys
++import random
++import signal
++import locale
++import faulthandler
++import json
++import traceback
++from operator import itemgetter
++from datetime import datetime
++from trytond import backend
++from trytond.config import config
++from trytond.tools import is_instance_method
++from trytond.exceptions import TrytonException, UserError
++from trytond.transaction import Transaction
++
++
++current_actions = {}
++action_id = 0
++
++apm = config.getboolean('apm', 'apm', default=True)
++profiler = config.get('apm', 'profiler')
++profiler_start_condition = config.get('apm', 'profiler_start_condition')
++profiler_store_condition = config.get('apm', 'profiler_store_condition')
++apm_directory = config.get('apm', 'directory')
++vmprof_period = config.getfloat('apm', 'vmprof_period')
++vmprof_memory = config.getboolean('apm', 'vmprof_memory')
++vmprof_lines = config.getboolean('apm', 'vmprof_lines')
++log_condition = config.get('apm', 'log_condition')
++
++if apm_directory:
++    profiler_directory = os.path.join(apm_directory, 'profiles')
++    errors_directory = os.path.join(apm_directory, 'errors')
++    for d in (apm_directory, profiler_directory, errors_directory):
++        if not os.path.exists(d):
++            os.mkdir(d)
++    log_path = os.path.join(apm_directory, 'transactions.log')
++    log_file = open(log_path, 'a')
++
++if profiler == 'vmprof':
++    import vmprof
++elif profiler == 'profile':
++    import cProfile
++
++
++ERROR_MESSAGE = {
++    'ca': ("S'ha produït un error executant la vostra petició. S'ha "
++        "enviat la informació per saber la causa i ho resoldrem.\n\n"
++        "Tot i amb això, si vols parlar-ne amb algú del nostre equip pots "
++        "utilitzar la següent referència: %d."),
++    'es': ('Se ha producido un error ejecutando vuestra petición. Se ha '
++        'enviado la información para saber el motivo y lo resolveremos.\n\n'
++        'A pesar de esto, si quieres hablar sobre la incidencia con alguien de '
++        'nuestro equipo puedes utilizar la referencia siguiente: %d.'),
++    'en': ('There was an error while executing your request. We will check '
++        'to see what could be the cause.\n\nHowever, if you want to talk to a '
++        'NaN-tic consultant about this issue, you may use the following '
++        'reference: %d'),
++    }
++
++
++# Start Printing Tables
++# http://ginstrom.com/scribbles/2007/09/04/pretty-printing-a-table-in-python/
++
++# Usage:
++# 1. Gets which PID trytond run
++# 2. sudo kill -s SIGUSR1 PID
++# 3. See results in trytond logs
++
++def format_num(num):
++    """Format a number according to given places.
++        Adds commas, etc. Will truncate floats into ints!"""
++
++    try:
++        inum = int(num)
++        return locale.format("%.*f", (0, inum), True)
++
++    except (ValueError, TypeError):
++        return str(num)
++
++def get_max_width(table, index):
++    """Get the maximum width of the given column index"""
++    return max([len(format_num(row[index])) for row in table])
++
++def pprint_table(table):
++    """
++    Prints out a table of data, padded for alignment
++    @param table: The table to print. A list of lists.
++    Each row must have the same number of columns.
++    """
++    col_paddings = []
++
++    for i in range(len(table[0])):
++        col_paddings.append(get_max_width(table, i))
++
++    for row in table:
++        # left col
++        print row[0].ljust(col_paddings[0] + 1),
++        # rest of the cols
++        for i in range(1, len(row)):
++            col = format_num(row[i]).ljust(col_paddings[i] + 2)
++            print col,
++        print
++
++# End Printing Tables
++
++def signal_user_handler(signal, frame):
++    print '-' * 30
++    if current_actions:
++       key = current_actions.keys()[0]
++       header = sorted(current_actions[key].keys())
++       header = ('id', 'database_name', 'database_pid', 'user', 'protocol',
++           'host', 'port', 'timestamp', 'elapsed', 'object_name', 'method',
++           'args')
++       table = []
++       table.append([x.upper() for x in header])
++
++       for action in sorted(current_actions.values(),
++               key=itemgetter('timestamp')):
++           row = []
++           for key in header:
++                value = action.get(key, '')
++                if key == 'elapsed':
++                   value = (datetime.now() - action['timestamp']).total_seconds()
++                if key == 'args':
++                    value = value[:30]
++                if isinstance(value, datetime):
++                   value = value.ctime()
++                row.append(value)
++           table.append(row)
++       pprint_table(table)
++       print '=' * 30
++
++def call_rpc(rpc, obj, method, c_args, c_kwargs):
++    try:
++        meth = getattr(obj, method)
++        if (rpc.instantiate is None
++                or not is_instance_method(obj, method)):
++            result = rpc.result(meth(*c_args, **c_kwargs))
++        else:
++            assert rpc.instantiate == 0
++            inst = c_args.pop(0)
++            if hasattr(inst, method):
++                result = rpc.result(meth(inst, *c_args, **c_kwargs))
++            else:
++                result = [rpc.result(meth(i, *c_args, **c_kwargs))
++                    for i in inst]
++    except TrytonException:
++        raise
++    except Exception, e:
++        if not apm_directory:
++            raise
++        ex_type, ex, tb = sys.exc_info()
++        transaction_id = Transaction().apm_transaction_id
++        language = Transaction().language
++        data = {
++            'id': transaction_id,
++            'exception_type' : str(type(e)),
++            'exception_args': e.args,
++            'formatted_exception': traceback.format_exception(type(e), e, tb),
++            'root_directory': sys.path[0],
++            }
++        data.update(current_actions[transaction_id])
++        path = os.path.join(errors_directory, str(transaction_id))
++        with open(path, 'w') as f:
++            f.write(json.dumps(data, default=json_serial, sort_keys=True,
++                    indent=4, separators=(',', ': ')))
++        # Try to get language from the user
++        if not language in ERROR_MESSAGE:
++            language = 'en_US'
++        raise UserError(ERROR_MESSAGE[language] % transaction_id)
++    return result
++
++def rpc_result(transaction, request, pool, user, args, rpc, obj, method,
++        c_args, c_kwargs):
++    if backend.name() == 'postgresql':
++        cursor = transaction.connection.cursor()
++        cursor.execute("SELECT pg_backend_pid()")
++        database_pid = cursor.fetchone()[0]
++    else:
++        database_pid = '-'
++    action = {
++        'host': request.host,
++        'port': '',
++        'protocol': '',
++        'database_name': pool.database_name,
++        'database_pid': database_pid,
++        'user': user,
++        'object_name': obj.__name__,
++        'method': method,
++        'args': repr(args),
++        }
++    action_id = add(action)
++    transaction.apm_transaction_id = action_id
++    def get_filename():
++        return os.path.join(profiler_directory, str(action_id))
++
++    if not profiler or not eval(profiler_start_condition, {}, action):
++        try:
++            result = call_rpc(rpc, obj, method, c_args, c_kwargs)
++        finally:
++            remove(action_id)
++        return result
++
++    if profiler == 'vmprof':
++        filename = get_filename()
++        with open(filename, 'w') as f:
++            vmprof.enable(f.fileno(), period=float(vmprof_period)/1000.0,
++                memory=vmprof_memory, lines=vmprof_lines)
++            try:
++                result = call_rpc(rpc, obj, method, c_args, c_kwargs)
++            finally:
++                vmprof.disable()
++                action = close(action_id)
++                if not eval(profiler_store_condition, {}, action):
++                    os.remove(filename)
++                remove(action_id)
++    elif profiler == 'profile':
++        profile = cProfile.Profile()
++        profile.enable()
++        try:
++            result = call_rpc(rpc, obj, method, c_args, c_kwargs)
++        finally:
++            profile.disable()
++            action = close(action_id)
++            if eval(profiler_store_condition, {}, action):
++                profile.dump_stats(get_filename())
++            remove(action_id)
++    return result
++
++if apm:
++    signal.signal(signal.SIGUSR1, signal_user_handler)
++    faulthandler.register(signal.SIGUSR2)
++
++def add(value):
++    action_id = random.randint(0, 999999)
++    value['timestamp'] = datetime.now()
++    value['elapsed'] = None
++    value['id'] = str(action_id)
++    current_actions[action_id] = value
++    return action_id
++
++def json_serial(obj):
++    """JSON serializer for objects not serializable by default json code"""
++
++    if isinstance(obj, datetime):
++        serial = obj.isoformat()
++        return serial
++    raise TypeError ("Type not serializable")
++
++
++def close(action_id):
++    action = current_actions[action_id]
++    action['elapsed'] = (datetime.now() - action['timestamp']).total_seconds()
++    if eval(log_condition, {}, action):
++        log_file.write(json.dumps(action, default=json_serial) + '\n')
++    return action
++
++def remove(action_id):
++    del current_actions[action_id]
+diff -r dd969de519a8 trytond/trytond/protocols/dispatcher.py
+--- a/trytond/trytond/protocols/dispatcher.py	Mon Nov 28 15:54:24 2016 +0100
++++ b/trytond/trytond/protocols/dispatcher.py	Mon Jan 30 22:49:35 2017 +0100
+@@ -3,6 +3,7 @@
+ # this repository contains the full copyright notices and license terms.
+ import logging
+ import pydoc
++import apm
+
+ from werkzeug.utils import redirect
+ from werkzeug.exceptions import abort
+@@ -154,18 +155,8 @@
+             try:
+                 c_args, c_kwargs, transaction.context, transaction.timestamp \
+                     = rpc.convert(obj, *args, **kwargs)
+-                meth = getattr(obj, method)
+-                if (rpc.instantiate is None
+-                        or not is_instance_method(obj, method)):
+-                    result = rpc.result(meth(*c_args, **c_kwargs))
+-                else:
+-                    assert rpc.instantiate == 0
+-                    inst = c_args.pop(0)
+-                    if hasattr(inst, method):
+-                        result = rpc.result(meth(inst, *c_args, **c_kwargs))
+-                    else:
+-                        result = [rpc.result(meth(i, *c_args, **c_kwargs))
+-                            for i in inst]
++                result = apm.rpc_result(transaction, request, pool, user,
++                    args, rpc, obj, method, c_args, c_kwargs)
+             except DatabaseOperationalError:
+                 if count and not rpc.readonly:
+                     transaction.rollback()

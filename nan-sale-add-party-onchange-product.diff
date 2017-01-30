@@ -1,0 +1,16 @@
+diff -r 49bb5470d6ba trytond/trytond/modules/sale/sale.py
+--- a/trytond/trytond/modules/sale/sale.py	Mon Nov 28 17:25:07 2016 +0100
++++ b/trytond/trytond/modules/sale/sale.py	Tue Dec 13 16:23:06 2016 +0100
+@@ -1175,8 +1175,10 @@
+         party_context = {}
+         if self.sale and self.sale.party:
+             party = self.sale.party
+-            if party.lang:
+-                party_context['language'] = party.lang.code
++        elif hasattr(self, 'party') and self.party:
++            party = self.party
++        if party and party.lang:
++            party_context['language'] = party.lang.code
+
+         # Set taxes before unit_price to have taxes in context of sale price
+         taxes = []

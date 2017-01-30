@@ -1,0 +1,8 @@
+# tryton issues
+issue6128-psycopg2cffi.diff
+
+# nan patches
+nan-locale.diff
+nan-country.diff
+nan-apm.diff
+nan-sale-add-party-onchange-product.diff

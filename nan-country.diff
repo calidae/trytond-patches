@@ -1,0 +1,256 @@
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/country.xml
+--- a/trytond/trytond/modules/country/country.xml	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/country.xml	Mon Jan 30 22:43:16 2017 +0100
+@@ -30896,7 +30896,7 @@
+         </record>
+
+         <record model="country.subdivision" id="es-bi">
+-            <field name="name">Vizcayaa / Bizkaia</field>
++            <field name="name">Vizcaya / Bizkaia</field>
+             <field name="code">ES-BI</field>
+             <field name="type">province</field>
+             <field name="parent" ref="es-pv"/>
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/bg.po
+--- a/trytond/trytond/modules/country/locale/bg.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/bg.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5728,8 +5728,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/ca.po
+--- a/trytond/trytond/modules/country/locale/ca.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/ca.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5715,8 +5715,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/cs.po
+--- a/trytond/trytond/modules/country/locale/cs.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/cs.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5720,8 +5720,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/de.po
+--- a/trytond/trytond/modules/country/locale/de.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/de.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5715,8 +5715,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/es.po
+--- a/trytond/trytond/modules/country/locale/es.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/es.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5715,8 +5715,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/es_419.po
+--- a/trytond/trytond/modules/country/locale/es_419.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/es_419.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5718,8 +5718,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/fr.po
+--- a/trytond/trytond/modules/country/locale/fr.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/fr.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5715,7 +5715,7 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr "Biscaye"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/hu_HU.po
+--- a/trytond/trytond/modules/country/locale/hu_HU.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/hu_HU.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5725,8 +5725,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/it_IT.po
+--- a/trytond/trytond/modules/country/locale/it_IT.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/it_IT.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5727,8 +5727,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/ja_JP.po
+--- a/trytond/trytond/modules/country/locale/ja_JP.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/ja_JP.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5718,8 +5718,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/lo.po
+--- a/trytond/trytond/modules/country/locale/lo.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/lo.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5734,7 +5734,7 @@
+ msgstr ""
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr ""
+
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/lt.po
+--- a/trytond/trytond/modules/country/locale/lt.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/lt.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5717,8 +5717,8 @@
+ msgstr "Badachoso provincija"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/nl.po
+--- a/trytond/trytond/modules/country/locale/nl.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/nl.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5741,7 +5741,7 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr "Biskaje / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/pl.po
+--- a/trytond/trytond/modules/country/locale/pl.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/pl.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5715,8 +5715,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/pt_BR.po
+--- a/trytond/trytond/modules/country/locale/pt_BR.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/pt_BR.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5718,8 +5718,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/ru.po
+--- a/trytond/trytond/modules/country/locale/ru.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/ru.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5745,7 +5745,7 @@
+ msgstr ""
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
+ msgstr ""
+
+ msgctxt "model:country.subdivision,name:es-bu"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/sl.po
+--- a/trytond/trytond/modules/country/locale/sl.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/sl.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5715,8 +5715,8 @@
+ msgstr "Badajoz"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
+diff -r 0d85c0b4b17a trytond/trytond/modules/country/locale/zh_CN.po
+--- a/trytond/trytond/modules/country/locale/zh_CN.po	Mon Nov 28 16:07:47 2016 +0100
++++ b/trytond/trytond/modules/country/locale/zh_CN.po	Mon Jan 30 22:43:16 2017 +0100
+@@ -5736,8 +5736,8 @@
+ msgstr "巴达霍斯"
+
+ msgctxt "model:country.subdivision,name:es-bi"
+-msgid "Vizcayaa / Bizkaia"
+-msgstr "Vizcayaa / Bizkaia"
++msgid "Vizcaya / Bizkaia"
++msgstr "Vizcaya / Bizkaia"
+
+ msgctxt "model:country.subdivision,name:es-bu"
+ msgid "Burgos"
