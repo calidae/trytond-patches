@@ -1,7 +1,15 @@
-diff -r b1c807b558e9 trytond/trytond/ir/ui/tree.rnc
---- a/trytond/trytond/ir/ui/tree.rnc	Wed Sep 28 08:14:45 2016 +0200
-+++ b/trytond/trytond/ir/ui/tree.rnc	Wed Sep 28 08:19:23 2016 +0200
-@@ -62,6 +62,7 @@
+diff -r ad9170e4838b trytond/trytond/ir/ui/tree.rnc
+--- a/trytond/trytond/ir/ui/tree.rnc	Tue Aug 30 14:38:04 2016 +0200
++++ b/trytond/trytond/ir/ui/tree.rnc	Mon Feb 13 11:11:10 2017 +0100
+@@ -9,6 +9,7 @@
+ attlist.tree &= attribute on_write { text }?
+ attlist.tree &= attribute editable { "top" | "bottom" }?
+ attlist.tree &= attribute sequence { text }?
++attlist.tree &= attribute colors { text }?
+ attlist.tree &=
+   [ a:defaultValue = "0" ] attribute keyword_open { "0" | "1" }?
+ attlist.tree &=
+@@ -62,6 +63,7 @@
  attlist.field &= attribute string { text }?
  attlist.field &= [a:defaultValue = "1"] attribute factor { text }?
  attlist.field &= attribute filename { text }?
@@ -9,21 +17,45 @@ diff -r b1c807b558e9 trytond/trytond/ir/ui/tree.rnc
  prefix = element prefix { attlist.affix, empty }
  suffix = element suffix { attlist.affix, empty }
  attlist.affix &= attribute string { text }?
-diff -r b1c807b558e9 trytond/trytond/ir/ui/tree.rng
---- a/trytond/trytond/ir/ui/tree.rng	Wed Sep 28 08:14:45 2016 +0200
-+++ b/trytond/trytond/ir/ui/tree.rng	Wed Sep 28 08:19:23 2016 +0200
-@@ -198,6 +198,11 @@
-       <attribute name="filename"/>
-     </optional>
-   </define>
-+  <define name="attlist.field" combine="interleave">
-+    <optional>
-+      <attribute name="view_ids"/>
-+    </optional>
-+  </define>
-   <define name="prefix">
-     <element name="prefix">
-       <ref name="attlist.affix"/>
+ diff -r ad9170e4838b trytond/trytond/ir/ui/tree.rng
+ --- a/trytond/trytond/ir/ui/tree.rng	Tue Aug 30 14:38:04 2016 +0200
+ +++ b/trytond/trytond/ir/ui/tree.rng	Mon Feb 13 11:11:10 2017 +0100
+ @@ -38,6 +38,11 @@
+    </define>
+    <define name="attlist.tree" combine="interleave">
+      <optional>
+ +      <attribute name="colors"/>
+ +    </optional>
+ +  </define>
+ +  <define name="attlist.tree" combine="interleave">
+ +    <optional>
+        <attribute name="keyword_open" a:defaultValue="0">
+          <choice>
+            <value>0</value>
+ @@ -198,6 +203,11 @@
+        <attribute name="filename"/>
+      </optional>
+    </define>
+ +  <define name="attlist.field" combine="interleave">
+ +    <optional>
+ +      <attribute name="view_ids"/>
+ +    </optional>
+ +  </define>
+    <define name="prefix">
+      <element name="prefix">
+        <ref name="attlist.affix"/>
+diff -r ad9170e4838b trytond/trytond/ir/ui/view.py
+--- a/trytond/trytond/ir/ui/view.py     Tue Aug 30 14:38:04 2016 +0200
++++ b/trytond/trytond/ir/ui/view.py     Mon Feb 13 11:21:02 2017 +0100
+@@ -155,7 +155,7 @@
+             }
+
+             def encode(element):
+-                for attr in ('states', 'domain', 'spell'):
++                for attr in ('states', 'domain', 'spell', 'colors'):
+                     if element.get(attr):
+                         try:
+                             value = PYSONDecoder().decode(element.get(attr))
 diff -r b1c807b558e9 trytond/trytond/model/modelview.py
 --- a/trytond/trytond/model/modelview.py	Wed Sep 28 08:14:45 2016 +0200
 +++ b/trytond/trytond/model/modelview.py	Wed Sep 28 08:19:23 2016 +0200
@@ -32,7 +64,7 @@ diff -r b1c807b558e9 trytond/trytond/model/modelview.py
          else:
              fields_attrs = copy.deepcopy(fields_attrs)
 -        childs = True
- 
+
 -        if element.tag in ('field', 'label', 'separator', 'group', 'suffix',
 -                'prefix'):
 +        def set_view_ids(element):
@@ -142,11 +174,11 @@ diff -r b1c807b558e9 trytond/trytond/model/modelview.py
 +
              if type == 'tree' and element.get('name') in fields_width:
                  element.set('width', str(fields_width[element.get('name')]))
- 
+
 @@ -588,10 +593,9 @@
                  if element.get(attr):
                      fields_attrs.setdefault(element.get(attr), {})
- 
+
 -        if childs:
 -            for field in element:
 -                fields_attrs = cls.__view_look_dom(field, type,
@@ -155,5 +187,5 @@ diff -r b1c807b558e9 trytond/trytond/model/modelview.py
 +            fields_attrs = cls.__view_look_dom(field, type,
 +                fields_width=fields_width, fields_attrs=fields_attrs)
          return fields_attrs
- 
+
      @staticmethod
