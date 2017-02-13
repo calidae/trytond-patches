@@ -1,0 +1,27 @@
+diff -r 69b5dc36b783 trytond/trytond/modules/account_invoice/invoice.py
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Mon Feb 13 12:47:07 2017 +0100
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Mon Feb 13 12:48:02 2017 +0100
+@@ -965,6 +965,11 @@
+         move.lines = move_lines
+         return move
+
++    def invoice_type_criteria(self):
++        if all(l.amount <= 0 for l in self.lines):
++            return '_credit_note'
++        return '_invoice'
++
+     def set_number(self):
+         '''
+         Set number to the invoice
+@@ -986,10 +991,7 @@
+             date=accounting_date, test_state=test_state)
+         period = Period(period_id)
+         invoice_type = self.type
+-        if all(l.amount <= 0 for l in self.lines):
+-            invoice_type += '_credit_note'
+-        else:
+-            invoice_type += '_invoice'
++        invoice_type += self.invoice_type_criteria()
+         sequence = period.get_invoice_sequence(invoice_type)
+         if not sequence:
+             self.raise_user_error('no_invoice_sequence', {
