@@ -1,0 +1,20 @@
+diff -r 48925cd5bac1 trytond/trytond/convert.py
+--- a/trytond/trytond/convert.py	Sat Feb 11 19:05:18 2017 +0100
++++ b//trytond/trytond/convert.py	Mon Feb 27 17:14:18 2017 +0100
+@@ -460,7 +460,6 @@
+ 
+             if name in self.taghandlerlist:
+                 self.taghandler = self.taghandlerlist[name]
+-                self.taghandler.startElement(name, attributes)
+ 
+             elif name == "data":
+                 self.noupdate = bool(int(attributes.get("noupdate", '0')))
+@@ -482,7 +481,7 @@
+             else:
+                 logger.info("Tag %s not supported", (name,))
+                 return
+-        elif not self.skip_data:
++        if self.taghandler and not self.skip_data:
+             self.taghandler.startElement(name, attributes)
+ 
+     def characters(self, data):
