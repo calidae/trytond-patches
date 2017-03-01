@@ -59,7 +59,7 @@ diff -r ad9170e4838b trytond/trytond/ir/ui/view.py
 diff -r b1c807b558e9 trytond/trytond/model/modelview.py
 --- a/trytond/trytond/model/modelview.py	Wed Sep 28 08:14:45 2016 +0200
 +++ b/trytond/trytond/model/modelview.py	Wed Sep 28 08:19:23 2016 +0200
-@@ -488,59 +488,64 @@
+@@ -488,59 +488,67 @@
              fields_attrs = {}
          else:
              fields_attrs = copy.deepcopy(fields_attrs)
@@ -162,8 +162,11 @@ diff -r b1c807b558e9 trytond/trytond/model/modelview.py
 +                view_ids = set_view_ids(element)
 +                if type != 'form':
 +                    continue
-+                field = cls._fields[fname]
-+                relation = get_relation(field)
++                try:
++                    field = cls._fields[fname]
++                    relation = get_relation(field)
++                except:
++                    relation = False
 +                if not relation:
 +                    continue
 +                mode = (
