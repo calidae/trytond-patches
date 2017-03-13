@@ -1,0 +1,21 @@
+diff -r 2df2fc68c3f0 account.xml
+--- a/trytond/trytond/modules/accout_payment/account.xml	Mon Nov 02 15:18:41 2015 +0100
++++ b/trytond/trytond/modules/account_payment/account.xml	Mon Mar 13 12:20:49 2017 +0100
+@@ -28,7 +28,7 @@
+             <field name="name">Payable</field>
+             <field name="sequence" eval="10"/>
+             <field name="domain"
+-                eval="[('account.kind', '=', 'payable'), ['OR', ('credit', '&gt;', 0), ('debit', '&lt;', 0)]]"
++                eval="['OR', ('credit', '&gt;', 0), ('debit', '&lt;', 0)]"
+                 pyson="1"/>
+             <field name="act_window" ref="act_move_line_form"/>
+         </record>
+@@ -37,7 +37,7 @@
+             <field name="name">Receivable</field>
+             <field name="sequence" eval="20"/>
+             <field name="domain"
+-                eval="[('account.kind', '=', 'receivable'), ['OR', ('debit', '&gt;', 0), ('credit', '&lt;', 0)]]"
++                eval="['OR', ('debit', '&gt;', 0), ('credit', '&lt;', 0)]"
+                 pyson="1"/>
+             <field name="act_window" ref="act_move_line_form"/>
+         </record>
