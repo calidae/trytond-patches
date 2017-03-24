@@ -43,6 +43,7 @@ account_product_rules.diff
 issue5558.diff
 party_check_vies.diff
 remove_payable_receivable_filter.diff
+sepa_sequence_type.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
