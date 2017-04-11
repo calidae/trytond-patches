@@ -1,0 +1,24 @@
+diff -r b38f16423727 trytond/trytond/modules/product/product.xml
+--- a/trytond/trytond/modules/product/product.xml	Wed Jan 04 00:20:57 2017 +0100
++++ b/trytond/trytond/modules/product/product.xml	Tue Apr 11 08:04:04 2017 +0200
+@@ -91,7 +91,7 @@
+             <field name="type" eval="None"/>
+             <field name="inherit" ref="template_view_tree"/>
+             <field name="priority" eval="10"/>
+-            <field name="name"></field>
++            <field name="name">product_tree</field>
+         </record>
+
+         <record model="ir.ui.view" id="product_view_tree_simple">
+diff -r b38f16423727 trytond/trytond/modules/product/view/product_tree.xml
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/modules/product/view/product_tree.xml	Tue Apr 11 08:04:04 2017 +0200
+@@ -0,0 +1,8 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<data>
++    <xpath expr="/tree/field[@name='name']" position="before">
++        <field name="code"/>
++    </xpath>
++</data>
