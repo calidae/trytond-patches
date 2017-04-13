@@ -7,6 +7,7 @@ diff -r 196f01a49aa0 trytond/trytond/model/modelview.py
                      continue
 -                field = cls._fields[fname]
 -                relation = get_relation(field)
++                relation = None
 +                try:
 +                    field = cls._fields[fname]
 +                    relation = get_relation(field)
