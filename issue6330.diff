@@ -1,7 +1,7 @@
 diff -r 196f01a49aa0 trytond/trytond/model/modelview.py
 --- a/trytond//trytond/model/modelview.py	Sat Feb 11 19:05:18 2017 +0100
 +++ b/trytond//trytond/model/modelview.py	Mon Mar 06 09:55:24 2017 +0100
-@@ -540,8 +540,11 @@
+@@ -540,8 +540,12 @@
                  view_ids = set_view_ids(element)
                  if type != 'form':
                      continue
