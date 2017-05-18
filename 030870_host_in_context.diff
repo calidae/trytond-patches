@@ -1,0 +1,14 @@
+diff --git trytond/protocols/dispatcher.py
+index cdf30d0..752524b 100644
+--- a/trytond/trytond/protocols/dispatcher.py
++++ b/trytond/trytond/protocols/dispatcher.py
+@@ -179,6 +179,9 @@ def dispatch(host, port, protocol, database_name, user, session, object_type,
+             try:
+                 c_args, c_kwargs, transaction.context, transaction.timestamp \
+                     = rpc.convert(obj, *args, **kwargs)
++
++                transaction.set_context({'host': host})
++
+                 meth = getattr(obj, method)
+                 if not hasattr(meth, 'im_self') or meth.im_self:
+                     result = rpc.result(meth(*c_args, **c_kwargs))
