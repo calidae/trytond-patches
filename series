@@ -44,3 +44,5 @@ issue5543-stock_lot.diff
 issue5828-product.diff
 
 locale.diff
+
+issue5917.diff # [tryton] - Reduce the number of request for tree_state (changeset 33c1a31d27bc) 

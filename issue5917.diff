@@ -1,0 +1,16 @@
+diff -r 5fbd611b91e0 tryton/gui/window/view_form/screen/screen.py
+--- a/tryton/tryton/gui/window/view_form/screen/screen.py	Mon May 22 16:01:38 2017 +0200
++++ b/tryton/tryton/gui/window/view_form/screen/screen.py	Mon May 22 16:03:21 2017 +0200
+@@ -701,7 +701,12 @@
+             return
+         if view.view_type == 'form' and self.tree_states_done:
+             return
++        if (view.view_type == 'tree'
++            and not view.attributes.get('tree_state', False)):
++            return
+         parent = self.parent.id if self.parent else None
++        if parent is not None and parent < 0:
++            return
+         expanded_nodes, selected_nodes = [], []
+         timestamp = self.parent._timestamp if self.parent else None
+         state = self.tree_states[parent][view.children_field]
