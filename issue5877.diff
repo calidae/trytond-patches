@@ -1,0 +1,24 @@
+diff -r b34aa7776865 trytond/model/modelsql.py
+--- a/trytond/trytond/model/modelsql.py	Mon May 22 16:29:37 2017 +0200
++++ b/trytond/trytond/model/modelsql.py	Mon May 22 16:31:23 2017 +0200
+@@ -1131,7 +1131,7 @@
+         table = convert_from(None, tables)
+
+         if count:
+-            cursor.execute(*table.select(Count(Literal(1)),
++            cursor.execute(*table.select(Count(Literal('*')),
+                     where=expression, limit=limit, offset=offset))
+             return cursor.fetchone()[0]
+         # execute the "main" query to fetch the ids we were searching for
+diff -r b34aa7776865 trytond/model/modelstorage.py
+--- a/trytond/trytond/model/modelstorage.py	Mon May 22 16:29:37 2017 +0200
++++ b/trytond/trytond/model/modelstorage.py	Mon May 22 16:31:23 2017 +0200
+@@ -357,7 +357,7 @@
+         '''
+         Return the number of records that match the domain.
+         '''
+-        res = cls.search(domain, count=True)
++        res = cls.search(domain, order=[], count=True)
+         if isinstance(res, list):
+             return len(res)
+         return res
