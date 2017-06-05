@@ -1,0 +1,18 @@
+diff -r 300f9a499321 trytond/trytond/modules/account_payment_sepa/payment.py
+--- a/trytond/trytond/modules/account_payment_sepa/payment.py	Tue Jul 05 22:50:41 2016 +0200
++++ b/trytond/trytond/modules/account_payment_sepa/payment.py	Mon Jun 05 12:06:26 2017 +0200
+@@ -510,10 +510,10 @@
+     def sequence_type(self):
+         if self.type == 'one-off':
+             return 'OOFF'
+-        elif (not self.payments
+-                or all(not p.sepa_mandate_sequence_type for p in self.payments)
+-                or all(p.rejected for p in self.payments)):
+-            return 'FRST'
++        # elif (not self.payments
++        #         or all(not p.sepa_mandate_sequence_type for p in self.payments)
++        #         or all(p.rejected for p in self.payments)):
++        #     return 'FRST'
+         # TODO manage FNAL
+         else:
+             return 'RCUR'
