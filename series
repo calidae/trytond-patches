@@ -42,6 +42,7 @@ lock_stock_move.diff
 stock_inventory_consumables.diff
 issue5543-stock_lot.diff
 issue5828-product.diff
+commission-issue6322-issue6501.diff
 sepa_sequence_type.diff
 
 locale.diff
