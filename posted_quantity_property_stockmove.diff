@@ -1,0 +1,27 @@
+diff -r 7a82d5277712 stock.py
+--- a/trytond/trytond/modules/account_invoice_stock/stock.py	Wed May 11 11:44:30 2016 +0200
++++ b/trytond/trytond/modules/account_invoice_stock/stock.py	Wed Jun 07 10:09:03 2017 +0200
+@@ -24,6 +24,23 @@
+                 invoice_line.quantity, self.uom)
+         return quantity
+ 
++    @property
++    def posted_quantity(self):
++        'The quantity from linked invoice lines in move unit and by invoice'
++        pool = Pool()
++        Uom = pool.get('product.uom')
++        quantity = 0.0
++        invoice_quantity = {}
++        for invoice_line in self.invoice_lines:
++            if (invoice_line.invoice and
++                    invoice_line.invoice.state in ('posted', 'paid')):
++                if invoice_line.invoice.id not in invoice_quantity:
++                    invoice_quantity[invoice_line.invoice.id] = 0.0
++                quantity = Uom.compute_qty(invoice_line.unit,
++                    invoice_line.quantity, self.uom)
++                invoice_quantity[invoice_line.invoice.id] += quantity
++        return invoice_quantity
++
+     @classmethod
+     def copy(cls, moves, default=None):
+         if default is None:
