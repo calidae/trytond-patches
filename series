@@ -1,4 +1,4 @@
-account_move_line_rule.diff
+issue3932-account_move_rule.diff
 analytic_account.diff
 analytic_invoice.diff
 analytic_purchase.diff

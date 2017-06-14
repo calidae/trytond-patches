@@ -1,0 +1,32 @@
+diff -r b6ae2b001525 trytond/trytond/modules/account/move.xml
+--- a/trytond/trytond/modules/account/move.xml	Wed Mar 08 09:39:24 2017 +0100
++++ b/trytond/trytond/modules/account/move.xml	Wed Jun 14 16:16:45 2017 +0200
+@@ -362,5 +362,28 @@
+             <field name="report_name">account.move.general_journal</field>
+             <field name="report">account/general_journal.odt</field>
+         </record>
++
++        <!-- ir rule account move and account move line by company -->
++        <record model="ir.rule.group" id="rule_group_account_move">
++            <field name="model" search="[('model', '=', 'account.move')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_account_move1">
++            <field name="domain"
++                eval="[('company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_account_move"/>
++        </record>
++
++        <record model="ir.rule.group" id="rule_group_account_move_line">
++            <field name="model" search="[('model', '=', 'account.move.line')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_account_move_line1">
++            <field name="domain"
++                eval="[('move.company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_account_move_line"/>
++        </record>
+     </data>
+ </tryton>
