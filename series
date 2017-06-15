@@ -123,3 +123,7 @@ issue4384.diff
 issue4322-account_payment_sepa.diff
 issue6265.diff
 030870_host_in_context.diff
+
+
+#changeset 1841:4d228a081908
+#do_not_set_effective_date_on_assign.diff
