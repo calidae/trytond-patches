@@ -45,7 +45,6 @@ issue5543-stock_lot.diff
 issue5828-product.diff
 commission-issue6322-issue6501.diff
 sepa_sequence_type.diff
-account_payment_type_both.diff # dissable both payment type kind
 
 locale.diff
 
