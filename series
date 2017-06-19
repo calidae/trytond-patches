@@ -32,6 +32,8 @@ domain_validation_warning.diff
 posted_quantity_property_stockmove.diff
 #do_not_lock_on_assign_try.diff
 
+issue6579.diff
+
 issue5587-stock.diff
 issue5587-stock_supply.diff
 
