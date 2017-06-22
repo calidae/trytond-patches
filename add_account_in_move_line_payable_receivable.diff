@@ -1,0 +1,11 @@
+diff -r ab31ba9a37d6 trytond/trytond/modules/account/view/move_line_list_payable_receivable.xml
+--- a/trytond/trytond/modules/account/view/move_line_list_payable_receivable.xml	Sat Dec 17 17:31:12 2016 +0100
++++ b/trytond/trytond/modules/account/view/move_line_list_payable_receivable.xml	Thu Jun 22 15:29:02 2017 +0200
+@@ -3,6 +3,7 @@
+ this repository contains the full copyright notices and license terms. -->
+ <tree string="Account Move Lines">
+     <field name="date"/>
++    <field name="account"/>
+     <field name="party"/>
+     <field name="amount"/>
+     <field name="amount_currency"/>
