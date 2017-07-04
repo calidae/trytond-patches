@@ -53,4 +53,4 @@ locale.diff
 
 issue5917.diff # [tryton] - Reduce the number of request for tree_state (changeset 33c1a31d27bc)
 issue5877.diff # [trytond] - Improve ModelStorage.search_count by using no order and COUNT(*) (changeset a2009809c10f)
-statement_of_account.diff
+statement_of_account.diff  # [account] - remove context and show all lines on general_ledger_lines
