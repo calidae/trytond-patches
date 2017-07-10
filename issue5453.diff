@@ -1,0 +1,50 @@
+diff -r 77bfd94d8b9e trytond/trytond/modules/account/account.py
+--- a/trytond/trytond/modules/account/account.py	Mon Jul 10 14:06:46 2017 +0200
++++ b/trytond/trytond/modules/account/account.py	Mon Jul 10 14:08:29 2017 +0200
+@@ -293,7 +293,7 @@
+                     if vals:
+                         values.append([child])
+                         values.append(vals)
+-                template2type[child.template.id] = child.id
++                    template2type[child.template.id] = child.id
+             childs = sum((c.childs for c in childs), ())
+         if values:
+             self.write(*values)
+@@ -902,7 +902,7 @@
+                     if vals:
+                         values.append([child])
+                         values.append(vals)
+-                template2account[child.template.id] = child.id
++                    template2account[child.template.id] = child.id
+             childs = sum((c.childs for c in childs), ())
+         if values:
+             self.write(*values)
+diff -r 77bfd94d8b9e trytond/trytond/modules/account/tax.py
+--- a/trytond/trytond/modules/account/tax.py	Mon Jul 10 14:06:46 2017 +0200
++++ b/trytond/trytond/modules/account/tax.py	Mon Jul 10 14:08:29 2017 +0200
+@@ -272,7 +272,7 @@
+                     if vals:
+                         values.append([child])
+                         values.append(vals)
+-                template2tax_code[child.template.id] = child.id
++                    template2tax_code[child.template.id] = child.id
+             childs = sum((c.childs for c in childs), ())
+         if values:
+             cls.write(*values)
+@@ -1006,7 +1006,7 @@
+                     if vals:
+                         values.append([child])
+                         values.append(vals)
+-                template2tax[child.template.id] = child.id
++                    template2tax[child.template.id] = child.id
+             childs = sum((c.childs for c in childs), ())
+         if values:
+             cls.write(*values)
+@@ -1549,7 +1549,7 @@
+                 if vals:
+                     values.append([line])
+                     values.append(vals)
+-            template2rule_line[line.template.id] = line.id
++                template2rule_line[line.template.id] = line.id
+         if values:
+             cls.write(*values)
