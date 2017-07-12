@@ -45,7 +45,7 @@ stock_supply_production-performance-improvement.diff
 stock_supply-provisioning-location.diff
 
 # Uncomment in TEB: companyia obligatoria a l'analitica
-# analytic_account.diff
+analytic_account.diff
 
 top.diff
 issue15211002-sale-confirmed-to-done.diff
@@ -124,6 +124,7 @@ issue4384.diff
 issue4322-account_payment_sepa.diff
 issue6265.diff
 030870_host_in_context.diff
+task030479.diff  # Adds locales to account_payment_clearing
 
 
 #changeset 1841:4d228a081908

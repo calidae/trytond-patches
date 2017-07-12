@@ -1,0 +1,23 @@
+diff -r 78e03afc2861 locale/es_ES.po
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ trytond/modules/account_payment_clearing/locale/es_ES.po	Wed Jul 12 15:29:57 2017 +0200
+@@ -0,0 +1,19 @@
++#
++msgid ""
++msgstr "Content-Type: text/plain; charset=utf-8\n"
++
++msgctxt "field:account.payment,clearing_move:"
++msgid "Clearing Move"
++msgstr "Movimiento de compensación"
++
++msgctxt "field:account.payment.journal,clearing_account:"
++msgid "Clearing Account"
++msgstr "Cuenta de compensación"
++
++msgctxt "field:account.payment.journal,clearing_journal:"
++msgid "Clearing Journal"
++msgstr "Diario de compensación"
++
++msgctxt "field:account.statement.line,payment:"
++msgid "Payment"
++msgstr "Pago"
