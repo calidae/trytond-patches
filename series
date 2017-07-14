@@ -54,3 +54,4 @@ issue6294.diff # [tryton] - Creating a board view with a form inside
 issue5917.diff # [tryton] - Reduce the number of request for tree_state (changeset 33c1a31d27bc)
 issue5877.diff # [trytond] - Improve ModelStorage.search_count by using no order and COUNT(*) (changeset a2009809c10f)
 statement_of_account.diff  # [account] - remove context and show all lines on general_ledger_lines
+issue6371.diff # [stock] - Do not set effective_date on assign
