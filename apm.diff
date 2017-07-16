@@ -1,7 +1,7 @@
 diff -r 2283822f1703 trytond/protocols/apm.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
 +++ b/trytond/trytond/protocols/apm.py	Sun Aug 07 01:55:37 2016 +0200
-@@ -0,0 +1,313 @@
+@@ -0,0 +1,314 @@
 +# encoding: utf-8
 +#
 +# apm.py aims to be an utility to extend Tryton with Application
@@ -286,8 +286,9 @@ diff -r 2283822f1703 trytond/protocols/apm.py
 +    return result
 +
 +if apm:
-+    signal.signal(signal.SIGUSR1, signal_user_handler)
-+    faulthandler.register(signal.SIGUSR2)
++    if sys.argv[0] != 'mod_wsgi':
++        signal.signal(signal.SIGUSR1, signal_user_handler)
++        faulthandler.register(signal.SIGUSR2)
 +
 +def add(value):
 +    action_id = random.randint(0, 999999)
