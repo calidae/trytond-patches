@@ -55,3 +55,4 @@ issue5917.diff # [tryton] - Reduce the number of request for tree_state (changes
 issue5877.diff # [trytond] - Improve ModelStorage.search_count by using no order and COUNT(*) (changeset a2009809c10f)
 statement_of_account.diff  # [account] - remove context and show all lines on general_ledger_lines
 issue6371.diff # [stock] - Do not set effective_date on assign
+issue5891.diff # [stock] - Allow using view locations in cancelled stock moves
