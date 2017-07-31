@@ -2,7 +2,7 @@ Index: move.py
 ===================================================================
 
 --- a/trytond/trytond/modules/stock/move.py
-+++ b//trytond/trytond/modules/stockmove.py
++++ b/trytond/trytond/modules/stock/move.py
 @@ -113,47 +113,32 @@
              whose quantity is computed.
          """
