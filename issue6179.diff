@@ -1,0 +1,54 @@
+diff -r f9060749bd74 -r ff79de98d2b1 tryton/gui/window/view_form/view/form_gtk/calendar.py
+--- a/tryton/tryton/gui/window/view_form/view/form_gtk/calendar.py	Sun Jan 15 19:04:16 2017 +0100
++++ b/tryton/tryton/gui/window/view_form/view/form_gtk/calendar.py	Fri Jan 27 19:47:20 2017 +0100
+@@ -1,5 +1,7 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
++import datetime
++
+ import gtk
+ import gettext
+ 
+@@ -45,10 +47,17 @@
+         else:
+             self.widget.unset_focus_chain()
+ 
++    @classmethod
++    def cast(cls, value):
++        if isinstance(value, datetime.datetime):
++            value = value.date()
++        return value
++
+     @property
+     def modified(self):
+         if self.record and self.field:
+-            return self.field.get_client(self.record) != self.entry.props.value
++            field_value = self.cast(self.field.get_client(self.record))
++            return field_value != self.entry.props.value
+         return False
+ 
+     def sig_key_press(self, widget, event):
+@@ -86,6 +95,12 @@
+     def _set_editable(self, value):
+         self.entry.set_sensitive(value)
+ 
++    @classmethod
++    def cast(cls, value):
++        if isinstance(value, datetime.datetime):
++            value = value.time()
++        return value
++
+     @property
+     def real_entry(self):
+         return self.entry.get_child()
+@@ -128,6 +143,10 @@
+             child.connect('focus-out-event', lambda x, y: self._focus_out())
+         self.widget.pack_start(self.entry, expand=False, fill=False)
+ 
++    @classmethod
++    def cast(cls, value):
++        return value
++
+     def _set_editable(self, value):
+         for child in self.entry.get_children():
+             if isinstance(child, gtk.Entry):

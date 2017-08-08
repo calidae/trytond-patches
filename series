@@ -50,6 +50,8 @@ sepa_sequence_type.diff
 add_account_in_move_line_payable_receivable.diff
 locale.diff
 
+issue6179.diff
+
 issue6294.diff # [tryton] - Creating a board view with a form inside
 issue5917.diff # [tryton] - Reduce the number of request for tree_state (changeset 33c1a31d27bc)
 issue5877.diff # [trytond] - Improve ModelStorage.search_count by using no order and COUNT(*) (changeset a2009809c10f)
