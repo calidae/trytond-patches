@@ -412,6 +412,21 @@ diff -r 2b9489aee936 trytond/trytond/modules/account_invoice/invoice.py
 
      def _credit(self):
          '''
+Index: trytond/trytond/modules/account_payment_type/invoice.py
+===================================================================
+--- a/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.270350897 +0200
++++ b/trytond/trytond/modules/account_payment_type/invoice.py	2016-05-31 15:12:13.266350897 +0200
+@@ -82,7 +82,7 @@
+                     return self.company.party.customer_payment_type.id
+
+     def _get_move_line(self, date, amount):
+-        res = super(Invoice, self)._get_move_line(date, amount)
++        line = super(Invoice, self)._get_move_line(date, amount)
+         if self.payment_type:
+-            res['payment_type'] = self.payment_type
+-        return res
++            line.payment_type = self.payment_type
++        return line
 Index: trytond/trytond/modules/analytic_invoice/invoice.py
 ===================================================================
 --- a/trytond/trytond/modules/analytic_invoice/invoice.py	2016-09-01 12:04:30.270350897 +0200
