@@ -59,3 +59,4 @@ statement_of_account.diff  # [account] - remove context and show all lines on ge
 issue6371.diff # [stock] - Do not set effective_date on assign
 issue5891.diff # [stock] - Allow using view locations in cancelled stock moves
 issue6764.diff # [stock] - Setting initial stock
+stock_recompute_cost_price.diff # [stock] - Recompute cost price when cost_price or unit_price is null
