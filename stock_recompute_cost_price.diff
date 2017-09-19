@@ -19,3 +19,21 @@ diff -r 4c5035111f5f trytond/trytond/modules/stock/product.py
                          move.company.currency, round=False)
                  unit_price = Uom.compute_price(move.uom, unit_price,
                      self.default_uom)
+diff -r f7364566b2de product.py
+--- a/trytond/trytond/modules/stock/product.py	Tue Aug 08 18:37:48 2017 +0200
++++ b/trytond/trytond/modules/stock/product.py	Tue Sep 19 10:57:02 2017 +0200
+@@ -267,10 +267,12 @@
+                         move.company.currency, round=False)
+                 unit_price = Uom.compute_price(move.uom, unit_price,
+                     self.default_uom)
+-                if quantity + qty != 0:
++                acc_quantity = max(quantity, 0)
++                move_quantity = max(qty, 0)
++                if acc_quantity + move_quantity != 0:
+                     cost_price = (
+-                        (cost_price * quantity) + (unit_price * qty)
+-                        ) / (quantity + qty)
++                        (cost_price * acc_quantity) + (unit_price * move_quantity)
++                        ) / (acc_quantity + move_quantity)
+             quantity += qty
+         return cost_price
