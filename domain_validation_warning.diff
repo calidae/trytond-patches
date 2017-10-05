@@ -25,12 +25,12 @@ diff -r bf7aea82d3bc trytond/trytond/model/modelstorage.py
 +                        msg = cls.raise_user_error('domain_validation_record',
 +                            error_args=error_args, raise_exception=False)
 +                        msg += ' Records: '+ ', '.join(
-+                            [r.id for r in records])
++                            [str(r.id) for r in records])
 +                        msg += ' Domain: %s' % (domain,)
 +                        msg += ' Relations: '+', '.join(
-+                            [r.id for r in list(sub_relations)])
++                            [str(r.id) for r in list(sub_relations)])
 +                        msg += ' Finds: '+', '.join(
-+                            [r.id for r in finds])
++                            [str(r.id) for r in finds])
 +                        logger.warn(msg)
                          cls.raise_user_error('domain_validation_record',
 -                            error_args=cls._get_error_args(field.name))
