@@ -1,0 +1,13 @@
+diff -r d5a4094774e9 sale.py
+--- a/trytond/trytond/modules/sale_supply_drop_shipment/sale.py	Wed Oct 04 22:04:03 2017 +0200
++++ b/trytond/trytond/modules/sale_supply_drop_shipment/sale.py	Fri Oct 06 14:55:49 2017 +0200
+@@ -58,7 +58,8 @@
+         moves = []
+         for line in self.lines:
+             moves += line.get_drop_moves()
+-        Move.save(moves)
++        if moves:
++            Move.save(moves)
+ 
+ 
+ class SaleLine:
