@@ -1,0 +1,25 @@
+diff -r e0ba9bd8f739 trytond/model/modelstorage.py
+--- a/trytond/trytond/model/modelstorage.py	Wed Oct 11 10:36:36 2017 +0200
++++ b/trytond/trytond/model/modelstorage.py	Wed Oct 11 11:04:16 2017 +0200
+@@ -1344,8 +1344,19 @@
+                     ids.append(value)
+                     return Model(value, **kwargs)
+                 elif field._type in ('one2many', 'many2many'):
+-                    ids.extend(int(x) for x in value)
+-                    return tuple(Model(id, **kwargs) for id in value)
++                    models = []
++                    for x in value:
++                        if isinstance(x, dict):
++                            id = int(x['id'])
++                            data = x.copy()
++                            del data['id']
++                            data.update(kwargs)
++                        else:
++                            id = int(x)
++                            data = kwargs
++                        ids.append(id)
++                        models.append(Model(id, **data))
++                    return models
+ 
+         model2ids = {}
+         model2cache = {}
