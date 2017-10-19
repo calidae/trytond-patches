@@ -19,7 +19,7 @@ diff -r e0ba9bd8f739 trytond/model/modelstorage.py
 +                            data = kwargs
 +                        ids.append(id)
 +                        models.append(Model(id, **data))
-+                    return models
- 
++                    return tuple(models)
+
          model2ids = {}
          model2cache = {}
