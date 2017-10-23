@@ -11,7 +11,13 @@ diff -r 1a408c6814aa asset.py
  
          asset_line = MoveLine(
              debit=0,
-@@ -528,6 +531,11 @@
+             credit=self.value,
+             account=account_asset,
+             )
++        if party:
++            asset_line.party = party
+         depreciation_line = MoveLine(
+             debit=self.get_depreciated_amount(),
              credit=0,
              account=self.product.account_depreciation_used,
              )
