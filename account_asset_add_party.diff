@@ -1,7 +1,7 @@
 diff -r 1a408c6814aa asset.py
 --- a/trytond/trytond/modules/account_asset/asset.py	Tue Aug 08 18:47:37 2017 +0200
 +++ b/trytond/trytond/modules/account_asset/asset.py	Mon Oct 23 16:19:43 2017 +0200
-@@ -517,6 +517,9 @@
+@@ -517,17 +517,27 @@
              account_asset = self.supplier_invoice_line.account
          else:
              account_asset = self.product.account_asset_used
