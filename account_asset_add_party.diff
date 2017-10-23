@@ -1,0 +1,25 @@
+diff -r 1a408c6814aa asset.py
+--- a/trytond/trytond/modules/account_asset/asset.py	Tue Aug 08 18:47:37 2017 +0200
++++ b/trytond/trytond/modules/account_asset/asset.py	Mon Oct 23 16:19:43 2017 +0200
+@@ -517,6 +517,9 @@
+             account_asset = self.supplier_invoice_line.account
+         else:
+             account_asset = self.product.account_asset_used
++        party = (account_asset.party_required and
++            self.supplier_invoice_line and
++            self.supplier_invoice_line.invoice.party or None)
+ 
+         asset_line = MoveLine(
+             debit=0,
+@@ -528,6 +531,11 @@
+             credit=0,
+             account=self.product.account_depreciation_used,
+             )
++        party = (self.product.account_depreciation_used.party_required and
++            self.supplier_invoice_line and
++            self.supplier_invoice_line.invoice.party or None)
++        if party:
++            depreciation_line.party = party
+         lines = [asset_line, depreciation_line]
+         square_amount = asset_line.credit - depreciation_line.debit
+         if square_amount:
