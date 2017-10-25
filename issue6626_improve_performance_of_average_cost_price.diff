@@ -1,0 +1,176 @@
+# TODO: Remove on version 4.6
+# http://hg.tryton.org/modules/stock/rev/9b49590277df
+
+diff -r 99021dd6717a move.py
+--- a/modules/stock/move.py	Wed Oct 25 09:54:30 2017 +0200
++++ b/modules/stock/move.py	Wed Oct 25 16:43:23 2017 +0200
+@@ -1,3 +1,4 @@
++
+ #This file is part of Tryton.  The COPYRIGHT file at the top level of
+ #this repository contains the full copyright notices and license terms.
+ import datetime
+@@ -540,29 +541,21 @@
+         Uom = pool.get('product.uom')
+         Product = pool.get('product.product')
+         ProductTemplate = pool.get('product.template')
+-        Location = pool.get('stock.location')
+         Currency = pool.get('currency.currency')
+-        Date = pool.get('ir.date')
+
+         if direction == 'in':
+             quantity = self.quantity
+         elif direction == 'out':
+             quantity = -self.quantity
+-        context = {}
+-        locations = Location.search([
+-                ('type', '=', 'storage'),
+-                ])
+-        context['locations'] = [l.id for l in locations]
+-        context['stock_date_end'] = Date.today()
+-        with Transaction().set_context(context):
+-            product = Product(self.product.id)
+-        qty = Uom.compute_qty(self.uom, quantity, product.default_uom)
++
++        qty = Uom.compute_qty(self.uom, quantity, self.product.default_uom)
+
+         qty = Decimal(str(qty))
+         if hasattr(Product, 'cost_price'):
+-            product_qty = product.quantity
++            product_qty = self.product.quantity
+         else:
+-            product_qty = product.template.quantity
++            product_qty = self.product.template.quantity
++
+         product_qty = Decimal(str(max(product_qty, 0)))
+         # convert wrt currency
+         with Transaction().set_context(date=self.effective_date):
+@@ -570,26 +563,45 @@
+                 self.company.currency, round=False)
+         # convert wrt to the uom
+         unit_price = Uom.compute_price(self.uom, unit_price,
+-            product.default_uom)
++            self.product.default_uom)
++
++        cost_price = self.product.cost_price
+         if product_qty + qty != Decimal('0.0'):
+             new_cost_price = (
+-                (product.cost_price * product_qty) + (unit_price * qty)
++                (cost_price * product_qty) + (unit_price * qty)
+                 ) / (product_qty + qty)
+         else:
+-            new_cost_price = product.cost_price
++            new_cost_price = cost_price
+
+         if hasattr(Product, 'cost_price'):
+             digits = Product.cost_price.digits
+-            write = partial(Product.write, [product])
+         else:
+             digits = ProductTemplate.cost_price.digits
+-            write = partial(ProductTemplate.write, [product.template])
++
+         new_cost_price = new_cost_price.quantize(
+             Decimal(str(10.0 ** -digits[1])))
+
+-        write({
+-                'cost_price': new_cost_price,
+-                })
++        return new_cost_price
++
++    def _cost_price_key(self):
++        return (
++            ('company', self.company.id),
++        )
++
++    @classmethod
++    def _cost_price_context(cls, moves):
++        pool = Pool()
++        Location = pool.get('stock.location')
++        Date = pool.get('ir.date')
++        context = {}
++        locations = Location.search([
++              ('type', '=', 'storage'),
++              ])
++        context['with_childs'] = False
++        context['locations'] = [l.id for l in locations]
++        context['stock_date_end'] = Date.today()
++
++        return context
+
+     @staticmethod
+     def _get_internal_quantity(quantity, uom, product):
+@@ -625,28 +637,64 @@
+     @ModelView.button
+     @Workflow.transition('done')
+     def do(cls, moves):
++        pool = Pool()
++        Product = pool.get('product.template')
++
++        def set_cost_values(cost_values):
++            values = []
++            for product, cost_price in cost_values:
++                values.extend(([product.template], {'cost_price': cost_price}))
++
++            if values:
++                Product.write(*values)
++
+         cls.check_origin(moves)
+-        to_write = []
+-        for move in moves:
+-            move.set_effective_date()
+-            move._do()
+-            to_write.extend(([move], move._save_values))
+
+-        if to_write:
+-            cls.write(*to_write)
++        for key, grouped_moves in groupby(moves, key=cls._cost_price_key):
++            to_save = []
++            cost_values = []
++            products = set()
++            grouped_moves = list(grouped_moves)
++            context = dict(key)
++            context.update(cls._cost_price_context(grouped_moves))
++            with Transaction().set_context(context):
++                grouped_moves = cls.browse(grouped_moves)
++                for move in grouped_moves:
++                    if move.product in products:
++                        # The average computation of product cost price
++                        # requires each previous move of the same product to be
++                        # saved
++                        cls.write(*to_save)
++                        set_cost_values(cost_values)
++                        del to_save[:]
++                        del cost_values[:]
++                        products.clear()
++                    move.set_effective_date()
++                    cost_price = move._do()
++                    if cost_price is not None:
++                        cost_values.append(
++                            (move.product, cost_price))
++                    if move.cost_price is None:
++                        if cost_price is None:
++                            cost_price = move.product.cost_price
++                        move.cost_price = cost_price
++                    to_save.extend(([move], move._save_values))
++                    products.add(move.product)
+
++                if to_save:
++                    cls.write(*to_save)
++                if cost_values:
++                    set_cost_values(cost_values)
+
+     def _do(self):
+         if (self.from_location.type in ('supplier', 'production')
+                 and self.to_location.type == 'storage'
+                 and self.product.cost_price_method == 'average'):
+-            self._update_product_cost_price('in')
++            return self._update_product_cost_price('in')
+         elif (self.to_location.type == 'supplier'
+                 and self.from_location.type == 'storage'
+                 and self.product.cost_price_method == 'average'):
+-            self._update_product_cost_price('out')
+-        if self.cost_price is None:
+-            self.cost_price = self.product.cost_price
++            return self._update_product_cost_price('out')
+
+     @classmethod
+     @ModelView.button
