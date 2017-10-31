@@ -1,0 +1,50 @@
+--- a/trytond/trytond/modules/sale_credit_limit/party.py
++++ b/trytond/trytond/modules/sale_credit_limit/party.py
+@@ -1,5 +1,7 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
++from decimal import Decimal
++
+ from trytond.pool import Pool, PoolMeta
+ from trytond.transaction import Transaction
+ 
+@@ -13,8 +15,9 @@
+     @classmethod
+     def get_credit_amount(cls, parties, name):
+         pool = Pool()
++        Currency = pool.get('currency.currency')
+         Sale = pool.get('sale.sale')
+-        Currency = pool.get('currency.currency')
++        Uom = pool.get('product.uom')
+         User = pool.get('res.user')
+ 
+         amounts = super(Party, cls).get_credit_amount(parties, name)
+@@ -31,14 +34,23 @@
+         for sale in sales:
+             amount = 0
+             for line in sale.lines:
+-                amount += Currency.compute(sale.currency, line.amount,
+-                    currency, round=False)
++                quantity = line.quantity
++                if not quantity:
++                    continue
+                 for invoice_line in line.invoice_lines:
+                     invoice = invoice_line.invoice
+                     if invoice and invoice.move:
+-                        amount -= Currency.compute(invoice.currency,
+-                            invoice_line.amount, currency)
+-            amounts[sale.party.id] += amount
++                        quantity -= Uom.compute_qty(
++                            invoice_line.unit, invoice_line.quantity,
++                            line.unit, round=False)
++                # Add only if same sign
++                if (line.quantity > 0) == (quantity > 0):
++                    amount += Currency.compute(
++                        sale.currency,
++                        Decimal(str(quantity)) * line.unit_price, currency,
++                        round=False)
++            amounts[sale.party.id] = currency.round(
++                amounts[sale.party.id] + amount)
+         return amounts
+ 
+     @classmethod

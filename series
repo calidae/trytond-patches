@@ -64,3 +64,4 @@ issue6764.diff # [stock] - Setting initial stock
 stock_recompute_cost_price.diff # [stock] - Recompute cost price when cost_price or unit_price is null
 support_dict_one2many_functional_fields.diff
 issue6836.diff # [sale] [sale_price_list] [purchase] - Recompute unit price when change taxes and price list is tax included
+issue6896.diff # [sale_credit_limit] - Use quantity sold and invoiced to compute credit amount
