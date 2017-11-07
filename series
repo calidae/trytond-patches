@@ -33,6 +33,7 @@ posted_quantity_property_stockmove.diff
 sale_supply_drop_shipment_save_move.diff
 #do_not_lock_on_assign_try.diff
 account_asset_add_party.diff
+search_sales_from_shipments.diff
 
 issue6579.diff
 
