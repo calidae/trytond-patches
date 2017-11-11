@@ -1,0 +1,12 @@
+--- a/trytond/trytond/modules/stock/inventory.py	Mon Oct 30 15:09:23 2017 +0100
++++ b/trytond/trytond/modules/stock/inventory.py	Sat Nov 11 00:52:34 2017 +0100
+@@ -227,8 +227,7 @@
+ 
+             # Update existing lines
+             for line in inventory.lines:
+-                if not (line.product.active and
+-                        line.product.type == 'goods'):
++                if not line.product.type == 'goods':
+                     Line.delete([line])
+                     continue
+ 
