@@ -1,0 +1,24 @@
+diff -r e2b8c7ad242b trytond/trytond/modules/locale/ca_ES.po
+--- a/trytond/trytond/modules/stock_lot_sled/locale/ca_ES.po	Mon Nov 02 16:28:21 2015 +0100
++++ b/trytond/trytond/modules/stock_lot_sled/locale/ca_ES.po	Tue Nov 07 15:25:45 2017 +0100
+@@ -52,7 +52,7 @@
+ 
+ msgctxt "field:stock.lot,shelf_life_expiration_date:"
+ msgid "Shelf Life Expiration Date"
+-msgstr "Data caducitat"
++msgstr "Data fi vida útil"
+ 
+ msgctxt "field:stock.lot,shelf_life_expiration_state:"
+ msgid "Shelf Life Expiration State"
+diff -r e2b8c7ad242b trytond/trytond/modules/locale/es_ES.po
+--- a/trytond/trytond/modules/stock_lot_sled/locale/es_ES.po	Mon Nov 02 16:28:21 2015 +0100
++++ b/trytond/trytond/modules/stock_lot_sled/locale/es_ES.po	Tue Nov 07 15:25:45 2017 +0100
+@@ -52,7 +52,7 @@
+ 
+ msgctxt "field:stock.lot,shelf_life_expiration_date:"
+ msgid "Shelf Life Expiration Date"
+-msgstr "Fecha caducidad"
++msgstr "Fecha fin vida útil"
+ 
+ msgctxt "field:stock.lot,shelf_life_expiration_state:"
+ msgid "Shelf Life Expiration State"
