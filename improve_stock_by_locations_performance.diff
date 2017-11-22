@@ -1,0 +1,72 @@
+diff -r 5714fc2292e2 move.py
+--- a/trytond/trytond/modules/stock/move.py	Wed Nov 08 00:00:54 2017 +0100
++++ b/trytond/trytond/modules/stock/move.py	Wed Nov 22 00:59:58 2017 +0100
+@@ -18,6 +18,7 @@
+ from trytond.tools import reduce_ids
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool
++from collections import defaultdict
+ 
+ from trytond.modules.product import price_digits
+ 
+@@ -1136,18 +1137,25 @@
+ 
+         product_getter = operator.itemgetter(grouping.index('product') + 1)
+         res_product_ids = set()
+-        quantities = {}
++        quantities = defaultdict(lambda: 0)
+         keys = set()
++        # We can do a quick loop without propagation if the request is for a
++        # single location because all the locations are children and we can sum
++        # them directly.
++        if len(location_ids) == 1:
++            location, = location_ids
++
+         for line in raw_lines:
+-            location = line[0]
++            if len(location_ids) > 1:
++                location = line[0]
+             key = tuple(line[1:-1])
+             quantity = line[-1]
+-            quantities[(location,) + key] = quantity
++            quantities[(location,) + key] += quantity
+             res_product_ids.add(product_getter(line))
+             keys.add(key)
+ 
+         # Propagate quantities on from child locations to their parents
+-        if with_childs:
++        if with_childs and len(location_ids) > 1:
+             # Fetch all child locations
+             locations = Location.search([
+                     ('parent', 'child_of', location_ids),
+@@ -1186,9 +1194,28 @@
+                 if location not in location_ids:
+                     del quantities[key]
+ 
++        Product = Pool().get('product.product')
++        Template = Pool().get('product.template')
++        Uom = Pool().get('product.uom')
++
+         # Round quantities
+-        default_uom = dict((p.id, p.default_uom) for p in
+-            Product.browse(list(res_product_ids)))
++        product = Product.__table__()
++        template = Template.__table__()
++
++        cursor = Transaction().cursor
++
++        cursor.execute(*template.join(product,
++            condition=product.template == template.id).select(
++                product.id, template.default_uom,
++                where=reduce_ids(product.id, list(res_product_ids))))
++
++        default_uom = {}
++        for product in res_product_ids:
++            default_uom[product] = {}
++
++        for product, duom in cursor.fetchall():
++            default_uom[product] = Uom(duom)
++
+         for key, quantity in quantities.iteritems():
+             location = key[0]
+             product = product_getter(key)
