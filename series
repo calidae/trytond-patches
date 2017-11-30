@@ -72,4 +72,4 @@ issue5453.diff
 issue5891.diff # [stock] - Allow using view locations in cancelled stock moves
 
 #TODO remove at branch 4.0
-#issue6322_6501.diff
+issue6322_6501.diff
