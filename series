@@ -67,3 +67,4 @@ support_dict_one2many_functional_fields.diff
 issue6836.diff # [sale] [sale_price_list] [purchase] - Recompute unit price when change taxes and price list is tax included
 issue6896.diff # [sale_credit_limit] - Use quantity sold and invoiced to compute credit amount
 issue6931.diff # [stock] - Complete Inventory discards inactive products on update
+issue6845-issue5613.diff # [commission] Missing agent type domain on sale and invoice + Remove old usage of out_credit_note

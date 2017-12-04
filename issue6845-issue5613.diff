@@ -1,0 +1,31 @@
+diff -r 9770ab917e02 trytond/trytond/modules/commission/invoice.py
+--- a/trytond/trytond/modules/commission/invoice.py	Mon Dec 04 12:05:39 2017 +0100
++++ b/trytond/trytond/modules/commission/invoice.py	Mon Dec 04 12:13:31 2017 +0100
+@@ -17,6 +17,7 @@
+     __name__ = 'account.invoice'
+     agent = fields.Many2One('commission.agent', 'Commission Agent',
+         domain=[
++            ('type_', '=', 'agent'),
+             ('company', '=', Eval('company', -1)),
+             ],
+         states={
+@@ -156,8 +157,6 @@
+             with Transaction().set_context(date=self.invoice.currency_date):
+                 amount = Currency.compute(self.invoice.currency,
+                     self.amount, agent.currency, round=False)
+-            if self.invoice.type == 'out_credit_note':
+-                amount *= -1
+             amount = self._get_commission_amount(amount, plan)
+             if amount:
+                 digits = Commission.amount.digits
+diff -r 9770ab917e02 trytond/trytond/modules/commission/sale.py
+--- a/trytond/trytond/modules/commission/sale.py	Mon Dec 04 12:05:39 2017 +0100
++++ b/trytond/trytond/modules/commission/sale.py	Mon Dec 04 12:13:31 2017 +0100
+@@ -15,6 +15,7 @@
+     __name__ = 'sale.sale'
+     agent = fields.Many2One('commission.agent', 'Commission Agent',
+         domain=[
++            ('type_', '=', 'agent'),
+             ('company', '=', Eval('company', -1)),
+             ],
+         states={
