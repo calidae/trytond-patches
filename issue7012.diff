@@ -1,0 +1,14 @@
+diff -r c5fad88f4be1 stock.py
+--- a/trytond/trytond/modules/stock_consignment/stock.py	Mon Oct 30 15:55:27 2017 +0100
++++ b/trytond/trytond/modules/stock_consignment/stock.py	Fri Dec 15 02:05:29 2017 +0100
+@@ -291,6 +291,10 @@
+     @classmethod
+     def __setup__(cls):
+         super(OrderPoint, cls).__setup__()
++        cls.storage_location.domain = ['OR',
++            cls.storage_location.domain,
++            ('type', '=', 'supplier'),
++            ]
+         cls.provisioning_location.domain = ['OR',
+             cls.provisioning_location.domain,
+             ('type', '=', 'supplier'),

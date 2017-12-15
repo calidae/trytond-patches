@@ -68,3 +68,6 @@ issue6836.diff # [sale] [sale_price_list] [purchase] - Recompute unit price when
 issue6896.diff # [sale_credit_limit] - Use quantity sold and invoiced to compute credit amount
 issue6931.diff # [stock] - Complete Inventory discards inactive products on update
 issue6845-issue5613.diff # [commission] Missing agent type domain on sale and invoice + Remove old usage of out_credit_note
+
+issue7011.diff # [stock_consignment] stock_consignment should create invoices for moves that go to a production location
+issue7012.diff # [stock_consignment] Allow to create internal order points to provision supplier consignment locations
