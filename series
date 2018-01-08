@@ -130,3 +130,5 @@ issue6371.diff # stock Do not set effective date on assignation
 
 # electr
 # issue6626_improve_performance_of_average_cost_price.diff
+
+filestore.diff

@@ -1,0 +1,712 @@
+# HG changeset patch
+# User Àngel Àlvarez <angel@nan-tic.com>
+# Date 1515148271 -3600
+#      Fri Jan 05 11:31:11 2018 +0100
+# Branch 3.4
+# Node ID e2a33b6e1f6eedf7f03a7b89cf53cb3757853bb2
+# Parent  733523deed8932c706443586a4e2b4710ca72501
+filestore
+
+diff -r 733523deed89 -r e2a33b6e1f6e CHANGELOG
+--- a/CHANGELOG	Thu Jan 04 17:33:07 2018 +0100
++++ b/CHANGELOG	Fri Jan 05 11:31:11 2018 +0100
+@@ -1,3 +1,5 @@
++* Add filestore module
++
+ Version 3.4.18 - 2017-06-05
+ * Bug fixes (see mercurial logs for details)
+ 
+diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/filestore.rst
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/doc/ref/filestore.rst	Fri Jan 05 11:31:11 2018 +0100
+@@ -0,0 +1,42 @@
++.. _ref-filestore:
++.. module:: trytond.filestore
++
++=========
++FileStore
++=========
++
++.. class:: FileStore()
++
++The class is used to store and retrieve files from the directory defined in the
++configuration `path` of `database` section. It uses a two levels of directory
++composed of the 2 chars of the file hash. It is an append only storage.
++
++.. method:: get(id[, prefix])
++
++Retrieve the content of the file referred by the id in the prefixed directory.
++
++.. method:: getmany(ids[, prefix])
++
++Retrieve a list of contents for the sequence of ids.
++
++.. method:: size(id[, prefix])
++
++Return the size of the file referred by the id in the prefixed directory.
++
++.. method:: sizemany(ids[, prefix])
++
++Return a list of sizes for the sequence of ids.
++
++.. method:: set(data[, prefix])
++
++Store the data in the prefixed directory and return the identifiers.
++
++.. method:: setmany(data[, prefix])
++
++Store the sequence of data and return a list of identifiers.
++
++.. note::
++    The class can be overridden by setting a fully qualified name of a
++    alternative class defined in the configuration `class` of the `database`
++    section.
++..
+diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/index.rst
+--- a/doc/ref/index.rst	Thu Jan 04 17:33:07 2018 +0100
++++ b/doc/ref/index.rst	Fri Jan 05 11:31:11 2018 +0100
+@@ -11,6 +11,7 @@
+     wizard
+     pyson
+     transaction
+-    tools/singleton
++    tools/index
+     pool
+     rpc
++    filestore
+diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/tools/index.rst
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/doc/ref/tools/index.rst	Fri Jan 05 11:31:11 2018 +0100
+@@ -0,0 +1,13 @@
++.. _ref-tools-index:
++
++=====
++Tools
++=====
++
++Tools API reference.
++
++.. toctree::
++    :maxdepth: 1
++
++    misc
++    singleton
+diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/tools/misc.rst
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/doc/ref/tools/misc.rst	Fri Jan 05 11:31:11 2018 +0100
+@@ -0,0 +1,10 @@
++.. _ref-tools:
++.. module:: trytond.tools
++
++=============
++Miscellaneous
++=============
++
++.. method:: resolve(name)
++
++Resolve a dotted name to a global object.
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/filestore.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/filestore.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -0,0 +1,67 @@
++# This file is part of Tryton.  The COPYRIGHT file at the top level of
++# this repository contains the full copyright notices and license terms.
++import os
++import hashlib
++
++from trytond.config import config
++from trytond.tools import resolve
++
++__all__ = ['filestore']
++
++
++class FileStore(object):
++
++    def get(self, id, prefix=''):
++        filename = self._filename(id, prefix)
++        with open(filename, 'rb') as fp:
++            return fp.read()
++
++    def getmany(self, ids, prefix=''):
++        return [self.get(id, prefix) for id in ids]
++
++    def size(self, id, prefix=''):
++        filename = self._filename(id, prefix)
++        statinfo = os.stat(filename)
++        return statinfo.st_size
++
++    def sizemany(self, ids, prefix=''):
++        return [self.size(id, prefix) for id in ids]
++
++    def set(self, data, prefix=''):
++        id = self._id(data)
++        filename = self._filename(id, prefix)
++        dirname = os.path.dirname(filename)
++        if not os.path.exists(dirname):
++            os.makedirs(dirname, 0770)
++
++        collision = 0
++        while True:
++            basename = os.path.basename(filename)
++            if os.path.exists(filename):
++                if data != self.get(basename, prefix):
++                    collision += 1
++                    filename = self._filename(
++                        '%s-%s' % (id, collision), prefix)
++                    continue
++            else:
++                with open(filename, 'wb')as fp:
++                    fp.write(data)
++            return basename
++
++    def setmany(self, data, prefix=''):
++        return [self.set(d, prefix) for d in data]
++
++    def _filename(self, id, prefix):
++        path = os.path.normpath(config.get('database', 'path'))
++        filename = os.path.join(path, prefix, id[0:2], id[2:4], id)
++        filename = os.path.normpath(filename)
++        if not filename.startswith(path):
++            raise ValueError('Bad prefix')
++        return filename
++
++    def _id(self, data):
++        return hashlib.md5(data).hexdigest()
++
++if config.get('database', 'class'):
++    FileStore = resolve(config.get('database', 'class'))
++filestore = FileStore()
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
+--- a/trytond/ir/attachment.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/ir/attachment.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -1,15 +1,16 @@
+-#This file is part of Tryton.  The COPYRIGHT file at the top level of
+-#this repository contains the full copyright notices and license terms.
+-import os
+-import hashlib
++# This file is part of Tryton.  The COPYRIGHT file at the top level of
++# this repository contains the full copyright notices and license terms.
++from sql import Null
+ from sql.operators import Concat
+ 
+ from ..model import ModelView, ModelSQL, fields
+-from ..config import config
+ from .. import backend
+ from ..transaction import Transaction
+ from ..pyson import Eval
+-from ..pool import Pool
++from .resource import ResourceMixin
++from ..filestore import filestore
++from ..config import config
++
+ 
+ __all__ = [
+     'Attachment',
+@@ -22,8 +23,15 @@
+     except StopIteration:
+         return ''
+ 
++if config.getboolean('attachment', 'filestore', default=True):
++    file_id = 'file_id'
++    store_prefix = config.get('attachment', 'store_prefix', default=None)
++else:
++    file_id = None
++    store_prefix = None
+ 
+-class Attachment(ModelSQL, ModelView):
++
++class Attachment(ResourceMixin, ModelSQL, ModelView):
+     "Attachment"
+     __name__ = 'ir.attachment'
+     name = fields.Char('Name', required=True)
+@@ -31,25 +39,20 @@
+         ('data', 'Data'),
+         ('link', 'Link'),
+         ], 'Type', required=True)
+-    data = fields.Function(fields.Binary('Data', filename='name', states={
+-                'invisible': Eval('type') != 'data',
+-                }, depends=['type']), 'get_data', setter='set_data')
++    data = fields.Binary('Data', filename='name',
++        file_id=file_id, store_prefix=store_prefix,
++        states={
++            'invisible': Eval('type') != 'data',
++            }, depends=['type'])
+     description = fields.Text('Description')
+     summary = fields.Function(fields.Char('Summary'), 'on_change_with_summary')
+-    resource = fields.Reference('Resource', selection='models_get',
+-        select=True)
+     link = fields.Char('Link', states={
+             'invisible': Eval('type') != 'link',
+             }, depends=['type'])
+-    digest = fields.Char('Digest', size=32)
+-    collision = fields.Integer('Collision')
++    file_id = fields.Char('File ID', readonly=True)
+     data_size = fields.Function(fields.Integer('Data size', states={
+                 'invisible': Eval('type') != 'data',
+-                }, depends=['type']), 'get_data')
+-    last_modification = fields.Function(fields.DateTime('Last Modification'),
+-        'get_last_modification')
+-    last_user = fields.Function(fields.Char('Last User'),
+-        'get_last_user')
++                }, depends=['type']), 'get_size')
+ 
+     @classmethod
+     def __setup__(cls):
+@@ -81,172 +84,33 @@
+             table.drop_column('res_model')
+             table.drop_column('res_id')
+ 
++        # Migration from 4.0: merge digest and collision into file_id
++        if table.column_exist('digest') and table.column_exist('collision'):
++            cursor.execute(*attachment.update(
++                    [attachment.file_id],
++                    [attachment.digest],
++                    where=(attachment.collision == 0)
++                    | (attachment.collision == Null)))
++            cursor.execute(*attachment.update(
++                    [attachment.file_id],
++                    [Concat(Concat(attachment.digest, '-'),
++                            attachment.collision)],
++                    where=(attachment.collision != 0)
++                    & (attachment.collision != Null)))
++            table.drop_column('digest')
++            table.drop_column('collision')
++
+     @staticmethod
+     def default_type():
+         return 'data'
+ 
+-    @staticmethod
+-    def default_resource():
+-        return Transaction().context.get('resource')
+-
+-    @staticmethod
+-    def default_collision():
+-        return 0
+-
+-    @staticmethod
+-    def models_get():
+-        pool = Pool()
+-        Model = pool.get('ir.model')
+-        ModelAccess = pool.get('ir.model.access')
+-        models = Model.search([])
+-        access = ModelAccess.get_access([m.model for m in models])
+-        res = []
+-        for model in models:
+-            if access[model.model]['read']:
+-                res.append([model.model, model.name])
+-        return res
+-
+-    def get_data(self, name):
+-        db_name = Transaction().cursor.dbname
+-        format_ = Transaction().context.pop('%s.%s'
+-            % (self.__name__, name), '')
+-        value = None
+-        if name == 'data_size' or format_ == 'size':
+-            value = 0
+-        if self.digest:
+-            filename = self.digest
+-            if self.collision:
+-                filename = filename + '-' + str(self.collision)
+-            filename = os.path.join(config.get('database', 'path'), db_name,
+-                    filename[0:2], filename[2:4], filename)
+-            if name == 'data_size' or format_ == 'size':
+-                try:
+-                    statinfo = os.stat(filename)
+-                    value = statinfo.st_size
+-                except OSError:
+-                    pass
+-            else:
+-                try:
+-                    with open(filename, 'rb') as file_p:
+-                        value = buffer(file_p.read())
+-                except IOError:
+-                    pass
+-        return value
+-
+-    @classmethod
+-    def set_data(cls, attachments, name, value):
+-        if value is None:
+-            return
+-        cursor = Transaction().cursor
+-        table = cls.__table__()
+-        db_name = cursor.dbname
+-        directory = os.path.join(config.get('database', 'path'), db_name)
+-        if not os.path.isdir(directory):
+-            os.makedirs(directory, 0770)
+-        digest = hashlib.md5(value).hexdigest()
+-        directory = os.path.join(directory, digest[0:2], digest[2:4])
+-        if not os.path.isdir(directory):
+-            os.makedirs(directory, 0770)
+-        filename = os.path.join(directory, digest)
+-        collision = 0
+-        if os.path.isfile(filename):
+-            with open(filename, 'rb') as file_p:
+-                data = file_p.read()
+-            if value != data:
+-                cursor.execute(*table.select(table.collision,
+-                        where=(table.digest == digest)
+-                        & (table.collision != 0),
+-                        group_by=table.collision,
+-                        order_by=table.collision))
+-                collision2 = 0
+-                for row in cursor.fetchall():
+-                    collision2 = row[0]
+-                    filename = os.path.join(directory,
+-                            digest + '-' + str(collision2))
+-                    if os.path.isfile(filename):
+-                        with open(filename, 'rb') as file_p:
+-                            data = file_p.read()
+-                        if value == data:
+-                            collision = collision2
+-                            break
+-                if collision == 0:
+-                    collision = collision2 + 1
+-                    filename = os.path.join(directory,
+-                            digest + '-' + str(collision))
+-                    with open(filename, 'wb') as file_p:
+-                        file_p.write(value)
+-        else:
+-            with open(filename, 'wb') as file_p:
+-                file_p.write(value)
+-        cls.write(attachments, {
+-            'digest': digest,
+-            'collision': collision,
+-            })
++    def get_size(self, name):
++        with Transaction().set_context({
++                    '%s.%s' % (self.__name__, name): 'size',
++                    }):
++            record = self.__class__(self.id)
++            return record.data
+ 
+     @fields.depends('description')
+     def on_change_with_summary(self, name=None):
+         return firstline(self.description or '')
+-
+-    def get_last_modification(self, name):
+-        return (self.write_date if self.write_date else self.create_date
+-            ).replace(microsecond=0)
+-
+-    def get_last_user(self, name):
+-        return (self.write_uid.rec_name if self.write_uid
+-            else self.create_uid.rec_name)
+-
+-    @classmethod
+-    def check_access(cls, ids, mode='read'):
+-        pool = Pool()
+-        ModelAccess = pool.get('ir.model.access')
+-        if ((Transaction().user == 0)
+-                or not Transaction().context.get('_check_access')):
+-            return
+-        model_names = set()
+-        with Transaction().set_context(_check_access=False):
+-            for attachment in cls.browse(ids):
+-                if attachment.resource:
+-                    model_names.add(attachment.resource.__name__)
+-        for model_name in model_names:
+-            ModelAccess.check(model_name, mode=mode)
+-
+-    @classmethod
+-    def read(cls, ids, fields_names=None):
+-        cls.check_access(ids, mode='read')
+-        return super(Attachment, cls).read(ids, fields_names=fields_names)
+-
+-    @classmethod
+-    def delete(cls, attachments):
+-        cls.check_access([a.id for a in attachments], mode='delete')
+-        super(Attachment, cls).delete(attachments)
+-
+-    @classmethod
+-    def write(cls, attachments, values, *args):
+-        all_attachments = []
+-        actions = iter((attachments, values) + args)
+-        for records, _ in zip(actions, actions):
+-            all_attachments += records
+-        cls.check_access([a.id for a in all_attachments], mode='write')
+-        super(Attachment, cls).write(attachments, values, *args)
+-        cls.check_access(all_attachments, mode='write')
+-
+-    @classmethod
+-    def create(cls, vlist):
+-        attachments = super(Attachment, cls).create(vlist)
+-        cls.check_access([a.id for a in attachments], mode='create')
+-        return attachments
+-
+-    @classmethod
+-    def view_header_get(cls, value, view_type='form'):
+-        pool = Pool()
+-        Model = pool.get('ir.model')
+-        value = super(Attachment, cls).view_header_get(value,
+-                view_type=view_type)
+-        resource = Transaction().context.get('resource')
+-        if resource:
+-            model_name, record_id = resource.split(',', 1)
+-            ir_model, = Model.search([('model', '=', model_name)])
+-            Resource = pool.get(model_name)
+-            record = Resource(int(record_id))
+-            value = '%s - %s - %s' % (ir_model.name, record.rec_name, value)
+-        return value
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/binary.py
+--- a/trytond/model/fields/binary.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/model/fields/binary.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -1,10 +1,12 @@
+ #This file is part of Tryton.  The COPYRIGHT file at the top level of
+ #this repository contains the full copyright notices and license terms.
+-from sql import Query, Expression
++from sql import Query, Expression, Column, Null
+ 
+ from .field import Field, SQLType
+ from ...transaction import Transaction
+ from ... import backend
++from ...tools import grouped_slice, reduce_ids
++from ...filestore import filestore
+ 
+ 
+ class Binary(Field):
+@@ -12,26 +14,28 @@
+     Define a binary field (``str``).
+     '''
+     _type = 'binary'
++    cast = buffer
+ 
+     def __init__(self, string='', help='', required=False, readonly=False,
+             domain=None, states=None, select=False, on_change=None,
+             on_change_with=None, depends=None, filename=None, context=None,
+-            loading='lazy'):
++            loading='lazy', file_id=None, store_prefix=None):
+         if filename is not None:
+             self.filename = filename
+             if depends is None:
+                 depends = [filename]
+             else:
+                 depends.append(filename)
++        self.file_id = file_id
++        self.store_prefix = store_prefix
+         super(Binary, self).__init__(string=string, help=help,
+             required=required, readonly=readonly, domain=domain, states=states,
+             select=select, on_change=on_change, on_change_with=on_change_with,
+             depends=depends, context=context, loading=loading)
+ 
+-    @staticmethod
+-    def get(ids, model, name, values=None):
++    def get(self, ids, model, name, values=None):
+         '''
+-        Convert the binary value into ``str``
++        Convert the binary value into ``bytes``
+ 
+         :param ids: a list of ids
+         :param model: a string with the name of the model
+@@ -41,20 +45,78 @@
+         '''
+         if values is None:
+             values = {}
++        transaction = Transaction()
+         res = {}
+-        converter = buffer
++        converter = self.cast
+         default = None
+-        format_ = Transaction().context.pop('%s.%s' % (model.__name__, name),
+-            '')
++        format_ = Transaction().context.get(
++            '%s.%s' % (model.__name__, name), '')
+         if format_ == 'size':
+             converter = len
+             default = 0
++
++        if self.file_id:
++            table = model.__table__()
++            cursor = transaction.cursor
++
++            prefix = self.store_prefix
++            if prefix is None:
++                prefix = transaction.database.database_name
++
++            if format_ == 'size':
++                store_func = filestore.size
++            else:
++                def store_func(id, prefix):
++                    return self.cast(filestore.get(id, prefix=prefix))
++
++            for sub_ids in grouped_slice(ids):
++                cursor.execute(*table.select(
++                        table.id, Column(table, self.file_id),
++                        where=reduce_ids(table.id, sub_ids)
++                        & (Column(table, self.file_id) != Null)
++                        & (Column(table, self.file_id) != '')))
++                for record_id, file_id in cursor.fetchall():
++                    try:
++                        res[record_id] = store_func(file_id, prefix)
++                    except (IOError, OSError):
++                        pass
++
+         for i in values:
+-            res[i['id']] = converter(i[name]) if i[name] else default
++            if i['id'] in res:
++                continue
++            value = i[name]
++            if value:
++                if isinstance(value, unicode):
++                    value = value.encode('utf-8')
++                value = converter(value)
++            else:
++                value = default
++            res[i['id']] = value
+         for i in ids:
+             res.setdefault(i, default)
+         return res
+ 
++    def set(self, Model, name, ids, value, *args):
++        transaction = Transaction()
++        table = Model.__table__()
++        cursor = transaction.cursor
++
++        prefix = self.store_prefix
++        if prefix is None:
++            prefix = transaction.database.database_name
++
++        args = iter((ids, value) + args)
++        for ids, value in zip(args, args):
++            if self.file_id:
++                columns = [Column(table, self.file_id), Column(table, name)]
++                values = [
++                    filestore.set(value, prefix) if value else None, None]
++            else:
++                columns = [Column(table, name)]
++                values = [self.sql_format(value)]
++            cursor.execute(*table.update(columns, values,
++                    where=reduce_ids(table.id, ids)))
++
+     @staticmethod
+     def sql_format(value):
+         if isinstance(value, (Query, Expression)):
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/field.py
+--- a/trytond/model/fields/field.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/model/fields/field.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -236,7 +236,7 @@
+         return value
+ 
+     def sql_type(self):
+-        raise NotImplementedError
++        return None
+ 
+     def sql_column(self, table):
+         return Column(table, self.name)
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/function.py
+--- a/trytond/model/fields/function.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/model/fields/function.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -57,6 +57,9 @@
+                 return
+         setattr(self._field, name, value)
+ 
++    def sql_type(self):
++        return None
++
+     def convert_domain(self, domain, tables, Model):
+         name, operator, value = domain[:3]
+         if not self.searcher:
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/modelsql.py
+--- a/trytond/model/modelsql.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/model/modelsql.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -83,11 +83,10 @@
+         for field_name, field in cls._fields.iteritems():
+             if field_name == 'id':
+                 continue
++            sql_type = field.sql_type()
++            if not sql_type:
++                continue
+             default_fun = None
+-            try:
+-                sql_type = field.sql_type()
+-            except NotImplementedError:
+-                continue
+             if field_name in cls._defaults:
+                 default_fun = cls._defaults[field_name]
+ 
+@@ -134,6 +133,10 @@
+                 field_name, action=field.select and 'add' or 'remove')
+ 
+             required = field.required
++            # Do not set 'NOT NULL' for Binary field stored in the filestore
++            # as the database column will be left empty.
++            if isinstance(field, fields.Binary) and field.file_id:
++                required = False
+             table.not_null_action(
+                 field_name, action=required and 'add' or 'remove')
+ 
+@@ -163,7 +166,7 @@
+                 cursor.execute(*history_table.select(history_table.id))
+                 if not cursor.fetchone():
+                     columns = [n for n, f in cls._fields.iteritems()
+-                        if not hasattr(f, 'set')]
++                          if f.sql_type()]
+                     cursor.execute(*history_table.insert(
+                             [Column(history_table, c) for c in columns],
+                             sql_table.select(*(Column(sql_table, c)
+@@ -210,7 +213,7 @@
+             field = cls._fields[field_name]
+             # Check required fields
+             if (field.required
+-                    and not hasattr(field, 'set')
++                    and field.sql_type()
+                     and field_name not in ('create_uid', 'create_date')):
+                 if values.get(field_name) is None:
+                     cls.raise_user_error('required_field',
+@@ -290,7 +293,7 @@
+                 'write_date': cls.write_date,
+                 }
+         for fname, field in sorted(fields.iteritems()):
+-            if hasattr(field, 'set'):
++            if not field.sql_type():
+                 continue
+             columns.append(Column(table, fname))
+             hcolumns.append(Column(history, fname))
+@@ -315,7 +318,7 @@
+         columns = []
+         hcolumns = []
+         fnames = sorted(n for n, f in cls._fields.iteritems()
+-            if not hasattr(f, 'set'))
++             if f.sql_type())
+         for fname in fnames:
+             columns.append(Column(table, fname))
+             if fname == 'write_uid':
+@@ -561,8 +564,9 @@
+ 
+         columns = []
+         for f in fields_names + fields_related.keys() + datetime_fields:
+-            if (f in cls._fields and not hasattr(cls._fields[f], 'set')):
+-                columns.append(Column(table, f).as_(f))
++            field = cls._fields.get(f)
++            if field and field.sql_type():
++                columns.append(field.sql_column(table).as_(f))
+             elif f == '_timestamp' and not table_query:
+                 sql_type = fields.Char('timestamp').sql_type().base
+                 columns.append(Extract('EPOCH',
+diff -r 733523deed89 -r e2a33b6e1f6e trytond/tools/misc.py
+--- a/trytond/tools/misc.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/tools/misc.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -14,6 +14,7 @@
+ from array import array
+ from itertools import islice
+ import urllib
++import importlib
+ 
+ from sql import Literal
+ from sql.operators import Or
+@@ -435,3 +436,16 @@
+         count = Transaction().cursor.IN_MAX
+     for i in xrange(0, len(records), count):
+         yield islice(records, i, i + count)
++
++def resolve(name):
++    "Resolve a dotted name to a global object."
++    name = name.split('.')
++    used = name.pop(0)
++    found = importlib.import_module(used)
++    for n in name:
++        used = used + '.' + n
++        try:
++            found = getattr(found, n)
++        except AttributeError:
++            found = importlib.import_module(used)
++    return found
