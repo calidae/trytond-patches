@@ -3,22 +3,22 @@
 # Date 1515148271 -3600
 #      Fri Jan 05 11:31:11 2018 +0100
 # Branch 3.4
-# Node ID e2a33b6e1f6eedf7f03a7b89cf53cb3757853bb2
+# Node ID c6ec90e7167473144118e1aa8ca4892ff87d1970
 # Parent  733523deed8932c706443586a4e2b4710ca72501
 filestore
 
-diff -r 733523deed89 -r e2a33b6e1f6e CHANGELOG
---- a/CHANGELOG	Thu Jan 04 17:33:07 2018 +0100
-+++ b/CHANGELOG	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 CHANGELOG
+--- a/trytond/CHANGELOG	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/CHANGELOG	Fri Jan 05 11:31:11 2018 +0100
 @@ -1,3 +1,5 @@
 +* Add filestore module
 +
  Version 3.4.18 - 2017-06-05
  * Bug fixes (see mercurial logs for details)
- 
-diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/filestore.rst
+
+diff -r 733523deed89 -r c6ec90e71674 doc/ref/filestore.rst
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/doc/ref/filestore.rst	Fri Jan 05 11:31:11 2018 +0100
++++ b/trytond/doc/ref/filestore.rst	Fri Jan 05 11:31:11 2018 +0100
 @@ -0,0 +1,42 @@
 +.. _ref-filestore:
 +.. module:: trytond.filestore
@@ -62,9 +62,9 @@ diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/filestore.rst
 +    alternative class defined in the configuration `class` of the `database`
 +    section.
 +..
-diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/index.rst
---- a/doc/ref/index.rst	Thu Jan 04 17:33:07 2018 +0100
-+++ b/doc/ref/index.rst	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 doc/ref/index.rst
+--- a/trytond/doc/ref/index.rst	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/doc/ref/index.rst	Fri Jan 05 11:31:11 2018 +0100
 @@ -11,6 +11,7 @@
      wizard
      pyson
@@ -74,9 +74,9 @@ diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/index.rst
      pool
      rpc
 +    filestore
-diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/tools/index.rst
+diff -r 733523deed89 -r c6ec90e71674 doc/ref/tools/index.rst
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/doc/ref/tools/index.rst	Fri Jan 05 11:31:11 2018 +0100
++++ b/trytond/doc/ref/tools/index.rst	Fri Jan 05 11:31:11 2018 +0100
 @@ -0,0 +1,13 @@
 +.. _ref-tools-index:
 +
@@ -91,9 +91,9 @@ diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/tools/index.rst
 +
 +    misc
 +    singleton
-diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/tools/misc.rst
+diff -r 733523deed89 -r c6ec90e71674 doc/ref/tools/misc.rst
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/doc/ref/tools/misc.rst	Fri Jan 05 11:31:11 2018 +0100
++++ b/trytond/doc/ref/tools/misc.rst	Fri Jan 05 11:31:11 2018 +0100
 @@ -0,0 +1,10 @@
 +.. _ref-tools:
 +.. module:: trytond.tools
@@ -105,9 +105,9 @@ diff -r 733523deed89 -r e2a33b6e1f6e doc/ref/tools/misc.rst
 +.. method:: resolve(name)
 +
 +Resolve a dotted name to a global object.
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/filestore.py
+diff -r 733523deed89 -r c6ec90e71674 trytond/filestore.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/trytond/filestore.py	Fri Jan 05 11:31:11 2018 +0100
++++ b/trytond/trytond/filestore.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -0,0 +1,67 @@
 +# This file is part of Tryton.  The COPYRIGHT file at the top level of
 +# this repository contains the full copyright notices and license terms.
@@ -176,9 +176,9 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/filestore.py
 +if config.get('database', 'class'):
 +    FileStore = resolve(config.get('database', 'class'))
 +filestore = FileStore()
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
---- a/trytond/ir/attachment.py	Thu Jan 04 17:33:07 2018 +0100
-+++ b/trytond/ir/attachment.py	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 trytond/ir/attachment.py
+--- a/trytond/trytond/ir/attachment.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/trytond/ir/attachment.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -1,15 +1,16 @@
 -#This file is part of Tryton.  The COPYRIGHT file at the top level of
 -#this repository contains the full copyright notices and license terms.
@@ -188,7 +188,7 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
 +# this repository contains the full copyright notices and license terms.
 +from sql import Null
  from sql.operators import Concat
- 
+
  from ..model import ModelView, ModelSQL, fields
 -from ..config import config
  from .. import backend
@@ -199,20 +199,20 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
 +from ..filestore import filestore
 +from ..config import config
 +
- 
+
  __all__ = [
      'Attachment',
 @@ -22,8 +23,15 @@
      except StopIteration:
          return ''
- 
+
 +if config.getboolean('attachment', 'filestore', default=True):
 +    file_id = 'file_id'
 +    store_prefix = config.get('attachment', 'store_prefix', default=None)
 +else:
 +    file_id = None
 +    store_prefix = None
- 
+
 -class Attachment(ModelSQL, ModelView):
 +
 +class Attachment(ResourceMixin, ModelSQL, ModelView):
@@ -249,13 +249,13 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
 -    last_user = fields.Function(fields.Char('Last User'),
 -        'get_last_user')
 +                }, depends=['type']), 'get_size')
- 
+
      @classmethod
      def __setup__(cls):
 @@ -81,172 +84,33 @@
              table.drop_column('res_model')
              table.drop_column('res_id')
- 
+
 +        # Migration from 4.0: merge digest and collision into file_id
 +        if table.column_exist('digest') and table.column_exist('collision'):
 +            cursor.execute(*attachment.update(
@@ -275,7 +275,7 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
      @staticmethod
      def default_type():
          return 'data'
- 
+
 -    @staticmethod
 -    def default_resource():
 -        return Transaction().context.get('resource')
@@ -379,7 +379,7 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
 +                    }):
 +            record = self.__class__(self.id)
 +            return record.data
- 
+
      @fields.depends('description')
      def on_change_with_summary(self, name=None):
          return firstline(self.description or '')
@@ -447,29 +447,131 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/ir/attachment.py
 -            record = Resource(int(record_id))
 -            value = '%s - %s - %s' % (ir_model.name, record.rec_name, value)
 -        return value
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/binary.py
---- a/trytond/model/fields/binary.py	Thu Jan 04 17:33:07 2018 +0100
-+++ b/trytond/model/fields/binary.py	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 trytond/ir/resource.py
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/trytond/trytond/ir/resource.py	Fri Jan 05 11:31:11 2018 +0100
+@@ -0,0 +1,98 @@
++# This file is part of Tryton.  The COPYRIGHT file at the top level of
++# this repository contains the full copyright notices and license terms.
++from sql.conditionals import Coalesce
++
++from ..model import ModelSQL, ModelView, fields
++from ..pool import Pool
++from ..transaction import Transaction
++from ..pyson import Eval
++
++__all__ = ['ResourceMixin']
++
++
++class ResourceMixin(ModelSQL, ModelView):
++
++    resource = fields.Reference('Resource', selection='get_models',
++        required=True, select=True)
++    last_user = fields.Function(fields.Char('Last User',
++            states={
++                'invisible': ~Eval('last_user'),
++                }),
++        'get_last_user')
++    last_modification = fields.Function(fields.DateTime('Last Modification',
++            states={
++                'invisible': ~Eval('last_modification'),
++                }),
++        'get_last_modification')
++
++    @classmethod
++    def __setup__(cls):
++        super(ResourceMixin, cls).__setup__()
++        cls._order.insert(0, ('last_modification', 'DESC'))
++
++    @staticmethod
++    def default_resource():
++        return Transaction().context.get('resource')
++
++    @staticmethod
++    def get_models():
++        pool = Pool()
++        Model = pool.get('ir.model')
++        ModelAccess = pool.get('ir.model.access')
++        models = Model.search([])
++        access = ModelAccess.get_access([m.model for m in models])
++        return [(m.model, m.name) for m in models if access[m.model]['read']]
++
++    def get_last_user(self, name):
++        return (self.write_uid.rec_name if self.write_uid
++            else self.create_uid.rec_name)
++
++    def get_last_modification(self, name):
++        return (self.write_date if self.write_date else self.create_date
++            ).replace(microsecond=0)
++
++    @staticmethod
++    def order_last_modification(tables):
++        table, _ = tables[None]
++        return [Coalesce(table.write_date, table.create_date)]
++
++    @classmethod
++    def check_access(cls, ids, mode='read'):
++        pool = Pool()
++        ModelAccess = pool.get('ir.model.access')
++        if ((Transaction().user == 0)
++                or not Transaction().context.get('_check_access')):
++            return
++        model_names = set()
++        with Transaction().set_context(_check_access=False):
++            for record in cls.browse(ids):
++                if record.resource:
++                    model_names.add(str(record.resource).split(',')[0])
++        for model_name in model_names:
++            ModelAccess.check(model_name, mode=mode)
++
++    @classmethod
++    def read(cls, ids, fields_names=None):
++        cls.check_access(ids, mode='read')
++        return super(ResourceMixin, cls).read(ids, fields_names=fields_names)
++
++    @classmethod
++    def delete(cls, records):
++        cls.check_access([a.id for a in records], mode='delete')
++        super(ResourceMixin, cls).delete(records)
++
++    @classmethod
++    def write(cls, records, values, *args):
++        all_records = []
++        actions = iter((records, values) + args)
++        for other_records, _ in zip(actions, actions):
++            all_records += other_records
++        cls.check_access([a.id for a in all_records], mode='write')
++        super(ResourceMixin, cls).write(records, values, *args)
++        cls.check_access(all_records, mode='write')
++
++    @classmethod
++    def create(cls, vlist):
++        records = super(ResourceMixin, cls).create(vlist)
++        cls.check_access([r.id for r in records], mode='create')
++        return records
+diff -r 733523deed89 -r c6ec90e71674 trytond/model/fields/binary.py
+--- a/trytond/trytond/model/fields/binary.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/trytond/model/fields/binary.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -1,10 +1,12 @@
  #This file is part of Tryton.  The COPYRIGHT file at the top level of
  #this repository contains the full copyright notices and license terms.
 -from sql import Query, Expression
 +from sql import Query, Expression, Column, Null
- 
+
  from .field import Field, SQLType
  from ...transaction import Transaction
  from ... import backend
 +from ...tools import grouped_slice, reduce_ids
 +from ...filestore import filestore
- 
- 
+
+
  class Binary(Field):
 @@ -12,26 +14,28 @@
      Define a binary field (``str``).
      '''
      _type = 'binary'
 +    cast = buffer
- 
+
      def __init__(self, string='', help='', required=False, readonly=False,
              domain=None, states=None, select=False, on_change=None,
              on_change_with=None, depends=None, filename=None, context=None,
@@ -487,17 +589,17 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/binary.py
              required=required, readonly=readonly, domain=domain, states=states,
              select=select, on_change=on_change, on_change_with=on_change_with,
              depends=depends, context=context, loading=loading)
- 
+
 -    @staticmethod
 -    def get(ids, model, name, values=None):
 +    def get(self, ids, model, name, values=None):
          '''
 -        Convert the binary value into ``str``
 +        Convert the binary value into ``bytes``
- 
+
          :param ids: a list of ids
          :param model: a string with the name of the model
-@@ -41,20 +45,78 @@
+@@ -41,20 +45,81 @@
          '''
          if values is None:
              values = {}
@@ -555,8 +657,11 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/binary.py
          for i in ids:
              res.setdefault(i, default)
          return res
- 
+
 +    def set(self, Model, name, ids, value, *args):
++        print "Model:", Model, "name:", name, "ids", ids
++        print "arge:", args
++
 +        transaction = Transaction()
 +        table = Model.__table__()
 +        cursor = transaction.cursor
@@ -580,34 +685,34 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/binary.py
      @staticmethod
      def sql_format(value):
          if isinstance(value, (Query, Expression)):
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/field.py
---- a/trytond/model/fields/field.py	Thu Jan 04 17:33:07 2018 +0100
-+++ b/trytond/model/fields/field.py	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 trytond/model/fields/field.py
+--- a/trytond/trytond/model/fields/field.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/trytond/model/fields/field.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -236,7 +236,7 @@
          return value
- 
+
      def sql_type(self):
 -        raise NotImplementedError
 +        return None
- 
+
      def sql_column(self, table):
          return Column(table, self.name)
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/fields/function.py
---- a/trytond/model/fields/function.py	Thu Jan 04 17:33:07 2018 +0100
-+++ b/trytond/model/fields/function.py	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 trytond/model/fields/function.py
+--- a/trytond/trytond/model/fields/function.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/trytond/model/fields/function.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -57,6 +57,9 @@
                  return
          setattr(self._field, name, value)
- 
+
 +    def sql_type(self):
 +        return None
 +
      def convert_domain(self, domain, tables, Model):
          name, operator, value = domain[:3]
          if not self.searcher:
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/modelsql.py
---- a/trytond/model/modelsql.py	Thu Jan 04 17:33:07 2018 +0100
-+++ b/trytond/model/modelsql.py	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 trytond/model/modelsql.py
+--- a/trytond/trytond/model/modelsql.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/trytond/model/modelsql.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -83,11 +83,10 @@
          for field_name, field in cls._fields.iteritems():
              if field_name == 'id':
@@ -622,10 +727,10 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/modelsql.py
 -                continue
              if field_name in cls._defaults:
                  default_fun = cls._defaults[field_name]
- 
+
 @@ -134,6 +133,10 @@
                  field_name, action=field.select and 'add' or 'remove')
- 
+
              required = field.required
 +            # Do not set 'NOT NULL' for Binary field stored in the filestore
 +            # as the database column will be left empty.
@@ -633,7 +738,7 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/modelsql.py
 +                required = False
              table.not_null_action(
                  field_name, action=required and 'add' or 'remove')
- 
+
 @@ -163,7 +166,7 @@
                  cursor.execute(*history_table.select(history_table.id))
                  if not cursor.fetchone():
@@ -671,7 +776,7 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/modelsql.py
              columns.append(Column(table, fname))
              if fname == 'write_uid':
 @@ -561,8 +564,9 @@
- 
+
          columns = []
          for f in fields_names + fields_related.keys() + datetime_fields:
 -            if (f in cls._fields and not hasattr(cls._fields[f], 'set')):
@@ -682,15 +787,15 @@ diff -r 733523deed89 -r e2a33b6e1f6e trytond/model/modelsql.py
              elif f == '_timestamp' and not table_query:
                  sql_type = fields.Char('timestamp').sql_type().base
                  columns.append(Extract('EPOCH',
-diff -r 733523deed89 -r e2a33b6e1f6e trytond/tools/misc.py
---- a/trytond/tools/misc.py	Thu Jan 04 17:33:07 2018 +0100
-+++ b/trytond/tools/misc.py	Fri Jan 05 11:31:11 2018 +0100
+diff -r 733523deed89 -r c6ec90e71674 trytond/tools/misc.py
+--- a/trytond/trytond/tools/misc.py	Thu Jan 04 17:33:07 2018 +0100
++++ b/trytond/trytond/tools/misc.py	Fri Jan 05 11:31:11 2018 +0100
 @@ -14,6 +14,7 @@
  from array import array
  from itertools import islice
  import urllib
 +import importlib
- 
+
  from sql import Literal
  from sql.operators import Or
 @@ -435,3 +436,16 @@
