@@ -659,8 +659,8 @@ diff -r 733523deed89 -r c6ec90e71674 trytond/model/fields/binary.py
          return res
 
 +    def set(self, Model, name, ids, value, *args):
-+        print "Model:", Model, "name:", name, "ids", ids
-+        print "arge:", args
++        
++       
 +
 +        transaction = Transaction()
 +        table = Model.__table__()
