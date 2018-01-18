@@ -1,0 +1,41 @@
+diff -r 096004a93da6 trytond/trytond/modules/account_invoice/invoice.py
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Thu Jan 18 13:57:46 2018 +0100
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Thu Jan 18 14:43:12 2018 +0100
+@@ -2665,11 +2665,11 @@
+         refund = self.start.with_refund
+         invoices = Invoice.browse(Transaction().context['active_ids'])
+ 
+-        if refund:
+-            for invoice in invoices:
+-                if invoice.state != 'posted':
+-                    self.raise_user_error('refund_non_posted',
+-                        (invoice.rec_name,))
++        for invoice in invoices:
++            if invoice.state != 'posted':
++                self.raise_user_error('invoice_non_posted',
++                    (invoice.rec_name,))
++            if refund:
+                 if invoice.payment_lines:
+                     self.raise_user_error('refund_with_payement',
+                         (invoice.rec_name,))
+diff -r 096004a93da6 trytond/trytond/modules/account_invoice/tests/scenario_invoice.rst
+--- a/trytond/trytond/modules/account_invoice/tests/scenario_invoice.rst	Thu Jan 18 13:57:46 2018 +0100
++++ b/trytond/trytond/modules/account_invoice/tests/scenario_invoice.rst	Thu Jan 18 14:43:12 2018 +0100
+@@ -139,6 +139,17 @@
+     Decimal('240.00')
+     >>> invoice.save()
+ 
++Try to credit the invoice::
++
++    >>> invoice.state
++    u'draft'
++    >>> credit = Wizard('account.invoice.credit', [invoice])
++    >>> credit.form.with_refund = True
++    >>> credit.execute('credit')  #doctest: +IGNORE_EXCEPTION_DETAIL
++    Traceback (most recent call last):
++        ...
++    UserError: ('UserError', (u'You can not credit with refund invoice "1 Party" because it is not posted.', ''))
++
+ Test change tax::
+ 
+     >>> tax_line, = invoice.taxes

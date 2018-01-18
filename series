@@ -71,3 +71,4 @@ issue6845-issue5613.diff # [commission] Missing agent type domain on sale and in
 
 issue7011.diff # [stock_consignment] stock_consignment should create invoices for moves that go to a production location
 issue7012.diff # [stock_consignment] Allow to create internal order points to provision supplier consignment locations
+issue33209.diff # [account_invoice] Forbid to create credit notes from nonposted invoices
