@@ -132,3 +132,5 @@ issue6371.diff # stock Do not set effective date on assignation
 # issue6626_improve_performance_of_average_cost_price.diff
 
 filestore.diff
+issue33209.diff # [account_invoice] Forbid to create credit notes from nonposted invoices
+
