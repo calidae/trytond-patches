@@ -6,7 +6,7 @@ diff -r 69b5dc36b783 trytond/trytond/modules/account_invoice/invoice.py
          return move
 
 +    def invoice_type_criteria(self):
-+        if all(l.amount <= 0 for l in self.lines if l.type == 'line'):
++        if self.untaxed_amount < 0:
 +            return '_credit_note'
 +        return '_invoice'
 +
