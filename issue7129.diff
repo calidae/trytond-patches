@@ -1,0 +1,33 @@
+diff -r 98695a5ca9e7 trytond/trytond/modules/account_payment/account.py
+--- a/trytond/trytond/modules/account_payment/account.py	Mon Feb 12 15:11:55 2018 +0100
++++ b/trytond/trytond/modules/account_payment/account.py	Mon Feb 12 15:36:36 2018 +0100
+@@ -1,6 +1,6 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
+-from sql import Null
++from sql import Union, Null, Literal
+ from sql.aggregate import Sum
+ from sql.conditionals import Case, Coalesce
+ from sql.functions import Abs
+@@ -87,14 +87,19 @@
+             else_=second_amount)
+         value = cls.payment_amount.sql_format(value)
+
+-        query = table.join(payment, type_='LEFT',
++        query1 = table.join(payment, type_='LEFT',
+             condition=(table.id == payment.line) & (payment.state != 'failed')
+             ).join(account, condition=table.account == account.id
+                 ).select(table.id,
+-                    where=account.kind.in_(['payable', 'receivable']),
++                    where=account.kind.in_(['payable', 'receivable']) &
++                        (table.reconciliation == Null),
+                     group_by=(table.id, account.kind, table.second_currency),
+                     having=Operator(amount, value)
+                     )
++        query2 = table.select(Literal(0).as_('amount'),
++                where=(table.reconciliation == Null) &
++                    Operator(Literal(0), value))
++        query = Union(query1, query2, all_=True)
+         return [('id', 'in', query)]
+
+     def get_payment_kind(self, name):
