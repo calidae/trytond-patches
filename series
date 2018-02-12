@@ -74,3 +74,4 @@ locale.diff
 improve_stock_by_locations_performance.diff
 issue6322_6501.diff
 issue33209.diff # [account_invoice] Forbid to create credit notes from nonposted invoices.
+issue7129.diff # [account_payment] Slow to list Lines to Pay
