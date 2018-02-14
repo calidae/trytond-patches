@@ -6,7 +6,7 @@ diff -r 6c85f394741c invoice.py
          cls.save(invoices)
 
 +    def invoice_type_criteria(self):
-+        if self.base_amount < 0:
++        if self.untaxed_amount < 0:
 +            return '_credit_note'
 +        return '_invoice'
 +
