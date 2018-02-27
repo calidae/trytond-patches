@@ -1,1 +1,2 @@
 issue6253.diff # add invoice type criteria
+issue35571002_20001_30001.diff  # https://bugs.tryton.org/issue6672
