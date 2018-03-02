@@ -1,7 +1,7 @@
-diff -r d3533b14b811 inventory.py
+diff -r f5e02ae4fd6d inventory.py
 --- a/trytond/trytond/modules/stock/inventory.py	Thu Mar 01 23:07:13 2018 +0100
 +++ b/trytond/trytond/modules/stock/inventory.py	Fri Mar 02 03:03:20 2018 +0100
-@@ -218,15 +218,13 @@
+@@ -228,15 +228,12 @@
  
              # Index some data
              product2type = {}
@@ -14,12 +14,11 @@ diff -r d3533b14b811 inventory.py
              for line in inventory.lines:
 -                if not (line.product.type == 'goods'
 -                        and not line.product.consumable):
-+                if not (line.product.active and
-+                        line.product.type == 'goods'):
++                if not line.product.type == 'goods':
                      Line.delete([line])
                      continue
  
-@@ -244,8 +242,7 @@
+@@ -254,8 +251,7 @@
              # Create lines if needed
              for key, quantity in pbl.iteritems():
                  product_id = key[grouping.index('product') + 1]
@@ -29,11 +28,11 @@ diff -r d3533b14b811 inventory.py
                      continue
                  if not quantity:
                      continue
-@@ -265,7 +262,6 @@
+@@ -281,7 +277,6 @@
      product = fields.Many2One('product.product', 'Product', required=True,
          domain=[
              ('type', '=', 'goods'),
 -            ('consumable', '=', False),
-             ])
+             ], states=_states, depends=_depends)
      uom = fields.Function(fields.Many2One('product.uom', 'UOM'), 'get_uom')
      unit_digits = fields.Function(fields.Integer('Unit Digits'),
