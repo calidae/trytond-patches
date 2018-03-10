@@ -1,0 +1,15 @@
+diff -r cc0a18b95c7c dunning.py
+--- a/trytond/trytond/modules/account_dunning/dunning.py	Wed Nov 08 23:52:14 2017 +0100
++++ b/trytond/trytond/modules/account_dunning/dunning.py	Sat Mar 10 15:08:02 2018 +0100
+@@ -181,7 +181,10 @@
+         return [
+             ('account.kind', '=', 'receivable'),
+             ('dunnings', '=', None),
+-            ('maturity_date', '<=', date),
++            ['OR',
++                ('maturity_date', '<=', date),
++                ('maturity_date', '=', None),
++                ]
+             ['OR',
+                 ('debit', '>', 0),
+                 ('credit', '<', 0),
