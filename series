@@ -126,12 +126,9 @@ issue6265.diff
 task030479.diff  # Adds locales to account_payment_clearing
 issue6371.diff # stock Do not set effective date on assignation
 025476_5154_5155_5456_optimize_move_write_assign.diff # stock optimize move write assign
-
+filestore.diff
+stock_lot_check_moves_without_lot_before_lot_required.diff
 
 # electr
 # issue6626_improve_performance_of_average_cost_price.diff
 
-filestore.diff
-issue33209.diff # [account_invoice] Forbid to create credit notes from nonposted invoices
-
-stock_lot_check_moves_without_lot_before_lot_required.diff
