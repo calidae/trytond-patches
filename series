@@ -45,6 +45,8 @@ party_check_vies.diff
 remove_payable_receivable_filter.diff
 sepa_sequence_type.diff
 
+issue7339.diff
+
 # Ignore next patches
 #incremental_wait_in_retries.diff
 # Uncomment in calfruitos and basidelta
