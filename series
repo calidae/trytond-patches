@@ -55,7 +55,7 @@ commission-issue6322-issue6501.diff
 sepa_sequence_type.diff
 add_account_in_move_line_payable_receivable.diff
 locale.diff
-
+#support_postgresql10_6789.patch
 issue6179.diff
 
 issue6294.diff # [tryton] - Creating a board view with a form inside
