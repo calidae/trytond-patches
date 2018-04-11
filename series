@@ -46,6 +46,7 @@ remove_payable_receivable_filter.diff
 sepa_sequence_type.diff
 
 issue7339.diff
+issue7342.diff
 
 # Ignore next patches
 #incremental_wait_in_retries.diff
