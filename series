@@ -57,6 +57,7 @@ add_account_in_move_line_payable_receivable.diff
 locale.diff
 #support_postgresql10_6789.patch
 issue6179.diff
+issue7342.diff # [stock] Take advantage of planned_date and effective_date indexes
 
 issue6294.diff # [tryton] - Creating a board view with a form inside
 issue5917.diff # [tryton] - Reduce the number of request for tree_state (changeset 33c1a31d27bc)
