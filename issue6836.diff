@@ -1,7 +1,7 @@
-diff -r faa466e4506c trytond/trytond/modules/sale/sale.py
---- a/trytond/trytond/modules/sale/sale.py	Tue Oct 17 09:29:45 2017 +0200
-+++ b/trytond/trytond/modules/sale/sale.py	Tue Oct 17 09:42:58 2017 +0200
-@@ -1228,10 +1228,6 @@
+diff -r 34d86dcfd76a trytond/trytond/modules/sale/sale.py
+--- a/trytond/trytond/modules/sale/sale.py   Thu Apr 12 14:25:55 2018 +0200
++++ b/trytond/trytond/modules/sale/sale.py   Thu Apr 12 14:32:33 2018 +0200
+@@ -1229,10 +1229,6 @@
      def on_change_unit(self):
          self.on_change_quantity()
 
@@ -9,13 +9,13 @@ diff -r faa466e4506c trytond/trytond/modules/sale/sale.py
 -    def on_change_taxes(self):
 -        self.on_change_quantity()
 -
-     @fields.depends('type', 'quantity', 'unit_price', 'unit',
+     @fields.depends('type', 'quantity', 'unit_price', 'unit', 'sale',
          '_parent_sale.currency')
      def on_change_with_amount(self):
-diff -r af073a6350d3 trytond/trytond/modules/purchase/purchase.py
---- a/trytond/trytond/modules/purchase/purchase.py	Tue Oct 17 09:29:56 2017 +0200
-+++ b/trytond/trytond/modules/purchase/purchase.py	Tue Oct 17 09:43:25 2017 +0200
-@@ -1132,10 +1132,6 @@
+diff -r 7af5346a9832 trytond/trytond/modules/purchase/purchase.py
+--- a/trytond/trytond/modules/purchase/purchase.py       Sat Mar 24 13:47:39 2018 +0100
++++ b/trytond/trytond/modules/purchase/purchase.py       Thu Apr 12 14:41:55 2018 +0200
+@@ -1133,10 +1133,6 @@
      def on_change_unit(self):
          self.on_change_quantity()
 
@@ -23,7 +23,7 @@ diff -r af073a6350d3 trytond/trytond/modules/purchase/purchase.py
 -    def on_change_taxes(self):
 -        self.on_change_quantity()
 -
-     @fields.depends('type', 'quantity', 'unit_price', 'unit',
+     @fields.depends('type', 'quantity', 'unit_price', 'unit', 'purchase',
          '_parent_purchase.currency')
      def on_change_with_amount(self):
 diff -r 38b54301d632 trytond/trytond/modules/sale_price_list/sale.py
