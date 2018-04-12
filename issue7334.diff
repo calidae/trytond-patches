@@ -1,0 +1,21 @@
+diff -r 6d7a5b7b018a trytond/trytond/model/modelsql.py
+--- a/trytond/trytond/model/modelsql.py	Thu Apr 12 13:56:38 2018 +0200
++++ b/trytond/trytond/model/modelsql.py	Thu Apr 12 14:02:33 2018 +0200
+@@ -708,7 +708,16 @@
+                             rowcount = len(cursor.fetchall())
+                         if rowcount == len({}.fromkeys(sub_ids)):
+                             cls.raise_user_error('access_error', cls.__name__)
+-                    cls.raise_user_error('read_error', cls.__name__)
++                    if cls._history:
++                        where = red_sql
++                        if domain:
++                            where &= dom_exp
++                        query = from_.select(*columns, where=where, order_by=history_order, limit=history_limit)
++                        cursor.execute(*from_.select(*columns, where=where,
++                                order_by=history_order, limit=history_limit))
++                        fetchall = list(cursor_dict(cursor))
++                    else:
++                        cls.raise_user_error('read_error', cls.__name__)
+                 result.extend(fetchall)
+         else:
+             result = [{'id': x} for x in ids]
