@@ -1,0 +1,12 @@
+diff -r 752197b4bc8d trytond/trytond/modules/account_asset/asset.py
+--- a/trytond/trytond/modules/account_asset/asset.py	Wed Apr 25 17:19:54 2018 +0200
++++ b/trytond/trytond/modules/account_asset/asset.py	Wed Apr 25 17:20:43 2018 +0200
+@@ -1023,6 +1023,8 @@
+                 ('start_date', '<', self.start.end_date),
+                 ('end_date', '>', self.start.start_date),
+                 ('state', '=', 'running'),
++                ('lines.date', '<', self.start.end_date),
++                ('lines.date', '>', self.start.start_date),
+                 ])
+         return action, {
+             'ids': [a.id for a in assets],
