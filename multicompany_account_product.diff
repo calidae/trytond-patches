@@ -1,6 +1,6 @@
 diff -r dfbce32f79c5 product.py
---- a/modules/account_product/product.py	Sun Mar 01 19:19:20 2015 +0100
-+++ b/modules/account_product/product.py	Wed Jul 12 12:42:53 2017 +0200
+--- a/trytond/trytond/modules/account_product/product.py	Sun Mar 01 19:19:20 2015 +0100
++++ b/trytond/trytond/modules/account_product/product.py	Wed Jul 12 12:42:53 2017 +0200
 @@ -74,6 +74,7 @@
          domain=[('parent', '=', None), ['OR',
                  ('group', '=', None),
