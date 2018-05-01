@@ -1,8 +1,8 @@
 Index: configuration.py
 ===================================================================
 
---- a/modules/product/configuration.py
-+++ b/modules/product/configuration.py
+--- a/trytod/trytond/modules/product/configuration.py
++++ b/trytod/trytond/modules/product/configuration.py
 @@ -27,6 +27,12 @@
      default_cost_price_method = fields.MultiValue(default_cost_price_method)
      get_cost_price_methods = get_cost_price_methods
