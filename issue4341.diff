@@ -1,0 +1,72 @@
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/account_list.xml
+--- a/trytond/trytond/modules/account/view/account_list.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/account_list.xml	Fri May 11 14:15:10 2018 +0200
+@@ -5,4 +5,5 @@
+     <field name="rec_name"/>
+     <field name="company"/>
+     <field name="type"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/account_tree.xml
+--- a/trytond/trytond/modules/account/view/account_tree.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/account_tree.xml	Fri May 11 14:15:10 2018 +0200
+@@ -7,4 +7,5 @@
+     <field name="type"/>
+     <field name="parent" tree_invisible="1"/>
+     <field name="childs" tree_invisible="1"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/journal_period_tree.xml
+--- a/trytond/trytond/modules/account/view/journal_period_tree.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/journal_period_tree.xml	Fri May 11 14:15:10 2018 +0200
+@@ -5,4 +5,5 @@
+     <field name="journal"/>
+     <field name="period"/>
+     <field name="state"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/journal_tree.xml
+--- a/trytond/trytond/modules/account/view/journal_tree.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/journal_tree.xml	Fri May 11 14:15:10 2018 +0200
+@@ -5,4 +5,5 @@
+     <field name="name"/>
+     <field name="code"/>
+     <field name="type"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/move_template_list.xml
+--- a/trytond/trytond/modules/account/view/move_template_list.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/move_template_list.xml	Fri May 11 14:15:10 2018 +0200
+@@ -3,4 +3,5 @@
+ this repository contains the full copyright notices and license terms. -->
+ <tree>
+     <field name="name"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/tax_code_list.xml
+--- a/trytond/trytond/modules/account/view/tax_code_list.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/tax_code_list.xml	Fri May 11 14:15:10 2018 +0200
+@@ -5,4 +5,5 @@
+     <field name="name"/>
+     <field name="code"/>
+     <field name="company"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/tax_code_tree.xml
+--- a/trytond/trytond/modules/account/view/tax_code_tree.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/tax_code_tree.xml	Fri May 11 14:15:10 2018 +0200
+@@ -7,4 +7,5 @@
+     <field name="company"/>
+     <field name="parent" tree_invisible="1"/>
+     <field name="childs" tree_invisible="1"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>
+diff -r e978ecc8f044 trytond/trytond/modules/account/view/tax_list.xml
+--- a/trytond/trytond/modules/account/view/tax_list.xml	Mon Apr 23 17:24:11 2018 +0200
++++ b/trytond/trytond/modules/account/view/tax_list.xml	Fri May 11 14:15:10 2018 +0200
+@@ -5,4 +5,5 @@
+     <field name="name"/>
+     <field name="group"/>
+     <field name="type"/>
++    <field name="active" tree_invisible="1"/>
+ </tree>

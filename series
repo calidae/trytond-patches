@@ -1,1 +1,12 @@
-issue6253.diff # add invoice type criteria
+babi_multiprocess.diff # [trytond] babi multiprocess
+logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
+
+issue3932.diff # [account] rule account move and account move line by company
+issue4341.diff # [account] Add active invisible in tree/list views
+
+issue6253.diff # [account_invoice] add invoice type criteria
+issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
+
+issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
+
+issue4482.diff # [stock] stock inventory misses company access rule
