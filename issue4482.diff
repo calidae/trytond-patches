@@ -10,7 +10,7 @@ diff -r 98c229b8cb4a trytond/trytond/modules/stock/inventory.xml
 +            <field name="global_p" eval="True"/>
 +        </record>
 +        <record model="ir.rule" id="rule_inventory">
-+            <field name="domain" eval="[('company', 'in', Eval('user', {}).get('companies', []))]" p
++            <field name="domain" eval="[('company', 'in', Eval('user', {}).get('companies', []))]" pyson="1"/>
 +            <field name="rule_group" ref="rule_group_inventory"/>
 +        </record>
 +
