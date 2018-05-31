@@ -1,0 +1,12 @@
+diff -r 36fa08276f66 modules/stock_consignment/stock.py
+--- a/modules/stock_consignment/stock.py	Thu Mar 01 23:04:06 2018 +0100
++++ b/modules/stock_consignment/stock.py	Wed May 30 11:40:24 2018 +0200
+@@ -226,7 +226,7 @@
+     @classmethod
+     @ModelView.button
+     @Workflow.transition('assigned')
+-    @set_origin_consignment
++    @unset_origin_consignment
+     def assign(cls, moves):
+         super(Move, cls).assign(moves)
+ 

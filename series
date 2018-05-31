@@ -79,3 +79,5 @@ filestore.diff # [trytond] changeset-06e955c4465e + changeset-a8d3c527a445
 issue7395.diff # [account_asset] Crash Depreciation Table repot when lines date is out of range asset start/end
 
 #issue7334.diff # [trytond] read history that created_date is before the requested create_date
+
+stock_consignment_create_invoice_lines_on_move_done.diff # [stock_consignment] Task #034628: stock_consignment only create invoice lines on move done
