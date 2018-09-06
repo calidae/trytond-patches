@@ -1,2 +1,1 @@
 issue6253.diff # add invoice type criteria
-issue53361003_1.diff # Proteus: Use the context of the group when record is inside a ModelList
