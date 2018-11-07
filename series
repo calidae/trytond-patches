@@ -1,1 +1,2 @@
 issue6253.diff # add invoice type criteria
+lock_stock_move.diff # stock 
