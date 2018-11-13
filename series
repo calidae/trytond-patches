@@ -129,6 +129,7 @@ issue6371.diff # stock Do not set effective date on assignation
 #filestore.diff
 stock_lot_check_moves_without_lot_before_lot_required.diff
 issue3228.diff # [trytond] Fix result order of search_read
+issue7856.diff # [stock] Can't move qty from a parent location to child location
 
 # electr
 # issue6626_improve_performance_of_average_cost_price.diff

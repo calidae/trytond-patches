@@ -1,0 +1,30 @@
+diff -r ab230d7946e7 trytond/trytond/modules/stock/move.py
+--- a/trytond/trytond/modules/stock/move.py	Tue Nov 13 11:38:24 2018 +0100
++++ b/trytond/trytond/modules/stock/move.py	Tue Nov 13 11:39:08 2018 +0100
+@@ -4,6 +4,7 @@
+ import operator
+ from decimal import Decimal
+ from functools import partial
++from collections import OrderedDict
+ from itertools import groupby
+
+ from sql import Literal, Union, Column
+@@ -794,7 +795,8 @@
+             if move.state != 'draft':
+                 continue
+             to_location = move.to_location
+-            location_qties = {}
++            # Keep location order for pick_product
++            location_qties = OrderedDict()
+             if with_childs:
+                 childs = Location.search([
+                         ('parent', 'child_of', [move.from_location.id]),
+@@ -802,6 +804,8 @@
+             else:
+                 childs = [move.from_location]
+             for location in childs:
++                if location.id == to_location.id:
++                    continue
+                 key = get_key(location)
+                 if key in pbl:
+                     location_qties[location] = Uom.compute_qty(
