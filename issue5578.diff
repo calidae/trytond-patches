@@ -4,7 +4,7 @@ diff -r 0ee41116c068 trytond/trytond/modules/stock_supply/purchase_request.py
 @@ -595,6 +595,16 @@
              ('invoice_address', request.party.address_get(type='invoice')),
              )
- 
+
 +    def _group_purchase_line_key(self, request):
 +        '''
 +        The key to group requests by lines
@@ -36,7 +36,7 @@ diff -r 0ee41116c068 trytond/trytond/modules/stock_supply/purchase_request.py
                          'purchase_line': line.id,
                          })
          return 'end'
- 
+
      @staticmethod
 -    def _get_tax_rule_pattern(request):
 +    def _get_tax_rule_pattern(line, purchase):
@@ -44,14 +44,14 @@ diff -r 0ee41116c068 trytond/trytond/modules/stock_supply/purchase_request.py
          Get tax rule pattern
          '''
          return {}
- 
+
      @classmethod
 -    def compute_purchase_line(cls, request, purchase):
 +    def compute_purchase_line(cls, key, requests, purchase):
          pool = Pool()
          Product = pool.get('product.product')
          Line = pool.get('purchase.line')
- 
+
 -        line = Line(
 -            product=request.product,
 -            unit=request.uom,
@@ -63,7 +63,7 @@ diff -r 0ee41116c068 trytond/trytond/modules/stock_supply/purchase_request.py
 +            setattr(line, f, v)
 +        line.description = line.product.name
 +        line.quantity = sum(r.quantity for r in requests)
- 
+
 -        # XXX purchase with several lines of the same product
 -        with Transaction().set_context(uom=request.uom.id,
 -                supplier=request.party.id,
@@ -76,13 +76,13 @@ diff -r 0ee41116c068 trytond/trytond/modules/stock_supply/purchase_request.py
 +                [line.product], line.quantity)[line.product.id]
              product_price = product_price.quantize(
                  Decimal(1) / 10 ** Line.unit_price.digits[1])
- 
+
          if product_price is None:
 -            cls.raise_user_error('missing_price', (request.product.rec_name,),
 +            cls.raise_user_error('missing_price', (line.product.rec_name,),
                  'please_update')
          line.unit_price = product_price
- 
+
          taxes = []
 -        for tax in request.product.supplier_taxes_used:
 -            if request.party and request.party.supplier_tax_rule:
@@ -100,7 +100,7 @@ diff -r a72241d1ef7e trytond/trytond/modules/analytic_product/product.py
 +++ b/trytond/trytond/modules/analytic_product/product.py	2016-06-23 10:53:02.290287626 +0200
 @@ -265,10 +265,10 @@
      __name__ = 'purchase.request.create_purchase'
- 
+
      @classmethod
 -    def compute_purchase_line(cls, request, purchase):
 +    def compute_purchase_line(cls, key, requests, purchase):
@@ -116,7 +116,7 @@ diff -r 14808c4f96be trytond/trytond/modules/purchase_supplier_price_period/prod
 +++ b/trytond/trytond/modules/purchase_supplier_price_period/product.py	2016-06-23 10:53:02.290287626 +0200
 @@ -132,7 +132,7 @@
      __name__ = 'purchase.request.create_purchase'
- 
+
      @classmethod
 -    def compute_purchase_line(cls, request, purchase):
 +    def compute_purchase_line(cls, key, requests, purchase):
@@ -125,35 +125,3 @@ diff -r 14808c4f96be trytond/trytond/modules/purchase_supplier_price_period/prod
 -                purchase)
 +            return super(CreatePurchase, cls).compute_purchase_line(key,
 +                requests, purchase)
-diff -r 70adc3aef3ff trytond/trytond/modules/stock_supply_minimum/purchase.py
---- a/trytond/trytond/modules/stock_supply_minimum/purchase.py	Wed Dec 02 22:22:45 2015 +0100
-+++ b/trytond/trytond/modules/stock_supply_minimum/purchase.py	Thu Jun 23 11:06:23 2016 +0200
-@@ -80,9 +80,9 @@
-     __name__ = 'purchase.request.create_purchase'
- 
-     @classmethod
--    def compute_purchase_line(cls, request, purchase):
--        line = super(CreatePurchase, cls).compute_purchase_line(request,
--            purchase)
-+    def compute_purchase_line(cls, key, requests, purchase):
-+        line = super(CreatePurchase, cls).compute_purchase_line(key,
-+            requests, purchase)
-         line.quantity = max(line.quantity, request.minimum_quantity)
-         return line
-
-diff -r 795f535306e1 trytond/trytond/modules/stock_supply_multiple/purchase.py
---- a/trytond/trytond/modules/stock_supply_multiple/purchase.py	Thu Feb 25 15:32:19 2016 +0100
-+++ b/trytond/trytond/modules/stock_supply_multiple/purchase.py	Thu Jun 23 10:51:46 2016 +0200
-@@ -31,9 +31,9 @@
-     __name__ = 'purchase.request.create_purchase'
- 
-     @classmethod
--    def compute_purchase_line(cls, request, purchase):
--        line = super(CreatePurchase, cls).compute_purchase_line(request,
--            purchase)
-+    def compute_purchase_line(cls, key, requests, purchase):
-+        line = super(CreatePurchase, cls).compute_purchase_line(key,
-+            requests, purchase)
-         if request.multiple_quantity:
-             line.quantity = (math.ceil(line.quantity /
-                     request.multiple_quantity) * request.multiple_quantity)
