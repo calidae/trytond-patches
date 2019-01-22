@@ -1,2 +1,26 @@
-issue6253.diff # add invoice type criteria
-lock_stock_move.diff # stock 
+babi_multiprocess.diff # [trytond] babi multiprocess
+logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
+match.diff # [trytond] Control when tje filed is a Char o Text and the value is not none but it's an empty string
+issue3932.diff # [account] rule account move and account move line by company
+issue6253.diff # [account_invoice] add invoice type criteria
+issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
+issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
+purchase_request.diff # [purchase_request] as shippment_date it's not required we need to ensure operation could be done
+
+issue4482.diff # [stock] stock inventory misses company access rule
+search_warehouse.diff #[stock] search function for warehouse.
+
+# TODO: improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
+
+issue240_631.diff # [stock_lot] stock_by_locations get all locations with that lot.
+issue10467.diff # stock_lot: add lot to grouping if lot it's required on product
+
+issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+sale_number_of_packages.diff # [sale_number_of_packages] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+stock_external_party.diff # [stock_external_party] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+stock_lot_deactivatable.diff # [stock_lot_deactivatable] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+
+issue7826.diff # [stock_package] Total packages moves are all
+lock_stock_move.diff # [stock] Function to overwrite if lock table or not
+issue7856.diff # [stock] Can't move qty from a parent location to child location
