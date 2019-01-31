@@ -130,6 +130,7 @@ issue6371.diff # stock Do not set effective date on assignation
 stock_lot_check_moves_without_lot_before_lot_required.diff
 issue3228.diff # [trytond] Fix result order of search_read
 issue7856.diff # [stock] Can't move qty from a parent location to child location
+issue8058.diff # [stock_supply_production] Can't create productions from request because exceeds digits limit
 
 # electr
 # issue6626_improve_performance_of_average_cost_price.diff
