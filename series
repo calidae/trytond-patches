@@ -5,7 +5,6 @@ issue3932.diff # [account] rule account move and account move line by company
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
-purchase_request.diff # [purchase_request] as shippment_date it's not required we need to ensure operation could be done
 
 issue4482.diff # [stock] stock inventory misses company access rule
 search_warehouse.diff #[stock] search function for warehouse.
