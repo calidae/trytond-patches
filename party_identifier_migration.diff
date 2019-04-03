@@ -1,0 +1,17 @@
+diff -r d04990e66e97 party.py
+--- a/trytond/trytond/modules/party/party.py	Wed Mar 27 23:25:26 2019 +0100
++++ b/trytond/trytond/modules/party/party.py	Mon Apr 01 14:49:19 2019 +0200
+@@ -454,8 +454,11 @@
+                     continue
+                 for type in Party.tax_identifier_types():
+                     module = get_cc_module(*type.split('_', 1))
+-                    if module.is_valid(code):
+-                        break
++                    try:
++                        if module and module.is_valid(code):
++                            break
++                    except:
++                        pass
+                 else:
+                     type = None
+                 identifiers.append(
