@@ -1,21 +1,25 @@
 babi_multiprocess.diff # [trytond] babi multiprocess
 trytond_test_database.diff # [trytond] avoid errors on upgrades from version 3.4
-party_identifier_migration.diff # [Party] avoid errors on upgrades
 logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
 
 issue3932.diff # [account] rule account move and account move line by company
+
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
+
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
+
+sale_list_price.diff # [sale] Can't convert to currency with list price is null (multicompany)
 
 lock_stock_move.diff # [stock] Function to overwrite if lock table or not
 issue4482.diff # [stock] stock inventory misses company access rule
-search_warehouse.diff #[stock] search function for warehouse.
-issue10467.diff # stock_lot: add lot to grouping if lot it's required on product
+search_warehouse.diff # [stock] search function for warehouse
+issue239_630.diff # [stock] get location quantity by product, product template or lot
 issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
-sale_list_price.diff # [sale] Can't convert to currency with list price is null (multicompany)
 
+issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
-#issue240_631.diff # [stock_lot] stock_by_locations get all locations with that lot. #TODO fer mòdul
+party_identifier_migration.diff # [Party] avoid errors on upgrades
+
 # TODO: improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
