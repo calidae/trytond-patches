@@ -1,6 +1,32 @@
-diff -r 9e1157ee5145 move.xml
---- a/trytond/trytond/modules/account/move.xml	Sun Mar 31 00:15:09 2019 +0100
-+++ b/trytond/trytond/modules/account/move.xml	Thu Apr 04 17:32:07 2019 +0200
+diff -r d5e2bdf73e16 account.xml
+--- a/trytond/trytond/modules/account/account.xml	Sun Apr 07 19:50:02 2019 +0200
++++ b/trytond/trytond/modules/account/account.xml	Fri Apr 12 21:43:14 2019 +0200
+@@ -747,5 +747,22 @@
+             <field name="model">account.aged_balance,-1</field>
+             <field name="action" ref="report_aged_balance"/>
+         </record>
++
++
++        <record model="ir.rule.group" id="rule_group_account_journal_period">
++          <field name="name">Account Journal Period</field>
++            <field name="model" search="[('model', '=', 'account.journal.period')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_account_journal_period">
++            <field name="domain"
++                eval="[('period.company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_account_journal_period"/>
++        </record>
++
++
++
++
+     </data>
+ </tryton>
+diff -r d5e2bdf73e16 move.xml
+--- a//trytond/trytond/modules/account/move.xml	Sun Apr 07 19:50:02 2019 +0200
++++ b//trytond/trytond/modules/account/move.xml	Fri Apr 12 21:43:14 2019 +0200
 @@ -411,5 +411,30 @@
              <field name="report_name">account.move.general_journal</field>
              <field name="report">account/general_journal.fodt</field>

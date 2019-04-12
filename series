@@ -8,6 +8,7 @@ issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
 
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
+analitic_.diff # [analytic_account] Not selected root accounts in analytic account lines
 
 sale_list_price.diff # [sale] Can't convert to currency with list price is null (multicompany)
 
