@@ -88,6 +88,6 @@ diff -r f95dbecc064f trytond/trytond/modules/stock/move.py
              location = key[0]
              uom = default_uom[id_getter(key)]
 -            quantities[key] = uom.round(quantity)
-+            quantities[key] = uom.round(quantity) if quantity else 0
++            quantities[key] = uom.round(quantity) if quantity else 0.0
 
          return quantities
