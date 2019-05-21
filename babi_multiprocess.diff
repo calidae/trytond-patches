@@ -23,3 +23,19 @@
 
   @app.auth_required
   @with_pool
+diff -r d875ab180d75 trytond/ir/model.py
+--- a/trytond/trytond/ir/model.py       Mon May 06 14:45:35 2019 +0200
++++ b/trytond/trytond/ir/model.py       Wed May 22 00:18:59 2019 +0200
+@@ -587,8 +587,9 @@
+             # XXX Can not check access right on instance method
+             selection = []
+             for model_name, _ in selection:
+-                if model_name and not cls.check(model_name, mode=mode,
+-                        raise_exception=False):
++                if (model_name and not model_name.startswith('babi_execution_')
++                        and not cls.check(model_name, mode=mode,
++                            raise_exception=False)):
+                     return False
+             return True
+         else:
+
