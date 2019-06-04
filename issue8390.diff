@@ -1,0 +1,18 @@
+diff -r f3543e407388 src/view/tree.js
+--- a/public_data/sao/src/view/tree.js	Tue Jun 04 12:10:26 2019 +0200
++++ b/public_data/sao/src/view/tree.js	Tue Jun 04 12:12:04 2019 +0200
+@@ -1585,7 +1585,13 @@
+                     continue;
+                 }
+                 var state_attrs = col.field.get_state_attrs(this.record);
+-                var readonly = col.attributes.readonly || state_attrs.readonly;
++                var readonly = col.attributes.readonly;
++                if (readonly === undefined) {
++                    readonly = state_attrs.readonly;
++                    if (readonly === undefined) {
++                        readonly = false;
++                    }
++                }
+
+                 var EditableBuilder = Sao.View.EditableTree.WIDGETS[
+                     col.attributes.widget];
