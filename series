@@ -25,3 +25,7 @@ issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's re
 party_identifier_migration.diff # [Party] avoid errors on upgrades
 
 # TODO: improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
+
+# Sao
+
+issue8240.diff # Add drag and drop support to sao
