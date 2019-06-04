@@ -1,0 +1,48 @@
+# HG changeset patch
+# User Cédric Krier <cedric.krier@b2ck.com>
+Change expand attribute into a factor
+
+trytond: Change expand attribute into a factor
+
+issue8308
+
+review275331002
+
+Index: trytond/ir/ui/tree.rnc
+===================================================================
+--- a/trytond/trytond/ir/ui/tree.rnc
++++ b/trytond/trytond/ir/ui/tree.rnc
+@@ -43,7 +43,7 @@
+ attlist.field &=
+   [ a:defaultValue = "0" ] attribute tree_invisible { text }?
+ attlist.field &=
+-  [ a:defaultValue = "0" ] attribute expand { "0" | "1" }?
++  [ a:defaultValue = "0" ] attribute expand { xsd:integer }?
+ attlist.field &= attribute icon { text }?
+ attlist.field &= attribute sum { text }?
+ attlist.field &= attribute width { text }?
+Index: trytond/ir/ui/tree.rng
+===================================================================
+--- a/trytond/trytond/ir/ui/tree.rng
++++ b/trytond/trytond/ir/ui/tree.rng
+@@ -1,6 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <grammar xmlns="http://relaxng.org/ns/structure/1.0"
+-         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
++         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
++         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+   <define name="tree">
+     <element>
+       <name ns="">tree</name>
+@@ -135,10 +136,7 @@
+     <optional>
+       <attribute a:defaultValue="0">
+         <name ns="">expand</name>
+-        <choice>
+-          <value>0</value>
+-          <value>1</value>
+-        </choice>
++        <data type="integer"/>
+       </attribute>
+     </optional>
+   </define>

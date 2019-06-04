@@ -1,0 +1,170 @@
+# HG changeset patch
+# User Cédric Krier <cedric.krier@b2ck.com>
+Improve column sizing
+
+sao: Improve column sizing
+
+We set a minimal width on the treeview table (min-width on td has an undefined
+behavior) by summing the default width of each column.
+We add a fake scrollbar on top of the treeview to ensure the user will see that
+there are more column to see. The fake scrolbbar is a div with the same minimal
+width and its parent as the scroll value synchronized with the scroll of the
+treeview div.
+The minimal widths are removed on extra small screen if the treeview is
+responsive because the tabel has 100% of the width.
+To have the minimal width working also on the xxx2Many view inside a form, we
+must set a maximum width to the cell. As this width must be expressed in
+relative size (not in pixel to support resizing), we expresse them as
+percentage of the width of the viewport. The percentage is computed from the
+percentage width already computed but also rated with all the percentage width
+of the parent cell. We also remove the maximum percentage of the offcanvas
+size. This does not give the exact maximal width but it is close enough to have
+a correct behavior no matter the size of the screen.
+
+issue8308
+
+review259411002
+
+diff -r 4b3996f742be src/sao.less
+--- a/public_data/sao/src/sao.less	Tue Jun 04 12:32:31 2019 +0200
++++ b/public_data/sao/src/sao.less	Tue Jun 04 12:48:46 2019 +0200
+@@ -559,6 +559,11 @@
+ }
+
+ @media screen and (max-width: @screen-xs-max) {
++   .responsive.scrollbar {
++        > div {
++            min-width: unset !important;
++        }
++    }
+     table.responsive,
+     table.responsive > thead,
+     table.responsive > thead > tr,
+@@ -572,6 +577,7 @@
+         display: block !important;
+     }
+     table.responsive {
++        min-width: unset !important;
+         /* Hide table headers (but not display: none; for accessiblity) */
+         > thead > tr {
+             position: absolute;
+@@ -580,6 +586,7 @@
+         }
+         > thead > tr,
+         > tbody > tr > td {
++            max-width: unset !important;
+             text-align: left !important;
+             text-align: start !important;
+             /* Force height to empty content */
+@@ -651,6 +658,14 @@
+     z-index: 2000;
+ }
+
++.scrollbar {
++    overflow: auto;
++
++    > div {
++        height: 1rem;
++    }
++}
++
+ .infobar {
+     position: fixed;
+     top: 0px;
+diff -r 4b3996f742be src/view/form.js
+--- a/public_data/sao/src/view/form.js	Tue Jun 04 12:32:31 2019 +0200
++++ b/public_data/sao/src/view/form.js	Tue Jun 04 12:48:46 2019 +0200
+@@ -503,6 +503,15 @@
+             var col = this.col;
+             var has_expand = false;
+             var i, j;
++
++            var parent_max_width = 1;
++            this.el.parents('td').each(function() {
++                var width = this.style.width;
++                if (width.endsWith('%')) {
++                    parent_max_width *= parseFloat(width.slice(0, -1), 10) / 100;
++                }
++            });
++
+             var get_xexpands = function(row) {
+                 row = jQuery(row);
+                 var xexpands = [];
+@@ -581,6 +590,12 @@
+                             width += widths[i + j] || 0;
+                         }
+                         cell.css('width', width + '%');
++                        if (0 < width) {
++                            // 25 is the percentage of offcanvas on md
++                            cell.css(
++                                'max-width',
++                                ((width * parent_max_width) - 25) + 'vw');
++                        }
+                     } else {
+                         cell.css('width', '');
+                     }
+diff -r 4b3996f742be src/view/tree.js
+--- a/public_data/sao/src/view/tree.js	Tue Jun 04 12:32:31 2019 +0200
++++ b/public_data/sao/src/view/tree.js	Tue Jun 04 12:48:46 2019 +0200
+@@ -83,9 +83,22 @@
+             this.columns = [];
+             this.selection_mode = (screen.attributes.selection_mode ||
+                 Sao.common.SELECTION_MULTIPLE);
+-            this.el = jQuery('<div/>', {
+-                'class': 'treeview responsive'
+-            });
++            this.el = jQuery('<div/>');
++            this.scrollbar = jQuery('<div/>')
++                .appendTo(jQuery('<div/>', {
++                    'class': 'scrollbar responsive',
++                }).appendTo(this.el));
++            this.treeview = jQuery('<div/>', {
++                            'class': 'treeview responsive'
++            }).appendTo(this.el);
++
++            // Synchronize both scrollbars
++            this.treeview.scroll(function() {
++                this.scrollbar.parent().scrollLeft(this.treeview.scrollLeft());
++            }.bind(this));
++            this.scrollbar.parent().scroll(function() {
++                this.treeview.scrollLeft(this.scrollbar.parent().scrollLeft());
++            }.bind(this));
+             this.expanded = {};
+
+             Sao.View.Tree._super.init.call(this, view_id, screen, xml);
+@@ -99,7 +112,7 @@
+             if (this.editable) {
+                 this.table.addClass('table-bordered');
+             }
+-            this.el.append(this.table);
++            this.treeview.append(this.table);
+             this.colgroup = jQuery('<colgroup/>').appendTo(this.table);
+             var col = jQuery('<col/>', {
+                 'class': 'selection-state',
+@@ -550,6 +563,7 @@
+             var inversion = new Sao.common.DomainInversion();
+             domain = inversion.simplify(domain);
+             var decoder = new Sao.PYSON.Decoder(this.screen.context);
++            var min_width = 0;
+             this.columns.forEach(function(column) {
+                 visible_columns += 1;
+                 var name = column.attributes.name;
+@@ -607,11 +621,17 @@
+                         'boolean': 2,
+                         'binary': 20,
+                     }[column.attributes.widget] || 10;
+-                    width = width * 100 + '%';
+-                    column.col.css('width', width);
++                    var factor = 1;
++                    if (column.attributes.expand) {
++                        factor += parseInt(column.attributes.expand, 10);
++                    }
++                    column.col.css('width', width * 100 * factor  + '%');
+                     column.col.show();
++                    min_width += width * 10;
+                 }
+             }.bind(this));
++            this.table.css('min-width', min_width + 'px');
++            this.scrollbar.css('min-width', min_width + 'px');
+             this.tbody.find('tr.more-row > td').attr(
+                 'colspan', visible_columns);
