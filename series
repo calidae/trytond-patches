@@ -26,7 +26,7 @@ stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is group
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
 party_identifier_migration.diff # [Party] avoid errors on upgrades
-
+production_view.diff [production] Split inputs and outputs on pages
 
 
 # Sao
