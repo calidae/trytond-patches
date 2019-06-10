@@ -17,7 +17,7 @@ diff -r 99ab023bae5d src/view/tree.js
 -        init: function(screen, attributes) {
 -            this.screen = screen;
 +        init: function(view, attributes) {
-+            this.screen = view;
++            this.view = view;
              this.type = 'button';
              this.attributes = attributes;
          },
