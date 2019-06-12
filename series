@@ -37,6 +37,12 @@ issue8394.diff # [stock_lot_sled] Allow configuring which quantity is grouped in
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
+
+
+
+account_asset.diff # [account_asset] check if exist asset_lines
+sale_remove_multiselection.diff # [sale] remove multiselection handling exceptions.
+
 # Sao
 issue8240.diff # Add drag and drop support to sao
 issue8390.diff # Different readonly computation for editable tree
