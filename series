@@ -3,6 +3,7 @@ trytond_test_database.diff # [trytond] avoid errors on upgrades from version 3.4
 logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
 
 issue3932.diff # [account] rule account move and account move line by company
+issue8421.diff # [account] set necessary attributes when generate keyword view
 
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
@@ -32,8 +33,8 @@ issue8413.diff # [carrier]  Add recname to search
 production_view.diff #[production] Split inputs and outputs on pages
 account_asset.diff # [account_asset] check if exist asset_lines
 
-# Sao
 
+# Sao
 issue8240.diff # Add drag and drop support to sao
 issue8390.diff # Different readonly computation for editable tree
 issue8386.diff # Buttons on list view do not work
