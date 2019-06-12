@@ -8,8 +8,18 @@ issue8421.diff # [account] set necessary attributes when generate keyword view
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
 
+account_asset.diff # [account_asset] check if exist asset_lines
+
+issue8252.diff # [account_tax_rule_country] Add subdivisiions to match account tax rule
+
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
 analitic_line_company_rules.diff # [analytic_account] Not selected root accounts in analytic account lines
+
+issue8413.diff # [carrier]  Add recname to search
+
+party_identifier_migration.diff # [party] avoid errors on upgrades
+
+production_view.diff # [production] Split inputs and outputs on pages
 
 sale_list_price.diff # [sale] Can't convert to currency with list price is null (multicompany)
 sale_supply_supply_on_sale_multivalue.diff # [sale_supply] supply_on_sale field multvalue #035100
@@ -26,13 +36,6 @@ stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is group
 issue8394.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
-
-party_identifier_migration.diff # [Party] avoid errors on upgrades
-
-issue8413.diff # [carrier]  Add recname to search
-production_view.diff #[production] Split inputs and outputs on pages
-account_asset.diff # [account_asset] check if exist asset_lines
-
 
 # Sao
 issue8240.diff # Add drag and drop support to sao
