@@ -1,9 +1,9 @@
-pbabi_multiprocess.diff # [trytond] babi multiprocess
+babi_multiprocess.diff # [trytond] babi multiprocess
 trytond_test_database.diff # [trytond] avoid errors on upgrades from version 3.4
 logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
 
 issue3932.diff # [account] rule account move and account move line by company
-issue8421.diff # [account] set necessary attributes when generate keyword view
+# issue8421.diff # [account] set necessary attributes when generate keyword view
 
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
@@ -19,23 +19,23 @@ issue4482.diff # [stock] stock inventory misses company access rule
 search_warehouse.diff # [stock] search function for warehouse
 issue239_630.diff # [stock] get location quantity by product, product template or lot
 issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
-stock_quantity_to_zero.diff # [stock] Ensure to sum with value.
-improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
+# stock_quantity_to_zero.diff # [stock] Ensure to sum with value.
+# improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
 
 stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
-issue8394.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+# issue8394.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
 party_identifier_migration.diff # [Party] avoid errors on upgrades
-production_view.diff [production] Split inputs and outputs on pages
-issue8413.diff [carrier]  Add recname to search
+# production_view.diff [production] Split inputs and outputs on pages
+# issue8413.diff [carrier]  Add recname to search
 sale_remove_multiselection.diff # [sale] remove multiselection handling exceptions.
 account_asset.diff # [account_asset] check if exist asset_lines
 
 # Sao
 issue8240.diff # Add drag and drop support to sao
-issue8390.diff # Different readonly computation for editable tree
-issue8386.diff # Buttons on list view do not work
-issue8308.diff # Improve column size
-issue8308_trytond.diff # Improve column size
+# issue8390.diff # Different readonly computation for editable tree
+# issue8386.diff # Buttons on list view do not work
+# issue8308.diff # Improve column size
+# issue8308_trytond.diff # Improve column size
