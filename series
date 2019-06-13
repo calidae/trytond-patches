@@ -8,8 +8,6 @@ issue8421.diff # [account] set necessary attributes when generate keyword view
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
 
-account_asset.diff # [account_asset] check if exist asset_lines
-
 issue8252.diff # [account_tax_rule_country] Add subdivisiions to match account tax rule
 
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
