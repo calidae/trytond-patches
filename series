@@ -3,7 +3,6 @@ trytond_test_database.diff # [trytond] avoid errors on upgrades from version 3.4
 logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
 
 issue3932.diff # [account] rule account move and account move line by company
-issue8421.diff # [account] set necessary attributes when generate keyword view
 
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
