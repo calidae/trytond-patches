@@ -30,7 +30,7 @@ party_identifier_migration.diff # [Party] avoid errors on upgrades
 
 issue8413.diff # [carrier]  Add recname to search
 production_view.diff #[production] Split inputs and outputs on pages
-issue8433.diff [stock] check inventory lines to not write if not necessary.
+issue8433.diff # [stock] check inventory lines to not write if not necessary.
 
 # Sao
 
