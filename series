@@ -18,6 +18,8 @@ sale_list_price.diff # [sale] Can't convert to currency with list price is null 
 sale_supply_supply_on_sale_multivalue.diff # [sale_supply] supply_on_sale field multvalue #035100
 sale_remove_multiselection.diff # [sale] remove multiselection handling exceptions
 
+purchase_remove_multiselection.diff # [purchase] remove multiselection handling exceptions
+
 lock_stock_move.diff # [stock] Function to overwrite if lock table or not
 issue4482.diff # [stock] stock inventory misses company access rule
 search_warehouse.diff # [stock] search function for warehouse
@@ -31,7 +33,6 @@ issue8394.diff # [stock_lot_sled] Allow configuring which quantity is grouped in
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
-party_identifier_migration.diff # [Party] avoid errors on upgrades
 
 issue8413.diff # [carrier]  Add recname to search
 production_view.diff #[production] Split inputs and outputs on pages
