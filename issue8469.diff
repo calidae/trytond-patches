@@ -1,0 +1,12 @@
+diff -r 00ceeb0849ee move.xml
+--- a/trytond/trytond/modules/account/move.xml	Sun Jun 16 19:14:46 2019 +0200
++++ b/trytond/trytond/modules/account/move.xml	Fri Jul 05 15:46:11 2019 +0200
+@@ -236,7 +236,7 @@
+             <field name="name">Receivable</field>
+             <field name="sequence" eval="20"/>
+             <field name="domain"
+-                eval="[('account.type.payable', '=', True)]" pyson="1"/>
++                eval="[('account.type.receivable', '=', True)]" pyson="1"/>
+             <field name="act_window" ref="act_move_line_payable_receivable"/>
+         </record>
+         <record model="ir.action.act_window.domain"
