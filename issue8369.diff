@@ -1,0 +1,11 @@
+--- a/trytond/trytond/convert.py	Tue May 28 10:03:40 2019 +0200
++++ b/trytond/trytond/convert.py	Thu May 30 09:37:52 2019 +0200
+@@ -242,7 +242,7 @@
+                     context.update(CONTEXT)
+                 value = eval(eval_attr, context)
+                 if pyson_attr:
+-                    value = PYSONEncoder().encode(value)
++                    value = PYSONEncoder(sort_keys=True).encode(value)
+                 self.values[field_name] = value
+ 
+         else:
