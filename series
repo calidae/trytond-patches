@@ -9,6 +9,7 @@ account_asset.diff # [account_asset] check if exist asset_lines
 
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
+issue8479.diff # [account_invoice] missing invoice payment method rule by company
 
 issue8252.diff # [account_tax_rule_country] Add subdivisiions to match account tax rule
 
