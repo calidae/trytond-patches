@@ -1,0 +1,12 @@
+diff -r fc7e92ca778f public_data/sao/src/view/form.js
+--- a/public_data/sao/src/view/form.js	Thu Jul 11 14:40:00 2019 +0200
++++ b/public_data/sao/src/view/form.js	Thu Jul 11 14:40:47 2019 +0200
+@@ -4065,7 +4065,7 @@
+             var field, row;
+             var key_schema = this.field.keys[key];
+             this.fields[key] = field = new (
+-                this.get_entries(key_schema.type))(key, this);
++                this.get_entries(key_schema.type_))(key, this);
+             this.rows[key] = row = jQuery('<div/>', {
+                 'class': 'form-group'
+             });
