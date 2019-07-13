@@ -1,6 +1,6 @@
 diff -r a79db218f578 invoice.py
---- a/invoice.py	Mon Jun 10 19:14:56 2019 +0200
-+++ b/invoice.py	Sat Jul 13 10:00:36 2019 +0200
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Mon Jun 10 19:14:56 2019 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Sat Jul 13 10:00:36 2019 +0200
 @@ -1306,6 +1306,8 @@
          Credit invoices and return ids of new invoices.
          Return the list of new invoice
