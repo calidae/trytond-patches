@@ -43,6 +43,8 @@ issue8433.diff # [stock] check inventory lines to not write if not necessary.
 
 issue8369.diff # [trytond] Sort keys of PYSON XML value
 
+issue8375.diff # [trytond] n_sign_posn and p_sign_posn are considered as string by trytond.convert
+
 # Sao
 
 issue8240.diff # Add drag and drop support to sao
