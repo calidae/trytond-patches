@@ -6,7 +6,7 @@ diff -r 74028491a4a5 trytond/trytond/modules/production/locale/ca.po
 
  msgctxt "view:production:"
 +msgid "Inputs"
-+msgstr "Entradas"
++msgstr "Entrades"
 +
 +msgctxt "view:production:"
  msgid "Lines"
@@ -18,7 +18,7 @@ diff -r 74028491a4a5 trytond/trytond/modules/production/locale/ca.po
 
 +msgctxt "view:production:"
 +msgid "Outputs"
-+msgstr "Salidas"
++msgstr "Sortides"
 +
  msgctxt "wizard_button:production.assign,failed,end:"
  msgid "OK"
