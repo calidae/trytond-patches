@@ -1,19 +1,68 @@
-diff -r 74028491a4a5 view/production_form.xml
+diff -r 74028491a4a5 trytond/trytond/modules/production/locale/ca.po
+--- a/trytond/trytond/modules/production/locale/ca.po	Mon May 06 15:06:40 2019 +0200
++++ b/trytond/trytond/modules/production/locale/ca.po	Tue Jul 23 11:43:54 2019 +0200
+@@ -736,6 +736,10 @@
+ msgstr "Línies"
+
+ msgctxt "view:production:"
++msgid "Inputs"
++msgstr "Entradas"
++
++msgctxt "view:production:"
+ msgid "Lines"
+ msgstr "Línies"
+
+@@ -743,6 +747,10 @@
+ msgid "Other Info"
+ msgstr "Informació addicional"
+
++msgctxt "view:production:"
++msgid "Outputs"
++msgstr "Salidas"
++
+ msgctxt "wizard_button:production.assign,failed,end:"
+ msgid "OK"
+ msgstr "D'acord"
+diff -r 74028491a4a5 trytond/trytond/modules/production/locale/es.po
+--- a/trytond/trytond/modules/production/locale/es.po	Mon May 06 15:06:40 2019 +0200
++++ b/trytond/trytond/modules/production/locale/es.po	Tue Jul 23 11:43:54 2019 +0200
+@@ -736,6 +736,10 @@
+ msgstr "Líneas"
+
+ msgctxt "view:production:"
++msgid "Inputs"
++msgstr "Entradas"
++
++msgctxt "view:production:"
+ msgid "Lines"
+ msgstr "Líneas"
+
+@@ -743,6 +747,10 @@
+ msgid "Other Info"
+ msgstr "Información adicional"
+
++msgctxt "view:production:"
++msgid "Outputs"
++msgstr "Salidas"
++
+ msgctxt "wizard_button:production.assign,failed,end:"
+ msgid "OK"
+ msgstr "Aceptar"
+diff -r 74028491a4a5 trytond/trytond/modules/production/view/production_form.xml
 --- a/trytond/trytond/modules/production/view/production_form.xml	Mon May 06 15:06:40 2019 +0200
-+++ b/trytond/trytond/modules/production/view/production_form.xml	Mon Jun 10 11:46:50 2019 +0200
-@@ -19,10 +19,12 @@
++++ b/trytond/trytond/modules/production/view/production_form.xml	Tue Jul 23 11:43:54 2019 +0200
+@@ -19,9 +19,11 @@
      <label name="uom"/>
      <field name="uom"/>
      <notebook>
 -        <page string="Lines" id="lines">
 -            <field name="inputs" colspan="2"/>
 -            <field name="outputs" colspan="2"/>
-+        <page name="inputs" id="inputs">
++        <page string="Inputs" id="inputs">
 +          <field name="inputs" colspan="2"/>
-         </page>
-+        <page string="outputs" id="lines">
-+          <field name="outputs" colspan="2"/>
 +        </page>
++        <page string="Outputs" id="lines">
++          <field name="outputs" colspan="2"/>
+         </page>
          <page string="Other Info" id="other">
              <label name="company"/>
-             <field name="company"/>
