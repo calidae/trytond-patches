@@ -33,7 +33,6 @@ stock_quantity_to_zero.diff # [stock] Ensure to sum with value.
 improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
 
 stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
-issue8394.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
