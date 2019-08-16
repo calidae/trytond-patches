@@ -1,41 +1,16 @@
- diff -r cc988ec8da34 trytond/trytond/protocols/dispatcher.py
- --- a/trytond/trytond/protocols/dispatcher.py   Mon Apr 23 17:12:37 2018 +0200
- +++ b/trytond/trytond/protocols/dispatcher.py   Fri May 11 12:53:17 2018 +0200
- @@ -122,8 +122,19 @@
-      type, _ = method.split('.', 1)
-      name = '.'.join(method.split('.')[1:-1])
-      method = method.split('.')[-1]
- -    return pool.get(name, type=type), method
- -
- +    try:
- +        obj = pool.get(name, type=type)
- +    except KeyError:
- +        if name[:15] == 'babi_execution_':
- +            with Transaction().start(pool.database_name, request.user_id,
- +                    readonly=False):
- +                Execution = pool.get('babi.report.execution')
- +                execution = Execution(int(name[15:]))
- +                execution.validate_model(avoid_registration=True)
- +            obj = pool.get(name, type=type)
- +        else:
- +            raise
- +    return obj, method
-
-  @app.auth_required
-  @with_pool
-diff -r d875ab180d75 trytond/ir/model.py
---- a/trytond/trytond/ir/model.py       Mon May 06 14:45:35 2019 +0200
-+++ b/trytond/trytond/ir/model.py       Wed May 22 00:18:59 2019 +0200
-@@ -587,8 +587,9 @@
-             # XXX Can not check access right on instance method
-             selection = []
-             for model_name, _ in selection:
--                if model_name and not cls.check(model_name, mode=mode,
--                        raise_exception=False):
-+                if (model_name and not model_name.startswith('babi_execution_')
-+                        and not cls.check(model_name, mode=mode,
-+                            raise_exception=False)):
-                     return False
-             return True
-         else:
-
+diff -r 0bde16075654 trytond/trytond/pool.py
+--- a/trytond/trytond/pool.py   Sun Jul 28 16:05:45 2019 +0200
++++ b/trytond/trytond/pool.py   Fri Aug 16 11:13:08 2019 +0000
+@@ -183,6 +183,12 @@
+                 cls.__setup__()
+                 self.add(cls, type)
+                 return cls
++            elif name[:15] == 'babi_execution_':
++                with Transaction(new=True).start(self.database_name, 0, readonly=False):
++                    Execution = self.get('babi.report.execution')
++                    execution = Execution(int(name[15:]))
++                    execution.validate_model(avoid_registration=True)
++                return self._pool[self.database_name][type][name]
+             raise
+ 
+     def add(self, cls, type='model'):
