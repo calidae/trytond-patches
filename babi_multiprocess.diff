@@ -15,7 +15,7 @@
  +                    readonly=False):
  +                Execution = pool.get('babi.report.execution')
  +                execution = Execution(int(name[15:]))
- +                execution.validate_model()
+ +                execution.validate_model(avoid_registration=True)
  +            obj = pool.get(name, type=type)
  +        else:
  +            raise
