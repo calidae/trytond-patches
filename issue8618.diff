@@ -1,0 +1,20 @@
+diff -r 6597f33e51d2 invoice.py
+--- a/trytond/trytond/modules/account_invoice/invoice.py	Fri Aug 09 16:33:39 2019 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.py	Wed Aug 28 23:44:50 2019 +0200
+@@ -2267,7 +2267,7 @@
+         else:
+             self.account = tax.credit_note_account
+ 
+-    @fields.depends('tax', 'base', 'amount', 'manual', 'invoice',
++    @fields.depends('tax', 'base', 'manual', 'invoice',
+         '_parent_invoice.currency')
+     def on_change_with_amount(self):
+         Tax = Pool().get('account.tax')
+@@ -2281,7 +2281,6 @@
+                     if self.invoice.currency:
+                         amount = self.invoice.currency.round(amount)
+                     return amount
+-        return self.amount
+ 
+     @classmethod
+     def check_modify(cls, taxes):
