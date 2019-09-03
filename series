@@ -46,6 +46,8 @@ issue8369.diff # [trytond] Sort keys of PYSON XML value
 
 issue8375.diff # [trytond] n_sign_posn and p_sign_posn are considered as string by trytond.convert
 
+issue8637.diff # [trytond] Use new related API for _changed_values
+
 # Sao
 
 issue8240.diff # Add drag and drop support to sao

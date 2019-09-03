@@ -1,0 +1,14 @@
+diff -r a7d5fe2a362d trytond/model/modelview.py
+--- a/trytond/trytond/model/modelview.py	Tue Sep 03 10:14:28 2019 +0200
++++ b/trytond/trytond/model/modelview.py	Tue Sep 03 10:17:13 2019 +0200
+@@ -765,7 +765,9 @@
+             if field._type in ('many2one', 'one2one', 'reference'):
+                 if value:
+                     if isinstance(value, ModelStorage):
+-                        changed['%s.rec_name' % fname] = value.rec_name
++                        changed['%s.' % fname] = {
++                            'rec_name': value.rec_name,
++                            }
+                     if value.id is None:
+                         # Don't consider temporary instance as a change
+                         continue
