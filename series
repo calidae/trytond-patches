@@ -56,3 +56,4 @@ issue8386.diff # Compare record against the current record of the screen
 issue8308.diff # Improve column size
 issue8308_trytond.diff # Improve column size
 sao_6be5204dc947.diff # Revert 6be5204dc947 that crash with add attribute dict field (product_attribute)
+sale_allow_group_shipments_with_different_dates.diff # [sale_shipment_grouping] Deletes the grouping condition by dates
