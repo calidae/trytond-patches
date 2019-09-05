@@ -39,3 +39,4 @@ issue8240.diff # Add drag and drop support to sao
 # issue8386.diff # Buttons on list view do not work
 # issue8308.diff # Improve column size
 # issue8308_trytond.diff # Improve column size
+sale_allow_group_shipments_with_different_dates.diff # [sale_shipment_grouping] Deletes the grouping condition by dates
