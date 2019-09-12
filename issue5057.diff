@@ -1,0 +1,28 @@
+diff -r b4fc69936b0e move.py
+--- a/trytond/trytond/modules/account/move.py	Thu Sep 12 10:25:13 2019 +0200
++++ b/trytond/trytond/modules/account/move.py	Thu Sep 12 10:32:48 2019 +0200
+@@ -170,6 +170,7 @@
+             if self.period and not (
+                     self.period.start_date <= date <= self.period.end_date):
+                 date = self.period.start_date
++                self.on_change_date()
+             return date
+         lines = Line.search([
+                 ('journal', '=', self.journal),
+@@ -181,6 +182,16 @@
+             date = self.period.start_date
+         return date
+
++    @fields.depends('date', 'lines')
++    def on_change_date(self):
++        for line in (self.lines or []):
++            line.date = self.date
++
++    @fields.depends(methods=['on_change_with_date', 'on_change_date'])
++    def on_change_period(self):
++        self.date = self.on_change_with_date()
++        self.on_change_date()
++
+     @classmethod
+     def _get_origin(cls):
+         'Return list of Model names for origin Reference'
