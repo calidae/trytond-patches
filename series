@@ -47,13 +47,3 @@ issue8369.diff # [trytond] Sort keys of PYSON XML value
 issue8375.diff # [trytond] n_sign_posn and p_sign_posn are considered as string by trytond.convert
 
 issue8637.diff # [trytond] Use new related API for _changed_values
-
-# Sao
-
-issue8240.diff # Add drag and drop support to sao
-issue8390.diff # Test if attribute readonly is undefined before using states value
-issue8386.diff # Compare record against the current record of the screen
-issue8308.diff # Improve column size
-issue8308_trytond.diff # Improve column size
-sao_6be5204dc947.diff # Revert 6be5204dc947 that crash with add attribute dict field (product_attribute)
-sale_allow_group_shipments_with_different_dates.diff # [sale_shipment_grouping] Deletes the grouping condition by dates
