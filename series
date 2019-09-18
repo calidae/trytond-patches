@@ -37,6 +37,7 @@ stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is group
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
+issue8659.diff # [product_cost_fifo] Cost FIFO does not consider moves from productions
 
 issue8413.diff # [carrier]  Add recname to search
 production_view.diff #[production] Split inputs and outputs on pages
