@@ -48,3 +48,5 @@ issue8369.diff # [trytond] Sort keys of PYSON XML value
 issue8375.diff # [trytond] n_sign_posn and p_sign_posn are considered as string by trytond.convert
 
 issue8637.diff # [trytond] Use new related API for _changed_values
+
+issue8636.diff # [account_payment_sepa] da434be20358 Include only validated mandates on lines to pay domain
