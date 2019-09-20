@@ -1,0 +1,12 @@
+diff -r 4e9d9963d09b view/move_line_list.xml
+--- a/trytond/trytond/modules/account_payment/view/move_line_list.xml	Mon May 06 14:56:47 2019 +0200
++++ b/trytond/trytond/modules/account_payment/view/move_line_list.xml	Wed Sep 18 16:18:53 2019 +0200
+@@ -3,7 +3,7 @@
+ this repository contains the full copyright notices and license terms. -->
+ <tree>
+     <field name="move"/>
+-    <field name="origin"/>
++    <field name="move_origin"/>
+     <field name="description"/>
+     <field name="party"/>
+     <field name="maturity_date"/>

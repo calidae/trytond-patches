@@ -1,6 +1,9 @@
+#issue262131002_284001002.diff  # [multi modules] view with expand
+
 babi_multiprocess.diff # [trytond] babi multiprocess
 trytond_test_database.diff # [trytond] avoid errors on upgrades from version 3.4
 logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
+account_payment_view.diff # [account_payment]
 
 issue3932.diff # [account] rule account move and account move line by company
 issue8469.diff # [account] Wrong domain in action move line receivable
