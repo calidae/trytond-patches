@@ -33,10 +33,4 @@ party_identifier_migration.diff # [Party] avoid errors on upgrades
 sale_remove_multiselection.diff # [sale] remove multiselection handling exceptions.
 account_asset.diff # [account_asset] check if exist asset_lines
 
-# Sao
-issue8240.diff # Add drag and drop support to sao
-# issue8390.diff # Different readonly computation for editable tree
-# issue8386.diff # Buttons on list view do not work
-# issue8308.diff # Improve column size
-# issue8308_trytond.diff # Improve column size
 sale_allow_group_shipments_with_different_dates.diff # [sale_shipment_grouping] Deletes the grouping condition by dates
