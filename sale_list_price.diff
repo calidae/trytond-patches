@@ -14,8 +14,8 @@ diff -r 656db55c90c0 trytond/trytond/modules/sale/product.py
          user = User(Transaction().user)
 
          for product in products:
--            prices[product.id] = product.list_price
-+            prices[product.id] = product.list_price or Decimal(0)
+-            prices[product.id] = product.list_price_used
++            prices[product.id] = product.list_price_used or Decimal(0)
              if uom and product.default_uom.category == uom.category:
                  prices[product.id] = Uom.compute_price(
                      product.default_uom, prices[product.id], uom)
