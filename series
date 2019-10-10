@@ -1,3 +1,4 @@
+issue8308.diff # [trytond] Change expand attribute into a factor
 #issue262131002_284001002.diff  # [multi modules] view with expand
 
 babi_multiprocess.diff # [trytond] babi multiprocess
