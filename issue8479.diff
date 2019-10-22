@@ -1,0 +1,21 @@
+diff -r 80d34e8f57a0 trytond/trytond/modules/account_invoice/invoice.xml
+--- a/trytond/trytond/modules/account_invoice/invoice.xml	Mon Jul 08 11:14:42 2019 +0200
++++ b/trytond/trytond/modules/account_invoice/invoice.xml	Mon Jul 08 11:15:43 2019 +0200
+@@ -411,5 +411,17 @@
+                 pyson="1"/>
+             <field name="rule_group" ref="rule_group_invoice_line"/>
+         </record>
++
++        <record model="ir.rule.group" id="rule_group_invoice_payment_method">
++            <field name="name">User in company</field>
++            <field name="model" search="[('model', '=', 'account.invoice.payment.method')]"/>
++            <field name="global_p" eval="True"/>
++        </record>
++        <record model="ir.rule" id="rule_invoice_payment_method1">
++            <field name="domain"
++                eval="[('company', '=', Eval('user', {}).get('company', None))]"
++                pyson="1"/>
++            <field name="rule_group" ref="rule_group_invoice_payment_method"/>
++        </record>
+     </data>
+ </tryton>
