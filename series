@@ -11,6 +11,7 @@ issue8469.diff # [account] Wrong domain in action move line receivable
 issue5057.diff # [account] Cannot change the date of a move after creating move lines
 
 account_asset.diff # [account_asset] check if exist asset_lines
+analytic_invoice.diff # [analytic_invoice] return move on set_analytic_lines
 
 issue6253.diff # [account_invoice] add invoice type criteria
 issue4506.diff # [account_invoice] Add credit invoices keyword from account.invoice
@@ -62,3 +63,4 @@ issue8703.diff # [stock_forecast] stock_forecast creates moves in the past
 
 issue8702.diff # [stock_supply_forecast] Support production forecast
 #issue8705.diff  # [trytond]  Always use search method on translations
+issue8752.diff # [analytic_invoice] 
