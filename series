@@ -33,6 +33,9 @@ issue8703.diff # [stock_forecast] stock_forecast creates moves in the past
 issue8702.diff # [stock_supply_forecast] Support production forecast
 sale_allow_group_shipments_with_different_dates.diff # [sale_shipment_grouping] Deletes the grouping condition by dates
 
+issue8752 # [analytic_invoice]
+
 #improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
 #issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages Issue7805 (only needed by stock_number_of_packages)
 #stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
+
