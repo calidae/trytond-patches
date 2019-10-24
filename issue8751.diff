@@ -1,0 +1,33 @@
+diff -r e4d3be431517 trytond/trytond/modules/commission/commission.py
+--- a/trytond/trytond/modules/commission/commission.py	Mon May 06 15:01:46 2019 +0200
++++ b/trytond/trytond/modules/commission/commission.py	Thu Oct 24 15:38:16 2019 +0200
+@@ -37,13 +37,8 @@
+             ('principal', 'Principal Of'),
+             ], 'Type')
+     company = fields.Many2One('company.company', 'Company', required=True)
+-    plan = fields.Many2One('commission.plan', 'Plan')
+-    currency = fields.Many2One('currency.currency', 'Currency',
+-        states={
+-            'required': Bool(Eval('plan')),
+-            'invisible': ~Eval('plan'),
+-            },
+-        depends=['plan'])
++    plan = fields.Many2One('commission.plan', 'Plan', required=True)
++    currency = fields.Many2One('currency.currency', 'Currency', required=True)
+     pending_amount = fields.Function(fields.Numeric('Pending Amount',
+             digits=price_digits), 'get_pending_amount')
+
+@@ -55,6 +50,13 @@
+     def default_type_():
+         return 'agent'
+
++    @staticmethod
++    def default_currency():
++        Company = Pool().get('company.company')
++        company = Transaction().context.get('company')
++        if company:
++            return Company(company).currency.id
++
+     @fields.depends('company', 'currency')
+     def on_change_company(self):
+         if self.company and not self.currency:
