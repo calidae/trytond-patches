@@ -27,7 +27,6 @@ issue239_630.diff # [stock] get location quantity by product, product template o
 stock_quantity_to_zero.diff # [stock] Ensure to sum with value.
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
-issue8699.diff # [product_cost_fifo] Cost price increases when no quantity FIFO
 production_view.diff #[production] Split inputs and outputs on pages
 issue8703.diff # [stock_forecast] stock_forecast creates moves in the past
 issue8702.diff # [stock_supply_forecast] Support production forecast
