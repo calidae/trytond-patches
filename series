@@ -39,6 +39,7 @@ issue239_630.diff # [stock] get location quantity by product, product template o
 issue7805.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 stock_quantity_to_zero.diff # [stock] Ensure to sum with value.
 improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
+issue8775.diff # [stock] Keep the origin of customer shipments when sync inventory to outgoing moves
 
 stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 

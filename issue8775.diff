@@ -1,0 +1,70 @@
+diff -r 183e40c3a037 trytond/trytond/modules/stock/move.py
+--- a/trytond/trytond/modules/stock/move.py	Tue Oct 29 10:51:12 2019 +0100
++++ b/trytond/trytond/modules/stock/move.py	Tue Oct 29 12:08:55 2019 +0100
+@@ -889,6 +889,7 @@
+                     first = False
+                 else:
+                     with Transaction().set_context(_stock_move_split=True):
++                        values.update({'origin': move})
+                         to_assign.extend(cls.copy([move], default=values))
+
+                 qty_default_uom = Uom.compute_qty(move.uom, qty,
+diff -r 183e40c3a037 trytond/trytond/modules/stock/shipment.py
+--- a/trytond/trytond/modules/stock/shipment.py	Tue Oct 29 10:51:12 2019 +0100
++++ b/trytond/trytond/modules/stock/shipment.py	Tue Oct 29 12:08:55 2019 +0100
+@@ -1177,8 +1177,8 @@
+                     continue
+                 quantity = Uom.compute_qty(move.uom, move.quantity,
+                         move.product.default_uom, round=False)
+-                outgoing_qty.setdefault(move.product.id, 0.0)
+-                outgoing_qty[move.product.id] += quantity
++                outgoing_qty.setdefault((move.product.id, move), 0.0)
++                outgoing_qty[(move.product.id, move)] += quantity
+
+             to_create = []
+             for move in shipment.inventory_moves:
+@@ -1187,18 +1187,18 @@
+                 qty_default_uom = Uom.compute_qty(move.uom, move.quantity,
+                     move.product.default_uom, round=False)
+                 # Check if the outgoing move doesn't exist already
+-                if outgoing_qty.get(move.product.id):
++                if outgoing_qty.get((move.product.id, move.origin)):
+                     # If it exist, decrease the sum
+-                    if qty_default_uom <= outgoing_qty[move.product.id]:
+-                        outgoing_qty[move.product.id] -= qty_default_uom
++                    if qty_default_uom <= outgoing_qty[(move.product.id, move.origin)]:
++                        outgoing_qty[(move.product.id, move.origin)] -= qty_default_uom
+                         continue
+                     # Else create the complement
+                     else:
+                         out_quantity = (qty_default_uom
+-                            - outgoing_qty[move.product.id])
++                            - outgoing_qty[(move.product.id, move.origin)])
+                         out_quantity = Uom.compute_qty(
+                             move.product.default_uom, out_quantity, move.uom)
+-                        outgoing_qty[move.product.id] = 0.0
++                        outgoing_qty[(move.product.id, move.origin)] = 0.0
+                 else:
+                     out_quantity = move.quantity
+
+@@ -1216,9 +1216,9 @@
+             for move in shipment.outgoing_moves:
+                 if move.state == 'cancel':
+                     continue
+-                if outgoing_qty.get(move.product.id, 0.0) > 0.0:
++                if outgoing_qty.get((move.product.id, move), 0.0) > 0.0:
+                     exc_qty = Uom.compute_qty(move.product.default_uom,
+-                            outgoing_qty[move.product.id], move.uom)
++                            outgoing_qty[(move.product.id, move)], move.uom)
+                     removed_qty = Uom.compute_qty(move.uom,
+                         min(exc_qty, move.quantity), move.product.default_uom,
+                         round=False)
+@@ -1228,7 +1228,7 @@
+                                     0.0,
+                                     move.uom.round(move.quantity - exc_qty)),
+                                 })
+-                    outgoing_qty[move.product.id] -= removed_qty
++                    outgoing_qty[(move.product.id, move)] -= removed_qty
+
+     @classmethod
+     @ModelView.button
