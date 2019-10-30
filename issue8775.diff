@@ -5,7 +5,7 @@ diff -r 183e40c3a037 trytond/trytond/modules/stock/move.py
                      first = False
                  else:
                      with Transaction().set_context(_stock_move_split=True):
-+                        values.update({'origin': move})
++                        values.update({'origin': 'stock.move,%s' % move.id})
                          to_assign.extend(cls.copy([move], default=values))
 
                  qty_default_uom = Uom.compute_qty(move.uom, qty,
