@@ -22,6 +22,7 @@ issue8252.diff # [account_tax_rule_country] Add subdivisiions to match account t
 
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
 analitic_line_company_rules.diff # [analytic_account] Not selected root accounts in analytic account lines
+analytic_invoice.diff # [analytic_invoice] Analytic Invoice
 
 issue8751.diff # [commission] Not create agent without plan
 

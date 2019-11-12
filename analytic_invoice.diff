@@ -1,0 +1,12 @@
+diff -r 65d02e2fa425 trytond/trytond/modules/analytic_invoice/invoice.py
+--- a/trytond/trytond/modules/analytic_invoice/invoice.py	Mon May 06 15:00:15 2019 +0200
++++ b/trytond/trytond/modules/analytic_invoice/invoice.py	Tue Nov 12 23:33:28 2019 +0100
+@@ -54,6 +54,8 @@
+             for line in lines:
+                 analytic_lines = []
+                 for entry in self.analytic_accounts:
++                    if not entry.account:
++                        continue
+                     analytic_lines.extend(
+                         entry.get_analytic_lines(line, date))
+                 line.analytic_lines = analytic_lines
