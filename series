@@ -47,6 +47,8 @@ stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is group
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
+party_identifier_migration.diff # [Party] avoid errors on upgrades
+
 issue8413.diff # [carrier]  Add recname to search
 production_view.diff #[production] Split inputs and outputs on pages
 issue8433.diff # [stock] check inventory lines to not write if not necessary.
