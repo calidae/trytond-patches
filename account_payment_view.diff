@@ -10,3 +10,4 @@ diff -r 9070eb9cb2e2 view/move_line_list.xml
      <field name="description" expand="1"/>
      <field name="party" expand="1"/>
      <field name="maturity_date"/>
+     <field name="bank_account"/>
