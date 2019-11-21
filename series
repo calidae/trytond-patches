@@ -65,3 +65,4 @@ issue8697.diff # [stock_supply] Missing supply period in purchase configuration
 issue8702.diff # [stock_supply_forecast] Support production forecast
 #issue8705.diff  # [trytond] Always use search method on translations
 issue8752.diff # [analytic_invoice] set_analytic_lines must return move
+issue8844.diff # [stock] Missing form view to Locations Tree Quantity
