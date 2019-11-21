@@ -1,33 +1,27 @@
-diff -r 0a8be30b1285 stock.py
---- a/trytond/trytond/modules/stock_lot/stock.py	Wed Nov 13 16:08:41 2019 +0100
-+++ b/trytond/trytond/modules/stock_lot/stock.py	Wed Nov 13 16:31:06 2019 +0100
-@@ -186,31 +186,41 @@
+diff -r 039880e76024 /trytond/trytond/modules/stock_lotstock.py
+--- a/trytond/trytond/modules/stock_lot/stock.py	Thu Nov 21 10:40:39 2019 +0100
++++ b/trytond/trytond/modules/stock_lot/stock.py	Thu Nov 21 11:33:55 2019 +0100
+@@ -184,33 +184,76 @@
+             shipments, create=create, write=write)
+         to_write = []
          for shipment in shipments:
-             outgoing_by_product = defaultdict(list)
-             for move in shipment.outgoing_moves:
+-            outgoing_by_product = defaultdict(list)
+-            for move in shipment.outgoing_moves:
 -                outgoing_by_product[move.product.id].append(move)
-+                key = (move.product.id, move)
-+                outgoing_by_product[key].append((move, Uom.compute_qty(move.uom,
-+                    move.quantity, move.product.default_uom,
-+                    round=False)))
-             for move in shipment.inventory_moves:
-                 if not move.lot:
-                     continue
-                 quantity = Uom.compute_qty(move.uom, move.quantity,
-                     move.product.default_uom, round=False)
+-            for move in shipment.inventory_moves:
+-                if not move.lot:
+-                    continue
+-                quantity = Uom.compute_qty(move.uom, move.quantity,
+-                    move.product.default_uom, round=False)
 -                outgoing_moves = outgoing_by_product[move.product.id]
-+                key = (move.product.id, move.origin)
-+                outgoing_moves = outgoing_by_product[key]
-                 while outgoing_moves and quantity > 0:
+-                while outgoing_moves and quantity > 0:
 -                    out_move = outgoing_moves.pop()
 -                    out_quantity = Uom.compute_qty(out_move.uom,
 -                        out_move.quantity, out_move.product.default_uom,
 -                        round=False)
-+                    out_move, out_quantity = outgoing_moves.pop()
-                     values = {}
-+                    pending_qty = out_quantity
-                     if quantity < out_quantity:
-                         with Transaction().set_context(_stock_move_split=True):
+-                    values = {}
+-                    if quantity < out_quantity:
+-                        with Transaction().set_context(_stock_move_split=True):
 -                            outgoing_moves.extend(
 -                                Move.copy([out_move], default={
 -                                        'quantity': out_move.uom.round(
@@ -36,23 +30,77 @@ diff -r 0a8be30b1285 stock.py
 -                        values['quantity'] = out_move.uom.round(quantity)
 -                    values['lot'] = move.lot.id
 -                    to_write.extend(([out_move], values))
-+                            new_move, = Move.copy([out_move], default={
-+                                        'quantity': quantity,
-+                                        'lot': move.lot.id
-+                                        })
-+                            to_write.extend(([move], {'origin': str(new_move)}))
-+                            pending_qty = out_move.uom.round(
-+                                out_quantity - quantity)
-+                            out_quantity = quantity
-+                    else:
-+                        pending_qty = 0
-+                        to_write.extend( ([out_move], {'lot': move.lot}) )
-+                    outgoing_by_product[key].append((out_move, pending_qty))
-                     quantity -= out_quantity
-                 assert move.uom.round(quantity) <= 0
-+        for values in outgoing_by_product.values():
-+            for move, qty in values:
-+                if qty > 0:
-+                    to_write.extend(([move], {'quantity': qty}))
+-                    quantity -= out_quantity
+-                assert move.uom.round(quantity) <= 0
++            if 'stock.move' in Move._get_origin():
++                # patch keep origin sync inventory to outgoing
++                outgoing_by_product = defaultdict(list)
++                for move in shipment.outgoing_moves:
++                    key = (move.product.id, move)
++                    outgoing_by_product[key].append((move, Uom.compute_qty(move.uom,
++                        move.quantity, move.product.default_uom,
++                        round=False)))
++                for move in shipment.inventory_moves:
++                    if not move.lot:
++                        continue
++                    quantity = Uom.compute_qty(move.uom, move.quantity,
++                        move.product.default_uom, round=False)
++                    key = (move.product.id, move.origin)
++                    outgoing_moves = outgoing_by_product[key]
++                    while outgoing_moves and quantity > 0:
++                        out_move, out_quantity = outgoing_moves.pop()
++                        values = {}
++                        pending_qty = out_quantity
++                        if quantity < out_quantity:
++                            with Transaction().set_context(_stock_move_split=True):
++                                new_move, = Move.copy([out_move], default={
++                                            'quantity': quantity,
++                                            'lot': move.lot.id
++                                            })
++                                to_write.extend(([move], {'origin': str(new_move)}))
++                                pending_qty = out_move.uom.round(
++                                    out_quantity - quantity)
++                                out_quantity = quantity
++                        else:
++                            pending_qty = 0
++                            to_write.extend( ([out_move], {'lot': move.lot}) )
++                        outgoing_by_product[key].append((out_move, pending_qty))
++                        quantity -= out_quantity
++                    assert move.uom.round(quantity) <= 0
++
++                for values in outgoing_by_product.values():
++                    for move, qty in values:
++                        if qty > 0:
++                            to_write.extend(([move], {'quantity': qty}))
++            else:
++                # core sync inventory to outgoing
++                outgoing_by_product = defaultdict(list)
++                for move in shipment.outgoing_moves:
++                    outgoing_by_product[move.product.id].append(move)
++                for move in shipment.inventory_moves:
++                    if not move.lot:
++                        continue
++                    quantity = Uom.compute_qty(move.uom, move.quantity,
++                        move.product.default_uom, round=False)
++                    outgoing_moves = outgoing_by_product[move.product.id]
++                    while outgoing_moves and quantity > 0:
++                        out_move = outgoing_moves.pop()
++                        out_quantity = Uom.compute_qty(out_move.uom,
++                            out_move.quantity, out_move.product.default_uom,
++                            round=False)
++                        values = {}
++                        if quantity < out_quantity:
++                            with Transaction().set_context(_stock_move_split=True):
++                                outgoing_moves.extend(
++                                    Move.copy([out_move], default={
++                                            'quantity': out_move.uom.round(
++                                                out_quantity - quantity),
++                                            }))
++                            values['quantity'] = out_move.uom.round(quantity)
++                        values['lot'] = move.lot.id
++                        to_write.extend(([out_move], values))
++                        quantity -= out_quantity
++                    assert move.uom.round(quantity) <= 0
++
          if to_write:
              Move.write(*to_write)
