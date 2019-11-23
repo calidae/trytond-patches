@@ -66,3 +66,4 @@ issue8702.diff # [stock_supply_forecast] Support production forecast
 #issue8705.diff  # [trytond] Always use search method on translations
 issue8752.diff # [analytic_invoice] set_analytic_lines must return move
 issue8844.diff # [stock] Missing form view to Locations Tree Quantity
+issue8860.diff # [stock_forecast] stock_forecast does not spread all the quantities
