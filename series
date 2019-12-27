@@ -40,3 +40,5 @@ issue7805.diff # [stock] [stock_lot_sled] Allow configuring which quantity is gr
 #issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages Issue7805 (only needed by stock_number_of_packages)
 #stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 issue8860.diff # [stock_forecast] stock_forecast does not spread all the quantities
+
+statement_of_account.diff # [account] Cumulate balance of previous fiscal years
