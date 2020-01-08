@@ -1,7 +1,8 @@
-diff -r 6c85f394741c invoice.py
---- a/trytond/trytond/modules/account_invoice/invoice.py	Wed Jan 24 20:14:28 2018 +0100
-+++ b/trytond/trytond/modules/account_invoice/invoice.py	Wed Feb 07 15:39:49 2018 +0100
-@@ -1020,6 +1020,11 @@
+diff --git a/invoice.py b/invoice.py
+index e58e444..5d44cd7 100644
+--- a/trytond/trytond/modules/account_invoice/invoice.py
++++ b/trytond/trytond/modules/account_invoice/invoice.py
+@@ -992,6 +992,11 @@ class Invoice(Workflow, ModelSQL, ModelView, TaxableMixin):
              invoice.number = invoice.get_next_number()
          cls.save(invoices)
 
@@ -13,11 +14,11 @@ diff -r 6c85f394741c invoice.py
      def get_next_number(self, pattern=None):
          pool = Pool()
          Sequence = pool.get('ir.sequence.strict')
-@@ -1040,11 +1045,7 @@
+@@ -1013,11 +1018,7 @@ class Invoice(Workflow, ModelSQL, ModelView, TaxableMixin):
          pattern.setdefault('fiscalyear', fiscalyear.id)
          pattern.setdefault('period', period.id)
          invoice_type = self.type
--        if (all(l.amount < 0 for l in self.lines if l.product)
+-        if (all(l.amount <= 0 for l in self.lines if l.product)
 -                and self.total_amount < 0):
 -            invoice_type += '_credit_note'
 -        else:
