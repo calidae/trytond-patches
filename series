@@ -43,4 +43,4 @@ issue8860.diff # [stock_forecast] stock_forecast does not spread all the quantit
 
 statement_of_account.diff # [account] Cumulate balance of previous fiscal years
 
-issue8880_trytond.diff # [trytond] Position new record based on order
+# issue8880_trytond.diff # [trytond] Position new record based on order
