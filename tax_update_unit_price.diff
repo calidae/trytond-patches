@@ -1,13 +1,13 @@
 diff --git a/tax.py b/tax.py
 --- a/trytond/trytond/modules/account/tax.py	Thu Gen 20 10:25:13 2020 +0200
 +++ b/trytond/trytond/modules/account/tax.py	Thu Gen 20 10:32:48 2020 +0200
-@@ -906,7 +906,8 @@ class Tax(sequence_ordered(), ModelSQL, ModelView, DeactivableMixin):
-                 if len(tax.childs):
-                     values.extend(
-                         cls._unit_compute(tax.childs, price_unit, date))
--                if tax.update_unit_price:
-+                if (tax.update_unit_price or
-+                        tax.parent and tax.parent.update_unit_price):
-                     for value in values:
+@@ -893,7 +893,8 @@ class Tax(sequence_ordered(), ModelSQL, ModelView, DeactivableMixin):
+                 if tax.type != 'none':
+                     value = tax._process_tax(price_unit)
+                     res.append(value)
+-                    if tax.update_unit_price:
++                    if (tax.update_unit_price or
++                            tax.parent and tax.parent.update_unit_price):
                          unit_price_variation += value['amount']
-                 res.extend(values)
+                 if len(tax.childs):
+                     res.extend(cls._unit_compute(tax.childs, price_unit, date))
