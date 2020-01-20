@@ -1,10 +1,10 @@
 diff -r c1860f118efd move.py
 --- a/trytond/trytond/modules/stock/move.py	Wed Nov 07 12:14:26 2018 +0100
 +++ b/trytond/trytond/modules/stock/move.py	Wed Nov 07 12:18:14 2018 +0100
-@@ -823,6 +823,10 @@
+@@ -748,6 +748,10 @@ class Move(Workflow, ModelSQL, ModelView):
              return to_pick
          return to_pick
-
+ 
 +    @staticmethod
 +    def lock_stock_move():
 +        return True
@@ -12,13 +12,67 @@ diff -r c1860f118efd move.py
      @classmethod
      def assign_try(cls, moves, with_childs=True, grouping=('product',)):
          '''
-@@ -878,7 +882,8 @@
-             with connection.cursor() as cursor:
-                 cursor.execute(*query)
-         else:
+@@ -780,34 +784,35 @@ class Move(Workflow, ModelSQL, ModelView):
+         companies = {m.company for m in moves}
+         stock_date_end = Date.today()
+ 
+-        if database.has_select_for():
+-            for company in companies:
+-                table = cls.__table__()
+-                query = table.select(Literal(1),
+-                    where=(table.to_location.in_(location_ids)
+-                        | table.from_location.in_(location_ids))
+-                    & table.product.in_(product_ids)
+-                    & (table.company == company.id),
+-                    for_=For('UPDATE', nowait=True))
+-
+-                PeriodCache = Period.get_cache(grouping)
+-                if PeriodCache:
+-                    periods = Period.search([
+-                            ('date', '<', stock_date_end),
+-                            ('company', '=', company.id),
+-                            ('state', '=', 'closed'),
+-                            ], order=[('date', 'DESC')], limit=1)
+-                    if periods:
+-                        period, = periods
+-                        query.where &= Coalesce(
+-                            table.effective_date,
+-                            table.planned_date,
+-                            datetime.date.max) > period.date
+-
+-                with connection.cursor() as cursor:
+-                    cursor.execute(*query)
+-        else:
 -            database.lock(connection, cls._table)
-+            if cls.lock_stock_move():
++        if cls.lock_stock_move():
++            if database.has_select_for():
++                for company in companies:
++                    table = cls.__table__()
++                    query = table.select(Literal(1),
++                        where=(table.to_location.in_(location_ids)
++                            | table.from_location.in_(location_ids))
++                        & table.product.in_(product_ids)
++                        & (table.company == company.id),
++                        for_=For('UPDATE', nowait=True))
++
++                    PeriodCache = Period.get_cache(grouping)
++                    if PeriodCache:
++                        periods = Period.search([
++                                ('date', '<', stock_date_end),
++                                ('company', '=', company.id),
++                                ('state', '=', 'closed'),
++                                ], order=[('date', 'DESC')], limit=1)
++                        if periods:
++                            period, = periods
++                            query.where &= Coalesce(
++                                table.effective_date,
++                                table.planned_date,
++                                datetime.date.max) > period.date
++
++                    with connection.cursor() as cursor:
++                        cursor.execute(*query)
++            else:
 +                database.lock(connection, cls._table)
-
-         with Transaction().set_context(
-                 stock_date_end=stock_date_end,
+ 
+         pblc = {}
+         for company in companies:
