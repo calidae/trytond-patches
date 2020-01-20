@@ -10,6 +10,7 @@ issue8834.diff # [account_payment_clearing] Party required when mark a payment s
 issue3932.diff # [account] rule account move and account move line by company
 issue8469.diff # [account] Wrong domain in action move line receivable
 issue5057.diff # [account] Cannot change the date of a move after creating move lines
+tax_update_unit_price.diff # [account] Add the update_unit_price control on parent tax
 
 account_asset.diff # [account_asset] check if exist asset_lines
 
