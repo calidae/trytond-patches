@@ -1,0 +1,1291 @@
+Index: trytond/trytond/modules/product_cost_fifo/product.py
+===================================================================
+--- a/trytond/trytond/modules/product_cost_fifo/product.py
++++ b/trytond/trytond/modules/product_cost_fifo/product.py
+@@ -1,6 +1,9 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
+-import datetime
++import datetime as dt
++from decimal import Decimal
++
++from trytond.config import config
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
+
+@@ -21,34 +24,26 @@
+ class Product(metaclass=PoolMeta):
+     __name__ = 'product.product'
+
+-    def _get_available_fifo_moves(self):
++    def _get_available_fifo_moves(self, date=None, offset=0, limit=None):
+         pool = Pool()
+         Move = pool.get('stock.move')
+-        return Move.search([
+-                ('product', '=', self.id),
+-                ('state', '=', 'done'),
+-                self._domain_moves_cost,
+-                ('fifo_quantity_available', '>', 0),
+-                ('to_location.type', '=', 'storage'),
+-                ('from_location.type', 'in', ['supplier', 'production']),
+-                ('to_location.type', '=', 'storage'),
+-                ], order=[('effective_date', 'DESC'), ('id', 'DESC')])
+
+-    def _get_fifo_quantity(self):
+-        pool = Pool()
+-        Location = pool.get('stock.location')
++        domain = [
++            ('product', '=', self.id),
++            self._domain_moves_cost(),
++            ('from_location.type', 'in', ['supplier', 'production']),
++            ('to_location.type', '=', 'storage'),
++            ]
++        if not date:
++            domain.append(('fifo_quantity_available', '>', 0))
++        else:
++            domain.append(('effective_date', '<=', date))
++        return Move.search(
++            domain,
++            offset=offset, limit=limit,
++            order=[('effective_date', 'DESC'), ('id', 'DESC')])
+
+-        locations = Location.search([
+-            ('type', '=', 'storage'),
+-            ])
+-        stock_date_end = datetime.date.today()
+-        location_ids = [l.id for l in locations]
+-        with Transaction().set_context(
+-                locations=location_ids,
+-                stock_date_end=stock_date_end):
+-            return self.__class__(self.id).quantity
+-
+-    def get_fifo_move(self, quantity=0.0):
++    def get_fifo_move(self, quantity=0.0, date=None):
+         '''
+         Return a list of (move, qty) where move is the move to be
+         consumed and qty is the quantity (in the product default uom)
+@@ -58,13 +53,30 @@
+         pool = Pool()
+         Uom = pool.get('product.uom')
+
+-        avail_qty = self._get_fifo_quantity()
++        avail_qty = self._get_storage_quantity(date=date)
++        if date:
++            # On recomputation, we must pretend
++            # outgoing moves are not yet done.
++            avail_qty += quantity
+         fifo_moves = []
+-        moves = self._get_available_fifo_moves()
+-        for move in moves:
+-            qty = Uom.compute_qty(move.uom,
+-                    move.fifo_quantity_available,
+-                    self.default_uom, round=False)
++
++        size = config.getint('cache', 'record')
++
++        def moves():
++            offset, limit = 0, size
++            while True:
++                moves = self._get_available_fifo_moves(
++                    date=date, offset=offset, limit=limit)
++                if not moves:
++                    break
++                for move in moves:
++                    yield move
++                offset += size
++
++        for move in moves():
++            qty = move.fifo_quantity_available if not date else move.quantity
++            qty = Uom.compute_qty(
++                move.uom, qty, self.default_uom, round=False)
+             avail_qty -= qty
+
+             if avail_qty <= quantity:
+@@ -78,5 +90,159 @@
+         fifo_moves.reverse()
+         return fifo_moves
+
+-    def recompute_cost_price_fifo(self):
+-        return self.recompute_cost_price_average()
++    def recompute_cost_price_fifo(self, start=None):
++        pool = Pool()
++        Move = pool.get('stock.move')
++        Currency = pool.get('currency.currency')
++        Uom = pool.get('product.uom')
++        digits = self.__class__.cost_price.digits
++
++        domain = [
++            ('product', '=', self.id),
++            self._domain_moves_cost(),
++            ['OR',
++                [
++                    ('to_location.type', '=', 'storage'),
++                    ('from_location.type', '!=', 'storage'),
++                    ],
++                [
++                    ('from_location.type', '=', 'storage'),
++                    ('to_location.type', '!=', 'storage'),
++                    ],
++                ],
++            ]
++        if start:
++            domain.append(('effective_date', '>=', start))
++        moves = Move.search(
++                domain, order=[('effective_date', 'ASC'), ('id', 'ASC')])
++
++        cost_price = Decimal(0)
++        quantity = 0
++        if start:
++            domain.remove(('effective_date', '>=', start))
++            domain.append(('effective_date', '<', start))
++            domain.append(
++                ('from_location.type', 'in', ['supplier', 'production']))
++            prev_moves = Move.search(
++                domain,
++                order=[('effective_date', 'DESC'), ('id', 'DESC')],
++                limit=1)
++            if prev_moves:
++                move, = prev_moves
++                cost_price = move.cost_price
++                quantity = self._get_storage_quantity(
++                    date=start - dt.timedelta(days=1))
++                quantity = Decimal(str(quantity))
++
++        def in_move(move):
++            return (move.from_location.type in ['supplier', 'production']
++                    or move.to_location.type == 'supplier')
++
++        def out_move(move):
++            return not in_move(move)
++
++        def compute_fifo_cost_price(quantity, date):
++            fifo_moves = self.get_fifo_move(
++                float(quantity),
++                date=current_moves[-1].effective_date)
++
++            cost_price = Decimal(0)
++            consumed_qty = 0
++            for move, move_qty in fifo_moves:
++                consumed_qty += move_qty
++                with Transaction().set_context(date=move.effective_date):
++                    unit_price = Currency.compute(
++                        move.currency, move.unit_price,
++                        move.company.currency, round=False)
++                unit_price = Uom.compute_price(
++                    move.uom, unit_price, move.product.default_uom)
++                cost_price += unit_price * Decimal(str(move_qty))
++            if consumed_qty:
++                return (cost_price / Decimal(str(consumed_qty))).quantize(
++                    Decimal(str(10.0 ** -digits[1])))
++
++        current_moves = []
++        current_out_qty = 0
++        current_cost_price = cost_price
++        for move in moves:
++            if (current_moves
++                    and current_moves[-1].effective_date
++                    != move.effective_date):
++                Move.write([
++                        m for m in filter(in_move, current_moves)
++                        if m.cost_price != current_cost_price],
++                    dict(cost_price=current_cost_price))
++
++                out_moves = list(filter(out_move, current_moves))
++                if out_moves:
++                    fifo_cost_price = compute_fifo_cost_price(
++                        current_out_qty, current_moves[-1].effective_date)
++                    if fifo_cost_price is None:
++                        fifo_cost_price = current_cost_price
++                    Move.write([
++                            m for m in out_moves
++                            if m.cost_price != fifo_cost_price],
++                        dict(cost_price=fifo_cost_price))
++                    if quantity:
++                        cost_price = (
++                            ((current_cost_price * (
++                                        quantity + current_out_qty))
++                                - (fifo_cost_price * current_out_qty))
++                            / quantity)
++                    else:
++                        cost_price = Decimal(0)
++                    current_cost_price = cost_price.quantize(
++                        Decimal(str(10.0 ** -digits[1])))
++                current_moves.clear()
++                current_out_qty = 0
++            current_moves.append(move)
++
++            qty = Uom.compute_qty(move.uom, move.quantity, self.default_uom)
++            qty = Decimal(str(qty))
++            if move.from_location.type == 'storage':
++                qty *= -1
++            if in_move(move):
++                with Transaction().set_context(date=move.effective_date):
++                    unit_price = Currency.compute(
++                        move.currency, move.unit_price,
++                        move.company.currency, round=False)
++                unit_price = Uom.compute_price(
++                    move.uom, unit_price, self.default_uom)
++                if quantity + qty > 0 and quantity >= 0:
++                    cost_price = (
++                        (cost_price * quantity) + (unit_price * qty)
++                        ) / (quantity + qty)
++                elif qty > 0:
++                    cost_price = unit_price
++                current_cost_price = cost_price.quantize(
++                    Decimal(str(10.0 ** -digits[1])))
++            else:
++                current_out_qty += -qty
++            quantity += qty
++
++        Move.write([
++                m for m in filter(in_move, current_moves)
++                if m.cost_price != current_cost_price],
++            dict(cost_price=current_cost_price))
++
++        out_moves = list(filter(out_move, current_moves))
++        if out_moves:
++            fifo_cost_price = compute_fifo_cost_price(
++                current_out_qty, current_moves[-1].effective_date)
++            if fifo_cost_price is None:
++                fifo_cost_price = current_cost_price
++            Move.write([
++                    m for m in out_moves
++                    if m.cost_price != fifo_cost_price],
++                dict(cost_price=fifo_cost_price))
++            if quantity:
++                cost_price = (
++                    ((current_cost_price * (
++                                quantity + current_out_qty))
++                        - (fifo_cost_price * current_out_qty))
++                    / quantity)
++            else:
++                cost_price = Decimal(0)
++            current_cost_price = cost_price.quantize(
++                Decimal(str(10.0 ** -digits[1])))
++        return current_cost_price
+Index: trytond/trytond/modules/product_cost_fifo/tests/scenario_product_cost_fifo_recompute_cost_price.rst
+===================================================================
+new file mode 100644
+--- /dev/null
++++ b/trytond/trytond/modules/product_cost_fifo/tests/scenario_product_cost_fifo_recompute_cost_price.rst
+@@ -0,0 +1,126 @@
++======================================
++Product Cost FIFO Recompute Cost Price
++======================================
++
++Imports::
++
++    >>> import datetime as dt
++    >>> from dateutil.relativedelta import relativedelta
++    >>> from decimal import Decimal
++    >>> from proteus import Model, Wizard
++    >>> from trytond.tests.tools import activate_modules
++    >>> from trytond.modules.company.tests.tools import create_company, \
++    ...     get_company
++    >>> today = dt.date.today()
++
++Install stock Module::
++
++    >>> config = activate_modules('product_cost_fifo')
++
++Create company::
++
++    >>> _ = create_company()
++    >>> company = get_company()
++
++Create product::
++
++    >>> ProductUom = Model.get('product.uom')
++    >>> ProductTemplate = Model.get('product.template')
++    >>> unit, = ProductUom.find([('name', '=', 'Unit')])
++
++    >>> template = ProductTemplate()
++    >>> template.name = 'Product'
++    >>> template.default_uom = unit
++    >>> template.type = 'goods'
++    >>> template.list_price = Decimal('300')
++    >>> template.cost_price_method = 'fifo'
++    >>> product, = template.products
++    >>> product.cost_price = Decimal('80')
++    >>> template.save()
++    >>> product, = template.products
++
++Get stock locations::
++
++    >>> Location = Model.get('stock.location')
++    >>> supplier_loc, = Location.find([('code', '=', 'SUP')])
++    >>> storage_loc, = Location.find([('code', '=', 'STO')])
++    >>> customer_loc, = Location.find([('code', '=', 'CUS')])
++
++Create some moves::
++
++    >>> StockMove = Model.get('stock.move')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=1,
++    ...     from_location=supplier_loc,
++    ...     to_location=storage_loc,
++    ...     unit_price=Decimal('100'),
++    ...     effective_date=today - dt.timedelta(days=2)).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=2,
++    ...     from_location=supplier_loc,
++    ...     to_location=storage_loc,
++    ...     unit_price=Decimal('120'),
++    ...     effective_date=today - dt.timedelta(days=1)).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=2,
++    ...     from_location=storage_loc,
++    ...     to_location=customer_loc,
++    ...     unit_price=Decimal('300'),
++    ...     effective_date=today - dt.timedelta(days=1)).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=3,
++    ...     from_location=supplier_loc,
++    ...     to_location=storage_loc,
++    ...     unit_price=Decimal('100'),
++    ...     effective_date=today).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=2,
++    ...     from_location=storage_loc,
++    ...     to_location=customer_loc,
++    ...     unit_price=Decimal('300'),
++    ...     effective_date=today).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=1,
++    ...     from_location=storage_loc,
++    ...     to_location=customer_loc,
++    ...     unit_price=Decimal('300'),
++    ...     effective_date=today).click('do')
++
++
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('100.0000'), Decimal('110.0000'), Decimal('105.0000'), Decimal('110.0000'), Decimal('113.3333'), Decimal('100.0000')]
++
++    >>> product.reload()
++    >>> product.cost_price
++    Decimal('100.0000')
++
++Recompute cost price::
++
++    >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.execute('recompute')
++
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('106.6667'), Decimal('106.6667'), Decimal('105.0000'), Decimal('110.0000'), Decimal('113.3333'), Decimal('100.0000')]
++
++    >>> product.reload()
++    >>> product.cost_price
++    Decimal('99.9999')
++
++Recompute cost price from a date::
++
++    >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.form.from_ = today - dt.timedelta(days=1)
++    >>> recompute.execute('recompute')
++
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('106.6667'), Decimal('106.6667'), Decimal('105.0000'), Decimal('110.0000'), Decimal('113.3333'), Decimal('100.0000')]
++
++    >>> product.reload()
++    >>> product.cost_price
++    Decimal('99.9999')
+Index: modules/product_cost_fifo/tests/test_product_cost_fifo.py
+===================================================================
+--- a/trytond/trytond/modules/product_cost_fifo/tests/test_product_cost_fifo.py
++++ b/trytond/trytond/modules/product_cost_fifo/tests/test_product_cost_fifo.py
+@@ -32,4 +32,9 @@
+             tearDown=doctest_teardown, encoding='utf-8',
+             checker=doctest_checker,
+             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
++    suite.addTests(doctest.DocFileSuite(
++            'scenario_product_cost_fifo_recompute_cost_price.rst',
++            tearDown=doctest_teardown, encoding='utf-8',
++            checker=doctest_checker,
++            optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
+     return suite
+Index: trytond/trytond/modules/production/__init__.py
+===================================================================
+--- a/trytond/trytond/modules/production/__init__.py
++++ b/trytond/trytond/modules/production/__init__.py
+@@ -7,6 +7,7 @@
+ from .product import *
+ from .production import *
+ from .stock import *
++from . import ir
+
+
+ def register():
+@@ -27,6 +28,7 @@
+         ProductionLeadTime,
+         Location,
+         Move,
++        ir.Cron,
+         module='production', type_='model')
+     Pool.register(
+         Assign,
+Index: trytond/trytond/modules/production/ir.py
+===================================================================
+new file mode 100644
+--- /dev/null
++++ b/trytond/trytond/modules/production/ir.py
+@@ -0,0 +1,14 @@
++# This file is part of Tryton.  The COPYRIGHT file at the top level of
++# this repository contains the full copyright notices and license terms.
++from trytond.pool import PoolMeta
++
++
++class Cron(metaclass=PoolMeta):
++    __name__ = 'ir.cron'
++
++    @classmethod
++    def __setup__(cls):
++        super().__setup__()
++        cls.method.selection.extend([
++                ('production|set_cost_from_moves', "Set Cost from Moves"),
++                ])
+Index: trytond/trytond/modules/production/production.py
+===================================================================
+--- a/trytond/trytond/modules/production/production.py
++++ b/trytond/trytond/modules/production/production.py
+@@ -447,6 +447,22 @@
+             }
+
+     @classmethod
++    def set_cost_from_moves(cls):
++        pool = Pool()
++        Move = pool.get('stock.move')
++        productions = set()
++        moves = Move.search([
++                ('production_cost_price_updated', '=', True),
++                ('production_input', '!=', None),
++                ],
++            order=[('effective_date', 'ASC')])
++        for move in moves:
++            if move.production_input not in productions:
++                cls.__queue__.set_cost([move.production_input])
++                productions.add(move.production_input)
++        Move.write(moves, {'production_cost_price_updated': False})
++
++    @classmethod
+     def set_cost(cls, productions):
+         pool = Pool()
+         Uom = pool.get('product.uom')
+Index: trytond/trytond/modules/production/production.xml
+===================================================================
+--- a/trytond/trytond/modules/production/production.xml
++++ b/trytond/trytond/modules/production/production.xml
+@@ -305,5 +305,10 @@
+             <field name="name">assign_failed_form</field>
+         </record>
+
++        <record model="ir.cron" id="cron_set_cost_from_moves">
++            <field name="method">production|set_cost_from_moves</field>
++            <field name="interval_number" eval="1"/>
++            <field name="interval_type">days</field>
++        </record>
+     </data>
+ </tryton>
+Index: trytond/trytond/modules/production/stock.py
+===================================================================
+--- a/trytond/trytond/modules/production/stock.py
++++ b/trytond/trytond/modules/production/stock.py
+@@ -32,6 +32,12 @@
+         readonly=True, select=True, ondelete='CASCADE',
+         domain=[('company', '=', Eval('company'))],
+         depends=['company'])
++    production_cost_price_updated = fields.Boolean(
++        "Cost Price Updated", readonly=True,
++        states={
++            'invisible': ~Eval('production_input') & (Eval('state') == 'done'),
++            },
++        depends=['production_input', 'state'])
+
+     def set_effective_date(self):
+         if not self.effective_date and self.production_input:
+@@ -39,3 +45,18 @@
+         if not self.effective_date and self.production_output:
+             self.effective_date = self.production_output.effective_date
+         super(Move, self).set_effective_date()
++
++    @classmethod
++    def write(cls, *args):
++        super().write(*args)
++        cost_price_update = []
++        actions = iter(args)
++        for moves, values in zip(actions, actions):
++            for move in moves:
++                if (move.state == 'done'
++                        and move.production_input
++                        and 'cost_price' in values):
++                    cost_price_update.append(move)
++        if cost_price_update:
++            cls.write(
++                cost_price_update, {'production_cost_price_updated': True})
+Index: trytond/trytond/modules/production/tests/scenario_production_set_cost.rst
+===================================================================
+new file mode 100644
+--- /dev/null
++++ b/trytond/trytond/modules/production/tests/scenario_production_set_cost.rst
+@@ -0,0 +1,105 @@
++===================
++Production Set Cost
++===================
++
++Imports::
++
++    >>> from decimal import Decimal
++    >>> from proteus import Model, Wizard
++    >>> from trytond.tests.tools import activate_modules
++    >>> from trytond.modules.company.tests.tools import create_company, \
++    ...     get_company
++
++Install production Module::
++
++    >>> config = activate_modules('production')
++
++Create company::
++
++    >>> _ = create_company()
++    >>> company = get_company()
++
++Create main product::
++
++    >>> ProductUom = Model.get('product.uom')
++    >>> unit, = ProductUom.find([('name', '=', 'Unit')])
++    >>> ProductTemplate = Model.get('product.template')
++
++    >>> template = ProductTemplate()
++    >>> template.name = 'product'
++    >>> template.default_uom = unit
++    >>> template.type = 'goods'
++    >>> template.producible = True
++    >>> template.list_price = Decimal(20)
++    >>> template.save()
++    >>> product, = template.products
++
++Create component::
++
++    >>> template = ProductTemplate()
++    >>> template.name = 'component'
++    >>> template.default_uom = unit
++    >>> template.type = 'goods'
++    >>> template.save()
++    >>> component, = template.products
++    >>> component.cost_price = Decimal(5)
++    >>> component.save()
++
++Create Bill of Material::
++
++    >>> BOM = Model.get('production.bom')
++    >>> bom = BOM(name='product')
++    >>> input = bom.inputs.new()
++    >>> input.product = component
++    >>> input.quantity = 2
++    >>> output = bom.outputs.new()
++    >>> output.product = product
++    >>> output.quantity = 1
++    >>> bom.save()
++
++Make a production::
++
++    >>> Production = Model.get('production')
++    >>> production = Production()
++    >>> production.product = product
++    >>> production.bom = bom
++    >>> production.quantity = 2
++    >>> production.click('wait')
++    >>> production.click('assign_force')
++    >>> production.click('run')
++    >>> production.click('done')
++
++Check output price::
++
++    >>> production.cost
++    Decimal('20.0000')
++    >>> output, = production.outputs
++    >>> output.unit_price
++    Decimal('10.0000')
++
++
++Change cost of input::
++
++    >>> Move = Model.get('stock.move')
++    >>> input, = production.inputs
++    >>> Move.write([input], {'cost_price': Decimal(6)}, config.context)
++    >>> input.reload()
++    >>> bool(input.production_cost_price_updated)
++    True
++
++Launch cron task::
++
++    >>> Cron = Model.get('ir.cron')
++    >>> Company = Model.get('company.company')
++    >>> cron_set_cost, = Cron.find([
++    ...     ('method', '=', 'production|set_cost_from_moves'),
++    ...     ])
++    >>> cron_set_cost.companies.append(Company(company.id))
++    >>> cron_set_cost.click('run_once')
++
++    >>> output.reload()
++    >>> output.unit_price
++    Decimal('12.0000')
++    >>> input.reload()
++    >>> bool(input.production_cost_price_updated)
++    False
+Index: trytond/trytond/modules/production/tests/test_production.py
+===================================================================
+--- a/trytond/trytond/modules/production/tests/test_production.py
++++ b/trytond/trytond/modules/production/tests/test_production.py
+@@ -63,4 +63,8 @@
+             tearDown=doctest_teardown, encoding='utf-8',
+             checker=doctest_checker,
+             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
++    suite.addTests(doctest.DocFileSuite('scenario_production_set_cost.rst',
++            tearDown=doctest_teardown, encoding='utf-8',
++            checker=doctest_checker,
++            optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
+     return suite
+Index: trytond/trytond/modules/stock/__init__.py
+===================================================================
+--- a/trytond/trytond/modules/stock/__init__.py
++++ b/trytond/trytond/modules/stock/__init__.py
+@@ -10,6 +10,7 @@ from .product import *
+ from . import inventory
+ from .configuration import *
+ from . import party
++from . import ir
+
+
+ def register():
+@@ -36,6 +37,7 @@ def register():
+         ProductByLocationContext,
+         ProductQuantitiesByWarehouse,
+         ProductQuantitiesByWarehouseContext,
++        product.RecomputeCostPriceStart,
+         inventory.Inventory,
+         inventory.InventoryLine,
+         inventory.CountSearch,
+@@ -43,6 +45,7 @@ def register():
+         Configuration,
+         ConfigurationSequence,
+         ConfigurationLocation,
++        ir.Cron,
+         module='stock', type_='model')
+     Pool.register(
+         AssignShipmentOut,
+Index: trytond/trytond/modules/stock/ir.py
+===================================================================
+new file mode 100644
+--- /dev/null
++++ b/trytond/trytond/modules/stock/ir.py
+@@ -0,0 +1,15 @@
++# This file is part of Tryton.  The COPYRIGHT file at the top level of
++# this repository contains the full copyright notices and license terms.
++from trytond.pool import PoolMeta
++
++
++class Cron(metaclass=PoolMeta):
++    __name__ = 'ir.cron'
++
++    @classmethod
++    def __setup__(cls):
++        super().__setup__()
++        cls.method.selection.extend([
++                ('product.product|recompute_cost_price_from_moves',
++                    "Recompute Cost Price from Moves"),
++                ])
+Index: trytond/trytond/modules/stock/move.py
+===================================================================
+--- a/trytond/trytond/modules/stock/move.py
++++ b/trytond/trytond/modules/stock/move.py
+@@ -245,6 +245,12 @@
+             'readonly': Eval('state') != 'draft',
+             },
+         depends=['unit_price_required', 'state'])
++    unit_price_updated = fields.Boolean(
++        "Unit Price Updated", readonly=True,
++        states={
++            'invisible': Eval('state') != 'done',
++            },
++        depends=['state'])
+     cost_price = fields.Numeric('Cost Price', digits=price_digits,
+         readonly=True)
+     currency = fields.Many2One('currency.currency', 'Currency',
+@@ -269,7 +275,7 @@
+             'from_location', 'to_location', 'company', 'currency'])
+         cls._deny_modify_done_cancel = (cls._deny_modify_assigned |
+             set(['planned_date', 'effective_date', 'state']))
+-        cls._allow_modify_closed_period = set()
++        cls._allow_modify_closed_period = {'cost_price'}
+
+         t = cls.__table__()
+         cls._sql_constraints += [
+@@ -345,6 +351,10 @@
+     def default_company():
+         return Transaction().context.get('company')
+
++    @classmethod
++    def default_unit_price_updated(cls):
++        return True
++
+     @staticmethod
+     def default_currency():
+         Company = Pool().get('company.company')
+@@ -687,6 +697,7 @@
+         super(Move, cls).write(*args)
+
+         to_write = []
++        unit_price_update = []
+         actions = iter(args)
+         for moves, values in zip(actions, actions):
+             if any(f not in cls._allow_modify_closed_period for f in values):
+@@ -700,8 +711,13 @@
+                     to_write.extend(([move], {
+                             'internal_quantity': internal_quantity,
+                             }))
++                if move.state == 'done' and 'unit_price' in values:
++                    unit_price_update.append(move)
++
+         if to_write:
+             cls.write(*to_write)
++        if unit_price_update:
++            cls.write(unit_price_update, {'unit_price_updated': True})
+
+     @classmethod
+     def delete(cls, moves):
+Index: trytond/trytond/modules/stock/product.py
+===================================================================
+--- a/trytond/trytond/modules/stock/product.py
++++ b/trytond/trytond/modules/stock/product.py
+@@ -13,7 +13,8 @@ from sql.conditionals import Coalesce
+ from trytond.i18n import gettext
+ from trytond.model import ModelSQL, ModelView, fields
+ from trytond.model.exceptions import AccessError
+-from trytond.wizard import Wizard, StateTransition
++from trytond.wizard import (
++    Wizard, StateTransition, StateAction, StateView, Button)
+ from trytond.pyson import Eval, Or
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
+@@ -103,12 +104,12 @@ class Template(metaclass=PoolMeta):
+         super(Template, cls).write(*args)
+
+     @classmethod
+-    def recompute_cost_price(cls, templates):
++    def recompute_cost_price(cls, templates, start=None):
+         pool = Pool()
+         Product = pool.get('product.product')
+
+         products = [p for t in templates for p in t.products]
+-        Product.recompute_cost_price(products)
++        Product.recompute_cost_price(products, start=start)
+
+
+ class Product(StockMixin, object, metaclass=PoolMeta):
+@@ -212,17 +213,48 @@ class Product(StockMixin, object, metaclass=PoolMeta):
+         return quantities
+
+     @classmethod
+-    def recompute_cost_price(cls, products):
++    def recompute_cost_price_from_moves(cls):
++        pool = Pool()
++        Move = pool.get('stock.move')
++        products = set()
++        for move in Move.search([
++                    ('unit_price_updated', '=', True),
++                    cls._domain_moves_cost(),
++                    ],
++                order=[('effective_date', 'ASC')]):
++            if move.product not in products:
++                cls.__queue__.recompute_cost_price(
++                    [move.product], start=move.effective_date)
++                products.add(move.product)
++
++    @classmethod
++    def recompute_cost_price(cls, products, start=None):
++        pool = Pool()
++        Move = pool.get('stock.move')
+         digits = cls.cost_price.digits
+         costs = defaultdict(list)
+         for product in products:
+             if product.type == 'service':
+                 continue
+-            cost = getattr(product,
+-                'recompute_cost_price_%s' % product.cost_price_method)()
++            cost = getattr(
++                product, 'recompute_cost_price_%s' %
++                product.cost_price_method)(start)
+             cost = cost.quantize(Decimal(str(10.0 ** -digits[1])))
+             costs[cost].append(product)
+
++        updated = []
++        for sub_products in grouped_slice(products):
++            domain = [
++                ('unit_price_updated', '=', True),
++                cls._domain_moves_cost(),
++                ('product', 'in', [p.id for p in sub_products]),
++                ]
++            if start:
++                domain.append(('effective_date', '>=', start))
++            updated += Move.search(domain, order=[])
++        if updated:
++            Move.write(updated, {'unit_price_updated': False})
++
+         if not costs:
+             return
+
+@@ -232,44 +264,92 @@ class Product(StockMixin, object, metaclass=PoolMeta):
+             to_write.append({'cost_price': cost})
+
+         # Enforce check access for account_stock*
+-        with Transaction().set_context(_check_access=True):
++        with Transaction().set_context(_check_access=False):
+             cls.write(*to_write)
+
+-    def recompute_cost_price_fixed(self):
++    def recompute_cost_price_fixed(self, start=None):
+         return self.cost_price
+
+-    def recompute_cost_price_average(self):
++    @classmethod
++    def _domain_moves_cost(cls):
++        "Returns the domain for moves to use in cost computation"
++        context = Transaction().context
++        return [
++            ('company', '=', context.get('company')),
++            ('state', '=', 'done'),
++            ]
++
++    def _get_storage_quantity(self, date=None):
++        pool = Pool()
++        Location = pool.get('stock.location')
++
++        locations = Location.search([
++            ('type', '=', 'storage'),
++            ])
++        if not date:
++            date = datetime.date.today()
++        location_ids = [l.id for l in locations]
++        with Transaction().set_context(
++                locations=location_ids,
++                with_childs=False,
++                stock_date_end=date):
++            return self.__class__(self.id).quantity
++
++    def recompute_cost_price_average(self, start=None):
+         pool = Pool()
+         Move = pool.get('stock.move')
+         Currency = pool.get('currency.currency')
+         Uom = pool.get('product.uom')
+-
+-        context = Transaction().context
+-
+-        if not isinstance(self.__class__.cost_price, TemplateFunction):
+-            product_clause = ('product', '=', self.id)
+-        else:
+-            product_clause = ('product.template', '=', self.template.id)
+-
+-        moves = Move.search([
+-                product_clause,
+-                ('state', '=', 'done'),
+-                ('company', '=', context.get('company')),
+-                ['OR',
+-                    [
+-                        ('to_location.type', '=', 'storage'),
+-                        ('from_location.type', '!=', 'storage'),
+-                        ],
+-                    [
+-                        ('from_location.type', '=', 'storage'),
+-                        ('to_location.type', '!=', 'storage'),
+-                        ],
+-                    ],
+-                ], order=[('effective_date', 'ASC'), ('id', 'ASC')])
++        digits = self.__class__.cost_price.digits
++
++        domain = [
++            ('product', '=', self.id),
++            self._domain_moves_cost(),
++            ['OR',
++                [
++                    ('to_location.type', '=', 'storage'),
++                    ('from_location.type', '!=', 'storage'),
++                    ], [
++                    ('from_location.type', '=', 'storage'),
++                    ('to_location.type', '!=', 'storage'),
++                     ],
++                ],
++            ]
++        if start:
++            domain.append(('effective_date', '>=', start))
++        moves = Move.search(
++                domain, order=[('effective_date', 'ASC'), ('id', 'ASC')])
+
+         cost_price = Decimal(0)
+         quantity = 0
++        if start:
++            domain.remove(('effective_date', '>=', start))
++            domain.append(('effective_date', '<', start))
++            domain.append(
++                ('from_location.type', 'in', ['supplier', 'production']))
++            prev_moves = Move.search(
++                domain,
++                order=[('effective_date', 'DESC'), ('id', 'DESC')],
++                limit=1)
++            if prev_moves:
++                move, = prev_moves
++                cost_price = move.cost_price
++                quantity = self._get_storage_quantity(
++                    date=start - datetime.timedelta(days=1))
++                quantity = Decimal(str(quantity))
++
++        current_moves = []
++        current_cost_price = cost_price
+         for move in moves:
++            if (current_moves
++                    and current_moves[-1].effective_date
++                    != move.effective_date):
++                Move.write([
++                        m for m in current_moves
++                        if m.cost_price != current_cost_price],
++                    dict(cost_price=current_cost_price))
++                current_moves.clear()
++            current_moves.append(move)
+             qty = Uom.compute_qty(move.uom, move.quantity, self.default_uom)
+             qty = Decimal(str(qty))
+             if move.from_location.type == 'storage':
+@@ -280,16 +360,23 @@ class Product(StockMixin, object, metaclass=PoolMeta):
+                     unit_price = Currency.compute(
+                         move.currency, move.unit_price,
+                         move.company.currency, round=False)
+-                unit_price = Uom.compute_price(move.uom, unit_price,
+-                    self.default_uom)
++                unit_price = Uom.compute_price(
++                    move.uom, unit_price, self.default_uom)
+                 if quantity + qty > 0 and quantity >= 0:
+                     cost_price = (
+                         (cost_price * quantity) + (unit_price * qty)
+                         ) / (quantity + qty)
+                 elif qty > 0:
+                     cost_price = unit_price
++                current_cost_price = cost_price.quantize(
++                    Decimal(str(10.0 ** -digits[1])))
+             quantity += qty
+-        return cost_price
++
++        Move.write([
++                m for m in current_moves
++                if m.cost_price != current_cost_price],
++            dict(cost_price=current_cost_price))
++        return current_cost_price
+
+
+ class ProductByLocationContext(ModelView):
+@@ -449,9 +536,40 @@ class ProductQuantitiesByWarehouseContext(ModelView):
+ class RecomputeCostPrice(Wizard):
+     'Recompute Cost Price'
+     __name__ = 'product.recompute_cost_price'
+-    start_state = 'recompute'
++    start = StateView(
++        'product.recompute_cost_price.start',
++        'stock.recompute_cost_price_start_view_form', [
++            Button("Cancel", 'end'),
++            Button("Recompute", 'recompute', default=True)])
+     recompute = StateTransition()
+
++    def default_start(self, fields):
++        pool = Pool()
++        Move = pool.get('stock.move')
++        Product = pool.get('product.product')
++        Template = pool.get('product.template')
++        context = Transaction().context
++
++        if context['active_model'] == 'product.product':
++            products = Product.browse(context['active_ids'])
++        elif context['active_model'] == 'product.template':
++            templates = Template.browse(context['active_ids'])
++            products = sum((t.products for t in templates), ())
++
++        from_ = None
++        for sub_products in grouped_slice(products):
++            moves = Move.search([
++                    ('unit_price_updated', '=', True),
++                    Product._domain_moves_cost(),
++                    ('product', 'in', [p.id for p in sub_products]),
++                    ],
++                order=[('effective_date', 'ASC')],
++                limit=1)
++            if moves:
++                move, = moves
++                from_ = min(from_ or datetime.date.max, move.effective_date)
++        return {'from_': from_}
++
+     def transition_recompute(self):
+         pool = Pool()
+         Product = pool.get('product.product')
+@@ -461,8 +579,14 @@ class RecomputeCostPrice(Wizard):
+
+         if context['active_model'] == 'product.product':
+             products = Product.browse(context['active_ids'])
+-            Product.recompute_cost_price(products)
++            Product.recompute_cost_price(products, start=self.start.from_)
+         elif context['active_model'] == 'product.template':
+             templates = Template.browse(context['active_ids'])
+-            Template.recompute_cost_price(templates)
++            Template.recompute_cost_price(templates, start=self.start.from_)
+         return 'end'
++
++
++class RecomputeCostPriceStart(ModelView):
++    "Recompute Cost Price"
++    __name__ = 'product.recompute_cost_price.start'
++    from_ = fields.Date("From")
+Index: trytond/trytond/modules/stock/product.xml
+===================================================================
+--- a/trytond/trytond/modules/stock/product.xml
++++ b/trytond/trytond/modules/stock/product.xml
+@@ -32,6 +32,18 @@
+             <field name="group" ref="product.group_product_admin"/>
+         </record>
+
++        <record model="ir.ui.view" id="recompute_cost_price_start_view_form">
++            <field name="model">product.recompute_cost_price.start</field>
++            <field name="type">form</field>
++            <field name="name">recompute_cost_price_start_form</field>
++        </record>
++
++        <record model="ir.cron" id="cron_recompute_cost_price_from_moves">
++            <field name="method">product.product|recompute_cost_price_from_moves</field>
++            <field name="interval_number" eval="1"/>
++            <field name="interval_type">days</field>
++        </record>
++
+         <record model="ir.ui.view" id="location_quantity_view_tree">
+             <field name="model">stock.location</field>
+             <field name="type">tree</field>
+@@ -197,6 +209,5 @@
+             <field name="action" ref="act_product_quantities_warehouse"/>
+             <field name="group" ref="group_stock"/>
+         </record>
+-
+     </data>
+ </tryton>
+Index: trytond/trytond/modules/stock/tests/scenario_stock_average_cost_price.rst
+===================================================================
+--- a/trytond/trytond/modules/stock/tests/scenario_stock_average_cost_price.rst
++++ b/trytond/trytond/modules/stock/tests/scenario_stock_average_cost_price.rst
+@@ -153,6 +153,7 @@
+ Recompute Cost Price::
+
+     >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.execute('recompute')
+     >>> product.cost_price
+     Decimal('175.0000')
+
+@@ -250,5 +251,6 @@
+ Recompute Cost Price::
+
+     >>> recompute = Wizard('product.recompute_cost_price', [negative_product])
++    >>> recompute.execute('recompute')
+     >>> negative_product.cost_price
+     Decimal('2.0000')
+Index: trytond/trytond/modules/stock/tests/scenario_stock_recompute_average_cost_price.rst
+===================================================================
+new file mode 100644
+--- /dev/null
++++ b/trytond/trytond/modules/stock/tests/scenario_stock_recompute_average_cost_price.rst
+@@ -0,0 +1,160 @@
++==================================
++Stock Recompute Average Cost Price
++==================================
++
++Imports::
++
++    >>> import datetime as dt
++    >>> from dateutil.relativedelta import relativedelta
++    >>> from decimal import Decimal
++    >>> from proteus import Model, Wizard
++    >>> from trytond.tests.tools import activate_modules
++    >>> from trytond.modules.company.tests.tools import create_company, \
++    ...     get_company
++    >>> today = dt.date.today()
++
++Install stock Module::
++
++    >>> config = activate_modules('stock')
++
++Create company::
++
++    >>> _ = create_company()
++    >>> company = get_company()
++
++Create product::
++
++    >>> ProductUom = Model.get('product.uom')
++    >>> ProductTemplate = Model.get('product.template')
++    >>> unit, = ProductUom.find([('name', '=', 'Unit')])
++
++    >>> template = ProductTemplate()
++    >>> template.name = 'Product'
++    >>> template.default_uom = unit
++    >>> template.type = 'goods'
++    >>> template.list_price = Decimal('300')
++    >>> template.cost_price_method = 'average'
++    >>> product, = template.products
++    >>> product.cost_price = Decimal('80')
++    >>> template.save()
++    >>> product, = template.products
++
++Get stock locations::
++
++    >>> Location = Model.get('stock.location')
++    >>> supplier_loc, = Location.find([('code', '=', 'SUP')])
++    >>> storage_loc, = Location.find([('code', '=', 'STO')])
++    >>> customer_loc, = Location.find([('code', '=', 'CUS')])
++
++Create some moves::
++
++    >>> StockMove = Model.get('stock.move')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=1,
++    ...     from_location=supplier_loc,
++    ...     to_location=storage_loc,
++    ...     unit_price=Decimal('100'),
++    ...     effective_date=today - dt.timedelta(days=2)).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=2,
++    ...     from_location=storage_loc,
++    ...     to_location=customer_loc,
++    ...     unit_price=Decimal('300'),
++    ...     effective_date=today - dt.timedelta(days=1)).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=2,
++    ...     from_location=supplier_loc,
++    ...     to_location=storage_loc,
++    ...     unit_price=Decimal('120'),
++    ...     effective_date=today - dt.timedelta(days=1)).click('do')
++    >>> StockMove(
++    ...     product=product,
++    ...     quantity=3,
++    ...     from_location=supplier_loc,
++    ...     to_location=storage_loc,
++    ...     unit_price=Decimal('100'),
++    ...     effective_date=today).click('do')
++
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('105.0000'), Decimal('120.0000'), Decimal('100.0000'), Decimal('100.0000')]
++
++    >>> product.reload()
++    >>> product.cost_price
++    Decimal('105.0000')
++
++Recompute cost price::
++
++    >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.execute('recompute')
++
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('105.0000'), Decimal('120.0000'), Decimal('120.0000'), Decimal('100.0000')]
++
++    >>> product.reload()
++    >>> product.cost_price
++    Decimal('105.0000')
++
++Recompute cost price from a date::
++
++    >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.form.from_ = today - dt.timedelta(days=1)
++    >>> recompute.execute('recompute')
++
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('105.0000'), Decimal('120.0000'), Decimal('120.0000'), Decimal('100.0000')]
++
++    >>> product.reload()
++    >>> product.cost_price
++    Decimal('105.0000')
++
++Update unit price of a move::
++
++    >>> move, = StockMove.find([
++    ...         ('from_location', '=', supplier_loc.id),
++    ...         ('effective_date', '=', today - dt.timedelta(days=1)),
++    ...         ])
++    >>> bool(move.unit_price_updated)
++    False
++    >>> move.unit_price = Decimal('130')
++    >>> move.save()
++    >>> bool(move.unit_price_updated)
++    True
++
++    >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.form.from_ = move.effective_date + dt.timedelta(days=1)
++    >>> recompute.execute('recompute')
++    >>> move.reload()
++    >>> bool(move.unit_price_updated)
++    True
++
++    >>> recompute = Wizard('product.recompute_cost_price', [product])
++    >>> recompute.form.from_ == move.effective_date
++    True
++    >>> recompute.execute('recompute')
++    >>> move.reload()
++    >>> bool(move.unit_price_updated)
++    False
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('107.5000'), Decimal('130.0000'), Decimal('130.0000'), Decimal('100.0000')]
++
++Launch cron task::
++
++    >>> move.unit_price = Decimal('120')
++    >>> move.save()
++
++    >>> Cron = Model.get('ir.cron')
++    >>> Company = Model.get('company.company')
++    >>> cron_recompute, = Cron.find([
++    ...     ('method', '=', 'product.product|recompute_cost_price_from_moves'),
++    ...     ])
++    >>> cron_recompute.companies.append(Company(company.id))
++    >>> cron_recompute.click('run_once')
++
++    >>> move.reload()
++    >>> bool(move.unit_price_updated)
++    False
++    >>> [m.cost_price for m in StockMove.find([])]
++    [Decimal('105.0000'), Decimal('120.0000'), Decimal('120.0000'), Decimal('100.0000')]
+Index: trytond/trytond/modules/stock/tests/test_stock.py
+===================================================================
+--- a/trytond/trytond/modules/stock/tests/test_stock.py
++++ b/trytond/trytond/modules/stock/tests/test_stock.py
+@@ -1423,6 +1423,11 @@
+             checker=doctest_checker,
+             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
+     suite.addTests(doctest.DocFileSuite(
++            'scenario_stock_recompute_average_cost_price.rst',
++            tearDown=doctest_teardown, encoding='utf-8',
++            checker=doctest_checker,
++            optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
++    suite.addTests(doctest.DocFileSuite(
+             'scenario_stock_inventory.rst',
+             tearDown=doctest_teardown, encoding='utf-8',
+             checker=doctest_checker,
+Index: trytond/trytond/modules/stock/view/recompute_cost_price_start_form.xml
+===================================================================
+new file mode 100644
+--- /dev/null
++++ b/trytond/trytond/modules/stock/view/recompute_cost_price_start_form.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0"?>
++<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
++this repository contains the full copyright notices and license terms. -->
++<form>
++    <label name="from_"/>
++    <field name="from_"/>
++</form>

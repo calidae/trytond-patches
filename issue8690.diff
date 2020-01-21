@@ -1,0 +1,15 @@
+diff --git a/trytond/trytond/modules/product/product.py b/trytond/trytond/modules/product/product.py
+index a3eb0e9..47a46ab 100644
+--- a/trytond/trytond/modules/product/product.py
++++ b/trytond/trytond/modules/product/product.py
+@@ -342,6 +342,10 @@ class Product(
+             icon = icon or 'tryton-product'
+             yield id_, rec_name, icon
+
++    @property
++    def list_price_used(self):
++        return self.template.get_multivalue('list_price')
++
+
+ class ProductListPrice(ModelSQL, CompanyValueMixin):
+     "Product List Price"

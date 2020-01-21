@@ -1,0 +1,183 @@
+Index: trytond/trytond/modules/product_cost_fifo/move.py
+===================================================================
+--- a/trytond/trytond/modules/product_cost_fifo/move.py
++++ b/trytond/trytond/modules/product_cost_fifo/move.py
+@@ -2,6 +2,8 @@
+ # this repository contains the full copyright notices and license terms.
+ from decimal import Decimal
+
++from sql import operators, Literal
++
+ from trytond.i18n import gettext
+ from trytond.model import Workflow, ModelView, fields, Check
+ from trytond.model.exceptions import AccessError
+@@ -13,7 +15,13 @@ __all__ = ['Move']
+
+ class Move(metaclass=PoolMeta):
+     __name__ = 'stock.move'
+-    fifo_quantity = fields.Float('FIFO Quantity')
++    fifo_quantity = fields.Float(
++        'FIFO Quantity',
++        help="Quantity used by FIFO.")
++    fifo_quantity_available = fields.Function(fields.Float(
++            "FIFO Quantity Available",
++            help="Quantity available for FIFO"),
++        'get_fifo_quantity_available')
+
+     @classmethod
+     def __setup__(cls):
+@@ -31,6 +39,27 @@ class Move(metaclass=PoolMeta):
+     def default_fifo_quantity():
+         return 0.0
+
++    def get_fifo_quantity_available(self, name):
++        return self.quantity - (self.fifo_quantity or 0)
++
++    @classmethod
++    def domain_fifo_quantity_available(cls, domain, tables):
++        table, _ = tables[None]
++        name, operator, value = domain
++        field = cls.fifo_quantity_available._field
++        Operator = fields.SQL_OPERATORS[operator]
++        column = (
++            cls.quantity.sql_column(table)
++            - cls.fifo_quantity.sql_column(table))
++        expression = Operator(column, field._domain_value(operator, value))
++        if isinstance(expression, operators.In) and not expression.right:
++            expression = Literal(False)
++        elif isinstance(expression, operators.NotIn) and not expression.right:
++            expression = Literal(True)
++        expression = field._domain_add_null(
++            column, operator, value, expression)
++        return expression
++
+     def _update_fifo_out_product_cost_price(self):
+         '''
+         Update the product cost price of the given product on the move. Update
+@@ -44,7 +73,8 @@ class Move(metaclass=PoolMeta):
+         total_qty = Uom.compute_qty(self.uom, self.quantity,
+             self.product.default_uom, round=False)
+
+-        fifo_moves = self.product.get_fifo_move(total_qty)
++        with Transaction().set_context(company=self.company.id):
++            fifo_moves = self.product.get_fifo_move(total_qty)
+
+         cost_price = Decimal("0.0")
+         consumed_qty = 0.0
+Index: trytond/trytond/modules/product_cost_fifo/product.py
+===================================================================
+--- a/trytond/trytond/modules/product_cost_fifo/product.py
++++ b/trytond/trytond/modules/product_cost_fifo/product.py
+@@ -21,16 +21,21 @@ class Template(metaclass=PoolMeta):
+ class Product(metaclass=PoolMeta):
+     __name__ = 'product.product'
+
+-    def get_fifo_move(self, quantity=0.0):
+-        '''
+-        Return a list of (move, qty) where move is the move to be
+-        consumed and qty is the quantity (in the product default uom)
+-        to be consumed on this move. The list contains the "first in"
+-        moves for the given quantity.
+-        '''
++    def _get_available_fifo_moves(self):
+         pool = Pool()
+         Move = pool.get('stock.move')
+-        Uom = pool.get('product.uom')
++        return Move.search([
++                ('product', '=', self.id),
++                ('state', '=', 'done'),
++                self._domain_moves_cost,
++                ('fifo_quantity_available', '>', 0),
++                ('to_location.type', '=', 'storage'),
++                ('from_location.type', 'in', ['supplier', 'production']),
++                ('to_location.type', '=', 'storage'),
++                ], order=[('effective_date', 'DESC'), ('id', 'DESC')])
++
++    def _get_fifo_quantity(self):
++        pool = Pool()
+         Location = pool.get('stock.location')
+
+         locations = Location.search([
+@@ -38,41 +43,38 @@ class Product(metaclass=PoolMeta):
+             ])
+         stock_date_end = datetime.date.today()
+         location_ids = [l.id for l in locations]
+-        with Transaction().set_context(locations=location_ids,
++        with Transaction().set_context(
++                locations=location_ids,
+                 stock_date_end=stock_date_end):
+-            product = self.__class__(self.id)
+-        offset = 0
+-        limit = Transaction().database.IN_MAX
+-        avail_qty = product.quantity
+-        fifo_moves = []
++            return self.__class__(self.id).quantity
+
+-        while avail_qty > 0.0:
+-            moves = Move.search([
+-                ('product', '=', product.id),
+-                ('state', '=', 'done'),
+-                ('from_location.type', 'in', ['supplier', 'production']),
+-                ('to_location.type', '=', 'storage'),
+-                ], offset=offset, limit=limit,
+-                order=[('effective_date', 'DESC'), ('id', 'DESC')])
+-            if not moves:
+-                break
+-            offset += limit
+-
+-            for move in moves:
+-                qty = Uom.compute_qty(move.uom,
+-                        move.quantity - move.fifo_quantity,
+-                        product.default_uom, round=False)
+-                avail_qty -= qty
+-
+-                if avail_qty <= quantity:
+-                    if avail_qty > 0.0:
+-                        fifo_moves.append(
+-                            (move, min(qty, quantity - avail_qty)))
+-                    else:
+-                        fifo_moves.append(
+-                            (move, min(quantity, qty + avail_qty)))
+-                        break
++    def get_fifo_move(self, quantity=0.0):
++        '''
++        Return a list of (move, qty) where move is the move to be
++        consumed and qty is the quantity (in the product default uom)
++        to be consumed on this move. The list contains the "first in"
++        moves for the given quantity.
++        '''
++        pool = Pool()
++        Uom = pool.get('product.uom')
+
++        avail_qty = self._get_fifo_quantity()
++        fifo_moves = []
++        moves = self._get_available_fifo_moves()
++        for move in moves:
++            qty = Uom.compute_qty(move.uom,
++                    move.fifo_quantity_available,
++                    self.default_uom, round=False)
++            avail_qty -= qty
++
++            if avail_qty <= quantity:
++                if avail_qty > 0.0:
++                    fifo_moves.append(
++                        (move, min(qty, quantity - avail_qty)))
++                else:
++                    fifo_moves.append(
++                        (move, min(quantity, qty + avail_qty)))
++                    break
+         fifo_moves.reverse()
+         return fifo_moves
+
+diff --git a/trytond/trytond/modules/stock/move.py b/trytond/trytond/modules/stock/move.py
+index dbe0677..46a82ae 100644
+--- a/trytond/trytond/modules/stock/move.py
++++ b/trytond/trytond/modules/stock/move.py
+@@ -610,6 +610,7 @@ class Move(Workflow, ModelSQL, ModelView):
+         context['with_childs'] = False
+         context['locations'] = [l.id for l in locations]
+         context['stock_date_end'] = Date.today()
++        context['company'] = moves[0].company.id
+         return context
+
+     def _do(self):
