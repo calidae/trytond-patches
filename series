@@ -1,7 +1,6 @@
 babi_multiprocess.diff # [trytond] babi multiprocess
 trytond_test_database.diff # [trytond] avoid errors on upgrades from version 3.4
 logging_jsonrpc_exeption.diff # [trytond] logging JSONRPC Exception
-account_payment_view.diff # [account_payment]
 
 issue8852.diff # [country] Adapt import_zip script to use the right subdivision type per country
 
