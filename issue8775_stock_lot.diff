@@ -1,7 +1,8 @@
-diff -r 5db7e45454ad stock.py
---- a/trytond/trytond/modules/stock_lot/stock.py	Wed Dec 11 11:35:56 2019 +0100
-+++ b/trytond/trytond/modules/stock_lot/stock.py	Wed Dec 11 11:38:40 2019 +0100
-@@ -184,33 +184,75 @@
+diff --git a/trytond/trytond/modules/stock_lot/stock.py b/trytond/trytond/modules/stock_lot/stock.py
+index f851071..d13b03d 100644
+--- a/trytond/trytond/modules/stock_lot/stock.py
++++ b/trytond/trytond/modules/stock_lot/stock.py
+@@ -170,33 +170,73 @@ class ShipmentOut(metaclass=PoolMeta):
              shipments, create=create, write=write)
          to_write = []
          for shipment in shipments:
@@ -40,6 +41,7 @@ diff -r 5db7e45454ad stock.py
 +                    outgoing_by_product[key].append((move, Uom.compute_qty(move.uom,
 +                        move.quantity, move.product.default_uom,
 +                        round=False)))
++
 +                for move in shipment.inventory_moves:
 +                    if not move.lot:
 +                        continue
@@ -58,15 +60,12 @@ diff -r 5db7e45454ad stock.py
 +                                            'lot': move.lot.id
 +                                            })
 +                                to_write.extend(([move], {'origin': str(new_move)}))
-+                                pending_qty = out_move.uom.round(
-+                                    out_quantity - quantity)
-+                                out_quantity = quantity
++                                pending_qty = out_move.uom.round(out_quantity - quantity)
++                                quantity = move.quantity - quantity
 +                        else:
-+                            pending_qty = 0
++                            quantity = 0
 +                            to_write.extend( ([out_move], {'lot': move.lot}) )
 +                        outgoing_by_product[key].append((out_move, pending_qty))
-+                        quantity = pending_qty
-+
 +                for values in outgoing_by_product.values():
 +                    for move, qty in values:
 +                        if qty > 0:
@@ -103,4 +102,3 @@ diff -r 5db7e45454ad stock.py
 +
          if to_write:
              Move.write(*to_write)
- 
