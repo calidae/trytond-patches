@@ -43,3 +43,5 @@ issue8860.diff # [stock_forecast] stock_forecast does not spread all the quantit
 
 statement_of_account.diff # [account] Cumulate balance of previous fiscal years
 issue9017.diff # [purchase] Doesn't copy product_suppliers when a template or a product is duplicated
+
+worker.diff # [trytond] Add default vaules for the number of worker process to solve supervisor problme with the interger variables
