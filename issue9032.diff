@@ -1,0 +1,13 @@
+diff --git a/trytond/trytond/modules/account_invoice_stock/stock.py b/trytond/trytond/modules/account_invoice_stock/stock.py
+index a741d88..b118326 100644
+--- a/trytond/trytond/modules/account_invoice_stock/stock.py
++++ b/trytond/trytond/modules/account_invoice_stock/stock.py
+@@ -20,6 +20,8 @@ class StockMove(metaclass=PoolMeta):
+         Uom = pool.get('product.uom')
+         quantity = 0
+         for invoice_line in self.invoice_lines:
++            if invoice_line.invoice and invoice_line.invoice.state == 'cancel':
++                continue
+             quantity += Uom.compute_qty(invoice_line.unit,
+                 invoice_line.quantity, self.uom)
+         return quantity
