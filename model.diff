@@ -1,0 +1,13 @@
+diff --git a/trytond/model/model.py b/trytond/model/model.py
+index c4ab96fc..bdb1c78b 100644
+--- a/trytond/trytond/model/model.py
++++ b/trytond/trytond/model/model.py
+@@ -258,7 +258,7 @@ class Model(URLMixin, PoolBase, metaclass=ModelMeta):
+                     name = name[len('_parent_'):]
+                     parent_values[name][field] = value
+                     value = parent_values[name]
+-                if getattr(self.__class__, name).context:
++                if hasattr(self.__class__, name) and getattr(self.__class__, name).context:
+                     has_context[name] = value
+ 
+             for name, value in parent_values.items():
