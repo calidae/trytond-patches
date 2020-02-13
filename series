@@ -38,6 +38,4 @@ stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is group
 backport_6fefd00369c1.diff # [trytond] Use recursive common table expression for child_of/parent_of operators + Fix: https://bugs.tryton.org/issue7405
 
 # sao
-old_icons.diff
-set_preferences.diff
 resize_modal_md.diff

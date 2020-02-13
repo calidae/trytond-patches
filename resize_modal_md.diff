@@ -1,13 +1,15 @@
-diff -r 399d0255a637 src/sao.less
---- a/public_data/sao/src/sao.less	Wed Nov 28 10:01:32 2018 +0100
-+++ b/public_data/sao/src/sao.less	Wed Jan 23 15:42:25 2019 +0100
-@@ -91,6 +91,9 @@
+Index: diloy/public_data/sao/src/sao.less
+===================================================================
+--- diloy.orig/public_data/sao/src/sao.less
++++ diloy/public_data/sao/src/sao.less
+@@ -82,6 +82,10 @@
      }
  }
-
+ 
 +.modal-md {
 +  width: 60%;
 +}
- .modal-body {
-     overflow-x: auto;
- }
++
+ input[type='color'] {
+     & .btn {
+         height: @line-height-base;
