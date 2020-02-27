@@ -1,7 +1,7 @@
 diff --git a/shipment.py b/shipment.py
 index 6ef998f..bd94381 100644
---- a/shipment.py
-+++ b/shipment.py
+--- a/trytond/trytond/modules/stock_supply/shipment.py
++++ b/trytond/trytond/modules/stock_supply/shipment.py
 @@ -132,16 +132,18 @@ class ShipmentInternal(ModelSQL, ModelView):
                      state='request',
                      )
