@@ -14,6 +14,9 @@ issue4506.diff # [account_invoice] Add credit invoices keyword from account.invo
 issue8479.diff # [account_invoice] missing invoice payment method rule by company
 create_invoice_credit_with_refund.diff # [account_invoice] revert the creation of a credit invoice whith refund change. reconcile the 2 invoices, not cancell the origin one.
 issue8618.diff # [account_invoice] Allow changing amount in manual invoice taxes
+
+issue9032.diff # [account_invoice_stock] Skip sum quantity of cancelled invoices
+
 issue4030.diff # [analytic_account] Not selected root accounts in analytic account lines
 analitic_line_company_rules.diff # [analytic_account] Not selected root accounts in analytic account lines
 
@@ -43,3 +46,5 @@ issue8860.diff # [stock_forecast] stock_forecast does not spread all the quantit
 
 statement_of_account.diff # [account] Cumulate balance of previous fiscal years
 issue9017.diff # [purchase] Doesn't copy product_suppliers when a template or a product is duplicated
+
+model.diff # [trytond] Allows dynamic fields in Model as required by the wizard in sale_pos_template_quantities
