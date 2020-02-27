@@ -22,7 +22,7 @@ diff -r 62f81d7eb78b account.py
 diff -r 62f81d7eb78b view/general_ledger_line_context_form.xml
 --- a/trytond/trytond/modules/account/view/general_ledger_line_context_form.xml	Fri Jul 07 10:04:01 2017 +0200
 +++ b/trytond/trytond/modules/account/view/general_ledger_line_context_form.xml	Fri Jul 07 10:30:29 2017 +0200
-@@ -6,4 +6,12 @@
+@@ -6,4 +6,16 @@
          <label name="party_cumulate"/>
          <field name="party_cumulate"/>
      </xpath>
@@ -34,4 +34,8 @@ diff -r 62f81d7eb78b view/general_ledger_line_context_form.xml
 +    <xpath expr="/form/label[@name='start_period']" position="replace"/>
 +    <xpath expr="/form/field[@name='end_period']" position="replace"/>
 +    <xpath expr="/form/label[@name='end_period']" position="replace"/>
++    <xpath expr="/form/field[@name='start_date']" position="replace"/>
++    <xpath expr="/form/label[@name='start_date']" position="replace"/>
++    <xpath expr="/form/field[@name='end_date']" position="replace"/>
++    <xpath expr="/form/label[@name='end_date']" position="replace"/>
  </data>
