@@ -1,22 +1,24 @@
 diff --git a/shipment.py b/shipment.py
-index 6ef998f..9afbb69 100644
+index 6ef998f..bd94381 100644
 --- a/shipment.py
 +++ b/shipment.py
-@@ -5,6 +5,7 @@ import datetime
- from trytond.model import ModelView, ModelSQL
- from trytond.transaction import Transaction
- from trytond.pool import Pool
-+from decimal import Decimal
- 
- __all__ = ['ShipmentInternal']
- 
-@@ -141,7 +142,8 @@ class ShipmentInternal(ModelSQL, ModelView):
+@@ -132,16 +132,18 @@ class ShipmentInternal(ModelSQL, ModelView):
+                     state='request',
+                     )
+                 shipment_moves = []
++
+                 for move in moves:
+                     product_id, qty = move
+                     product = id2product.setdefault(
+                         product_id, Product(product_id))
++                    digits = product.default_uom.digits
+                     shipment_moves.append(Move(
+                             from_location=from_location,
                              to_location=to_location,
                              planned_date=date,
                              product=product,
 -                            quantity=qty,
-+                            quantity=Decimal(qty).quantize(Decimal(str(10 **
-+                                        -Move.quantity.digits[1]))),
++                            quantity=round(qty, digits),
                              uom=product.default_uom,
                              company=user_record.company,
                              ))
