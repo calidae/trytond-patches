@@ -1,0 +1,37 @@
+diff --git a/trytond/trytond/modules/account_statement/locale/es_ES.po b/trytond/trytond/modules/account_statement/locale/es_ES.po
+index 92cbee3..a16dd97 100644
+--- a/trytond/trytond/modules/account_statement/locale/es_ES.po
++++ b/trytond/trytond/modules/account_statement/locale/es_ES.po
+@@ -3,8 +3,8 @@ msgid ""
+ msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+ msgctxt "error:account.statement.line:"
+-msgid "Amount \"%s\" is greater than the amount to pay of invoice."
+-msgstr "El importe \"%s\" es mayor que el importe a pagar de la factura."
++msgid "Amount \"%s\" is greater than the amount to pay of invoice \"%s\"."
++msgstr "El importe \"%s\" es mayor que el importe a pagar de la factura \"%s\"."
+
+ msgctxt "error:account.statement.line:"
+ msgid "Amount should be a positive or negative value."
+diff --git a/trytond/trytond/modules/account_statement/statement.py b/trytond/trytond/modules/account_statement/statement.py
+index c310b32..fe42e41 100644
+--- a/trytond/trytond/modules/account_statement/statement.py
++++ b/trytond/trytond/modules/account_statement/statement.py
+@@ -556,7 +556,7 @@ class Line(ModelSQL, ModelView):
+         cls._order.insert(0, ('sequence', 'ASC'))
+         cls._error_messages.update({
+                 'amount_greater_invoice_amount_to_pay': ('Amount "%s" is '
+-                    'greater than the amount to pay of invoice.'),
++                    'greater than the amount to pay of invoice "%s".'),
+                 })
+         t = cls.__table__()
+         cls._sql_constraints += [
+@@ -669,7 +669,7 @@ class Line(ModelSQL, ModelView):
+                     '%.' + str(self.statement.journal.currency.digits) + 'f',
+                     self.amount, True)
+                 self.raise_user_error('amount_greater_invoice_amount_to_pay',
+-                        error_args=(amount,))
++                        error_args=(amount, self.invoice.number))
+
+             with Transaction().set_context(date=self.invoice.currency_date):
+                 amount = Currency.compute(self.statement.journal.currency,
