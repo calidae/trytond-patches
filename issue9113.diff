@@ -1,0 +1,28 @@
+diff --git a/trytond/trytond/modules/stock/product.py b/trytond/trytond/modules/stock/product.py
+index d066146..61f7dfd 100644
+--- a/trytond/trytond/modules/stock/product.py
++++ b/trytond/trytond/modules/stock/product.py
+@@ -22,6 +22,7 @@ from trytond.tools import decistmt
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
+ from trytond.tools import grouped_slice
++from trytond.exceptions import UserError
+
+ from .exceptions import ProductCostPriceError
+ from .move import StockMixin
+@@ -146,9 +147,12 @@ class Product(StockMixin, object, metaclass=PoolMeta):
+         with Transaction().set_context(context):
+             for product in cls.browse(products):
+                 # The product may not have a cost price
+-                if product.cost_price is not None:
+-                    cost_values[product.id] = (
+-                        Decimal(str(product.quantity)) * product.cost_price)
++                try:
++                    if product.cost_price is not None:
++                        cost_values[product.id] = (
++                            Decimal(str(product.quantity)) * product.cost_price)
++                except UserError:
++                    cost_values[product.id] = None
+         return cost_values
+
+     @classmethod
