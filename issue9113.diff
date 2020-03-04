@@ -1,8 +1,16 @@
 diff --git a/trytond/trytond/modules/stock/product.py b/trytond/trytond/modules/stock/product.py
-index bbe41a5..a2dbccd 100644
+index bbe41a5..169f46e 100644
 --- a/trytond/trytond/modules/stock/product.py
 +++ b/trytond/trytond/modules/stock/product.py
-@@ -126,11 +126,14 @@ class Product(StockMixin, object):
+@@ -16,6 +16,7 @@ from trytond.pyson import PYSONEncoder, Eval, Or
+ from trytond.transaction import Transaction
+ from trytond.pool import Pool, PoolMeta
+ from trytond.tools import grouped_slice
++from trytond.exceptions import UserError
+
+ from trytond.modules.product import TemplateFunction
+ from .move import StockMixin
+@@ -126,11 +127,14 @@ class Product(StockMixin, object):
          with Transaction().set_context(context):
              for product in cls.browse(products):
                  # The date could be before the product creation
