@@ -1,0 +1,23 @@
+diff --git a/trytond/trytond/modules/stock/product.py b/trytond/trytond/modules/stock/product.py
+index bbe41a5..a2dbccd 100644
+--- a/trytond/trytond/modules/stock/product.py
++++ b/trytond/trytond/modules/stock/product.py
+@@ -126,11 +126,14 @@ class Product(StockMixin, object):
+         with Transaction().set_context(context):
+             for product in cls.browse(products):
+                 # The date could be before the product creation
+-                if not isinstance(product.cost_price, Decimal):
++                try:
++                    if not isinstance(product.cost_price, Decimal):
++                        cost_values[product.id] = None
++                    else:
++                        cost_values[product.id] = (Decimal(str(product.quantity))
++                            * product.cost_price)
++                except UserError:
+                     cost_values[product.id] = None
+-                else:
+-                    cost_values[product.id] = (Decimal(str(product.quantity))
+-                        * product.cost_price)
+         return cost_values
+
+     @classmethod
