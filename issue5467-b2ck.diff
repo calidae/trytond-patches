@@ -1,0 +1,22 @@
+--- a/trytond/trytond/modules/sale/stock.py
++++ b/trytond/trytond/modules/sale/stock.py
+@@ -22,7 +22,7 @@ def process_sale(moves_field):
+                     for m in getattr(s, moves_field) if m.sale)
+             func(cls, shipments)
+             if sales:
+-                Sale.__queue__.process(sales)
++                Sale.process(sales)
+         return wrapper
+     return _process_sale
+ 
+--- a/trytond/trytond/modules/purchase/stock.py
++++ b/trytond/trytond/modules/purchase/stock.py
+@@ -27,7 +27,7 @@ def process_purchase(moves_field):
+                     for m in getattr(s, moves_field) if m.purchase)
+             func(cls, shipments)
+             if purchases:
+-                Purchase.__queue__.process(purchases)
++                Purchase.process(purchases)
+         return wrapper
+     return _process_purchase
+ 

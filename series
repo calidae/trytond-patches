@@ -49,3 +49,6 @@ issue9017.diff # [purchase] Doesn't copy product_suppliers when a template or a 
 
 model.diff # [trytond] Allows dynamic fields in Model as required by the wizard in sale_pos_template_quantities
 issue9103.diff # [trytond] User-defined reports for custom template extensions
+
+issue5467-b2ck.diff # [sale] [purchase] Strange worker behaviour
+https://bugs.b2ck.com/issue5467
