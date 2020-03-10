@@ -75,6 +75,5 @@ statement_of_account.diff # [account] Cumulate balance of previous fiscal years
 # issue3209.diff # [production] Allocate cost based on list price of each product
 # issue260381003_284691002.diff # Update cost of moves when recomputing product cost price
 # issue8690.diff # Set company context in product instance
-product_cost_fifo.diff # [product_cost_fifo] Use round in compute_qty of move_qty
 stock_supply.diff # [stock_supply] Force rounding in the quantity of internal shipment moves
 issue9103.diff # [trytond] User-defined reports for custom template extensions
