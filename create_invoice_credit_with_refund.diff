@@ -7,7 +7,7 @@ diff -r a79db218f578 invoice.py
          '''
 +        MoveLine = Pool().get('account.move.line')
 +
-         new_invoices = [i._credit() for i in invoices]
+         new_invoices = [i._credit(**values) for i in invoices]
          cls.save(new_invoices)
          cls.update_taxes(new_invoices)
 @@ -1317,9 +1319,11 @@
