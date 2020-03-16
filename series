@@ -31,8 +31,6 @@ sale_allow_group_shipments_with_different_dates.diff # [sale_shipment_grouping] 
 party_identifier_migration.diff # set vat_eu as valid vat
 issue8752.diff # [analytic_invoice]
 
-issue7805.diff # [stock] [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query()
-
 #improve_performance_on_try_assign.diff # [stock] change browse of product to get default_uom to pysql
 #issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages Issue7805 (only needed by stock_number_of_packages)
 #stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
