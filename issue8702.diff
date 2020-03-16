@@ -5,28 +5,26 @@ diff -r 168b01453902 __init__.py
  # this repository contains the full copyright notices and license terms.
  
  from trytond.pool import Pool
--from .purchase_request import *
+-from . import purchase_request
 +from . import stock
  
  
  def register():
      Pool.register(
--        PurchaseRequest,
+-        purchase_request.Request,
 -        module='stock_supply_forecast', type_='model')
 +        stock.StockSupply,
 +        module='stock_supply_forecast', type_='wizard')
 diff -r 168b01453902 purchase_request.py
 --- a/trytond/trytond/modules/stock_supply_forecast/purchase_request.py	Mon May 06 15:17:58 2019 +0200
 +++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
-@@ -1,25 +0,0 @@
+@@ -1,23 +0,0 @@
 -# This file is part of Tryton.  The COPYRIGHT file at the top level of
 -# this repository contains the full copyright notices and license terms.
 -from trytond.pool import Pool, PoolMeta
 -
--__all__ = ['PurchaseRequest']
 -
--
--class PurchaseRequest(metaclass=PoolMeta):
+-class Request(metaclass=PoolMeta):
 -    __name__ = 'purchase.request'
 -
 -    @classmethod
@@ -42,7 +40,7 @@ diff -r 168b01453902 purchase_request.py
 -                ('state', '=', 'done'),
 -                ])
 -        Forecast.create_moves(forecasts)
--        super(PurchaseRequest, cls).generate_requests(*args, **kwargs)
+-        super().generate_requests(*args, **kwargs)
 -        Forecast.delete_moves(forecasts)
 diff -r 168b01453902 stock.py
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
