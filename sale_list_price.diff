@@ -7,7 +7,7 @@ diff -r 656db55c90c0 trytond/trytond/modules/sale/product.py
  import datetime
 -
 +from decimal import Decimal
- from trytond.model import fields
+ from trytond.model import ModelView, fields
  from trytond.pyson import Eval
  from trytond.pool import Pool, PoolMeta
 --- a/trytond/trytond/modules/sale/product.py	Tue Oct 01 22:23:55 2019 +0200
