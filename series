@@ -36,6 +36,7 @@ issue53451002_1_10001.diff # [stock] Allow configuring which quantity is grouped
 stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 
 backport_6fefd00369c1.diff # [trytond] Use recursive common table expression for child_of/parent_of operators + Fix: https://bugs.tryton.org/issue7405
+lazy_loading.diff # [trytond] https://discuss.tryton.org/t/should-create-uid-write-uid-use-lazy-loading/2458/7
 
 # sao
 resize_modal_md.diff
