@@ -77,3 +77,4 @@ statement_of_account.diff # [account] Cumulate balance of previous fiscal years
 # issue8690.diff # Set company context in product instance
 stock_supply.diff # [stock_supply] Force rounding in the quantity of internal shipment moves
 issue9103.diff # [trytond] User-defined reports for custom template extensions
+lazy_loading.diff # [trytond] lazy loading of id, create_date, write_date on many2one
