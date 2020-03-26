@@ -34,8 +34,8 @@ diff -r 62f81d7eb78b view/general_ledger_line_context_form.xml
 +    <xpath expr="/form/label[@name='start_period']" position="replace"/>
 +    <xpath expr="/form/field[@name='end_period']" position="replace"/>
 +    <xpath expr="/form/label[@name='end_period']" position="replace"/>
-+    <xpath expr="/form/field[@name='start_date']" position="replace"/>
-+    <xpath expr="/form/label[@name='start_date']" position="replace"/>
-+    <xpath expr="/form/field[@name='end_date']" position="replace"/>
-+    <xpath expr="/form/label[@name='end_date']" position="replace"/>
++    <xpath expr="/form/field[@name='from_date']" position="replace"/>
++    <xpath expr="/form/label[@name='from_date']" position="replace"/>
++    <xpath expr="/form/field[@name='to_date']" position="replace"/>
++    <xpath expr="/form/label[@name='to_date']" position="replace"/>
  </data>
