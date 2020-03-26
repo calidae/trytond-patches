@@ -71,10 +71,11 @@ issue8860.diff # [stock_forecast] stock_forecast does not spread all the quantit
 
 statement_of_account.diff # [account] Cumulate balance of previous fiscal years
 
-# issue8700.diff # [stock] + [product_cost_fifo] Improve selection of moves used for cost
-# issue3209.diff # [production] Allocate cost based on list price of each product
-# issue260381003_284691002.diff # Update cost of moves when recomputing product cost price
-# issue8690.diff # Set company context in product instance
+#issue8700.diff # [stock] + [product_cost_fifo] Improve selection of moves used for cost
+#issue3209.diff # [production] Allocate cost based on list price of each product
+#issue260381003_284691002.diff # Update cost of moves when recomputing product cost price
+#issue8690.diff # Set company context in product instance
 stock_supply.diff # [stock_supply] Force rounding in the quantity of internal shipment moves
 issue9103.diff # [trytond] User-defined reports for custom template extensions
 lazy_loading.diff # [trytond] lazy loading of id, create_date, write_date on many2one
+#cost_price_in_productions_without_inputs.diff # [production]
