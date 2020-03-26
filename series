@@ -86,3 +86,5 @@ change_key_tax.diff # Change the key tax use to not separrete refunds and invoic
 
 issue5907.diff # [trytond] Remove unoconv and call soffice directly
 issue9113.diff # [stock] ir.msg_read_error when read _history table when that not have history
+
+lazy_loading.diff # [trytond] https://discuss.tryton.org/t/should-create-uid-write-uid-use-lazy-loading/2458/7

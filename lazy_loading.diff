@@ -1,0 +1,29 @@
+diff --git a/trytond/model/fields/many2one.py b/trytond/model/fields/many2one.py
+index 2a697c6f..12e94253 100644
+--- a/trytond/trytond/model/fields/many2one.py
++++ b/trytond/trytond/model/fields/many2one.py
+@@ -22,7 +22,7 @@ class Many2One(Field):
+             ondelete='SET NULL', datetime_field=None, target_search='join',
+             help='', required=False, readonly=False, domain=None, states=None,
+             select=False, on_change=None, on_change_with=None, depends=None,
+-            context=None, loading='eager'):
++            context=None, loading='lazy'):
+         '''
+         :param model_name: The name of the target model.
+         :param left: The name of the field to store the left value for
+diff --git a/trytond/model/modelstorage.py b/trytond/model/modelstorage.py
+index 1d885ad1..87cb51b2 100644
+--- a/trytond/trytond/model/modelstorage.py
++++ b/trytond/trytond/model/modelstorage.py
+@@ -48,9 +48,9 @@ class ModelStorage(Model):
+     """
+ 
+     create_uid = fields.Many2One('res.user', 'Create User', readonly=True)
+-    create_date = fields.Timestamp('Create Date', readonly=True)
++    create_date = fields.Timestamp('Create Date', readonly=True, loading='lazy')
+     write_uid = fields.Many2One('res.user', 'Write User', readonly=True)
+-    write_date = fields.Timestamp('Write Date', readonly=True)
++    write_date = fields.Timestamp('Write Date', readonly=True, loading='lazy')
+     rec_name = fields.Function(fields.Char('Name'), 'get_rec_name',
+             searcher='search_rec_name')
+ 
