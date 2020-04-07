@@ -1,0 +1,45 @@
+diff --git a/product.py b/product.py
+index 9eaceac..a2e83d2 100644
+--- a/trytond/trytond/modules/product_cost_fifo/product.py
++++ b/trytond/trytond/modules/product_cost_fifo/product.py
+@@ -183,14 +183,13 @@ class Product(metaclass=PoolMeta):
+                             m for m in out_moves
+                             if m.cost_price != fifo_cost_price],
+                         dict(cost_price=fifo_cost_price))
+-                    if quantity:
+-                        cost_price = (
+-                            ((current_cost_price * (
+-                                        quantity + current_out_qty))
+-                                - (fifo_cost_price * current_out_qty))
+-                            / quantity)
++                    if quantity and quantity+current_out_qty > 0:
++                        cost_price = ((
++                            (current_cost_price * quantity)
++                                 + (fifo_cost_price * current_out_qty))
++                             / (quantity + current_out_qty))
+                     else:
+-                        cost_price = Decimal(0)
++                        cost_price = fifo_cost_price
+                     current_cost_price = cost_price.quantize(
+                         Decimal(str(10.0 ** -digits[1])))
+                 current_moves.clear()
+@@ -235,14 +234,11 @@ class Product(metaclass=PoolMeta):
+                     m for m in out_moves
+                     if m.cost_price != fifo_cost_price],
+                 dict(cost_price=fifo_cost_price))
+-            if quantity:
+-                cost_price = (
+-                    ((current_cost_price * (
+-                                quantity + current_out_qty))
+-                        - (fifo_cost_price * current_out_qty))
+-                    / quantity)
+-            else:
+-                cost_price = Decimal(0)
++            if quantity and quantity+current_out_qty > 0:
++                cost_price = ((
++                    (current_cost_price * quantity)
++                         + (fifo_cost_price * current_out_qty))
++                     / (quantity + current_out_qty))
+             current_cost_price = cost_price.quantize(
+                 Decimal(str(10.0 ** -digits[1])))
+         return current_cost_price
