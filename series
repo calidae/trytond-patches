@@ -79,3 +79,4 @@ stock_supply.diff # [stock_supply] Force rounding in the quantity of internal sh
 issue9103.diff # [trytond] User-defined reports for custom template extensions
 lazy_loading.diff # [trytond] lazy loading of id, create_date, write_date on many2one
 cost_price_in_productions_without_inputs.diff # [production]
+fifo_cost_price_formula.diff  # [product_cost_fio] change formula to avoid minus zero cost_price
