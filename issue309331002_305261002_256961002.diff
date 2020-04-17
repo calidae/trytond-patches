@@ -1,7 +1,7 @@
 diff --git a/trytond/model/modelstorage.py b/trytond/model/modelstorage.py
 index 32d6a531..e74ff841 100644
---- a/trytond/model/modelstorage.py
-+++ b/trytond/model/modelstorage.py
+--- a/trytond/trytond/model/modelstorage.py
++++ b/trytond/trytond/model/modelstorage.py
 @@ -1084,6 +1084,15 @@ class ModelStorage(Model):
                  if hasattr(field, 'selection') and field.selection:
                      if isinstance(field.selection, (tuple, list)):
