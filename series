@@ -87,3 +87,4 @@ issue8252.diff # [account_tax_rule_country] Add subdivisiions to match account t
 account_statement_message_invoice.diff # [account_statement] Add invoice number in amount_greater_invoice_amount_to_pay error message
 
 lazy_loading.diff
+issue309331002_305261002_256961002.diff # Issue 309331002: tryton-env: Cache selection of Reference fields. Remove unnecessary assignment
