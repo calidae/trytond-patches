@@ -1,7 +1,17 @@
 diff -r 74bdc279fae0 asset.py
 --- a/trytond/trytond/modules/account_asset/asset.py	Mon May 06 14:53:17 2019 +0200
 +++ b/trytond/trytond/modules/account_asset/asset.py	Tue Jun 11 22:56:45 2019 +0200
-@@ -922,6 +922,8 @@
+@@ -776,6 +776,9 @@ class UpdateAsset(Wizard):
+     def default_show_move(self, fields):
+         Asset = Pool().get('account.asset')
+         asset = Asset(Transaction().context['active_id'])
++        if not isinstance(self.start.value, Decimal):
++            self.start.value = Decimal(self.start.value).quantize(
++                Decimal(str(10.0 ** -asset.currency_digits)))
+         return {
+             'amount': self.start.value - asset.value,
+             'date': datetime.date.today(),
+@@ -923,6 +926,8 @@ class AssetDepreciationTable(CompanyReport):
              def start_fixed_value(self):
                  if self.start_date < self.asset.start_date:
                      return 0
