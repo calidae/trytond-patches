@@ -1,7 +1,7 @@
-Index: diloy/public_data/sao/src/sao.less
+Index: diloy/sao/src/sao.less
 ===================================================================
---- diloy.orig/public_data/sao/src/sao.less
-+++ diloy/public_data/sao/src/sao.less
+--- diloy.orig/sao/src/sao.less
++++ diloy/sao/src/sao.less
 @@ -82,6 +82,10 @@
      }
  }

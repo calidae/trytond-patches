@@ -1,6 +1,6 @@
 diff -r 399d0255a637 src/window.js
---- a/public_data/sao/src/window.js	Wed Nov 28 10:01:32 2018 +0100
-+++ b/public_data/sao/src/window.js	Thu Nov 29 11:56:22 2018 +0100
+--- a/sao/src/window.js	Wed Nov 28 10:01:32 2018 +0100
++++ b/sao/src/window.js	Thu Nov 29 11:56:22 2018 +0100
 @@ -765,9 +765,17 @@
                  prm = this.screen.current_record.validate()
                      .then(function(validate) {
