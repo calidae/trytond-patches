@@ -13,8 +13,8 @@ review17881002
 Index: src/view/form.js
 ===================================================================
 
---- a/public_data/sao/src/view/form.js
-+++ b/public_data/sao/src/view/form.js
+--- a/sao/src/view/form.js
++++ b/sao/src/view/form.js
 @@ -361,7 +361,12 @@
          },
          button_clicked: function(event) {
@@ -33,8 +33,8 @@ Index: src/view/form.js
 Index: src/view/tree.js
 ===================================================================
 
---- a/public_data/sao/src/view/tree.js
-+++ b/public_data/sao/src/view/tree.js
+--- a/sao/src/view/tree.js
++++ b/sao/src/view/tree.js
 @@ -1509,7 +1509,7 @@
          },
          render: function(record) {
