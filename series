@@ -39,9 +39,12 @@ lock_stock_move.diff # [stock] Function to overwrite if lock table or not
 issue4482.diff # [stock] stock inventory misses company access rule
 search_warehouse.diff # [stock] search function for warehouse
 issue239_630.diff # [stock] get location quantity by product, product template or lot
+issue7805.diff # [stock] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 stock_quantity_to_zero.diff # [stock] Ensure to sum with value.
 issue8775.diff # [stock] Keep the origin of customer shipments when sync inventory to outgoing moves
 issue8775_stock_lot.diff # [stock_lot] Keep the origin of customer shipments when sync inventory to outgoing moves
+
+stock_lot_sled.diff # [stock_lot_sled] Allow configuring which quantity is grouped in compute_quantities_query() needed by stock_number_of_packages
 
 issue10467.diff # [stock_lot] add lot to grouping when assign try if lot it's required on product
 
