@@ -77,3 +77,4 @@ lazy_loading.diff # [trytond] lazy loading of id, create_date, write_date on man
 cost_price_in_productions_without_inputs.diff # [production]
 #fifo_cost_price_formula.diff  # [product_cost_fio] change formula to avoid minus zero cost_price
 #issue9274.diff   # [product_cost_fifo] take care on inventory moves:
+issue7280.diff # [account_invoice_stock] + [account_stock_landed_cost] Update unit price of stock moves based on posted invoice lines
