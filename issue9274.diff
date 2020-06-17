@@ -1,8 +1,33 @@
+diff --git a/__init__.py b/__init__.py
+index 06b209f..be74293 100644
+--- a/__init__.py
++++ b/__init__.py
+@@ -1,13 +1,15 @@
+ # This file is part of Tryton.  The COPYRIGHT file at the top level of
+ # this repository contains the full copyright notices and license terms.
+ from trytond.pool import Pool
+-from .product import *
+-from .move import *
++from . import product
++from . import move
++from . import configuration
+ 
+ 
+ def register():
+     Pool.register(
+-        Template,
+-        Product,
+-        Move,
++        product.Template,
++        product.Product,
++        move.Move,
++        configuration.Configuration,
+         module='product_cost_fifo', type_='model')
 diff --git a/configuration.py b/configuration.py
 new file mode 100644
 index 0000000..e4e44fc
 --- /dev/null
-+++ b/trytond/trytond/modules/product_cost_fifo/configuration.py
++++ b/configuration.py
 @@ -0,0 +1,23 @@
 +# This file is part of Tryton.  The COPYRIGHT file at the top level of
 +# this repository contains the full copyright notices and license terms.
@@ -31,7 +56,7 @@ diff --git a/configuration.xml b/configuration.xml
 new file mode 100644
 index 0000000..d1a8c9a
 --- /dev/null
-+++ b/trytond/trytond/modules/product_cost_fifo/configuration.xml
++++ b/configuration.xml
 @@ -0,0 +1,12 @@
 +<?xml version="1.0"?>
 +<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
@@ -47,8 +72,8 @@ index 0000000..d1a8c9a
 +</tryton>
 diff --git a/move.py b/move.py
 index 91a7b07..a7393dd 100644
---- a/trytond/trytond/modules/product_cost_fifo/move.py
-+++ b/trytond/trytond/modules/product_cost_fifo/move.py
+--- a/move.py
++++ b/move.py
 @@ -81,13 +81,15 @@ class Move(metaclass=PoolMeta):
          to_save = []
          for move, move_qty in fifo_moves:
@@ -74,8 +99,8 @@ index 91a7b07..a7393dd 100644
              move_qty = Uom.compute_qty(self.product.default_uom, move_qty,
 diff --git a/product.py b/product.py
 index 9eaceac..2ad49a2 100644
---- a/trytond/trytond/modules/product_cost_fifo/product.py
-+++ b/trytond/trytond/modules/product_cost_fifo/product.py
+--- a/product.py
++++ b/product.py
 @@ -31,7 +31,7 @@ class Product(metaclass=PoolMeta):
          domain = [
              ('product', '=', self.id),
@@ -190,8 +215,8 @@ index 9eaceac..2ad49a2 100644
  
 diff --git a/tests/scenario_product_cost_fifo_recompute_cost_price.rst b/tests/scenario_product_cost_fifo_recompute_cost_price.rst
 index f8b952f..d4f906d 100644
---- a/trytond/trytond/modules/product_cost_fifo/tests/scenario_product_cost_fifo_recompute_cost_price.rst
-+++ b/trytond/trytond/modules/product_cost_fifo/tests/scenario_product_cost_fifo_recompute_cost_price.rst
+--- a/tests/scenario_product_cost_fifo_recompute_cost_price.rst
++++ b/tests/scenario_product_cost_fifo_recompute_cost_price.rst
 @@ -45,6 +45,7 @@ Get stock locations::
      >>> supplier_loc, = Location.find([('code', '=', 'SUP')])
      >>> storage_loc, = Location.find([('code', '=', 'STO')])
@@ -262,11 +287,20 @@ index f8b952f..d4f906d 100644
      >>> product.cost_price
 -    Decimal('99.9999')
 +    Decimal('100.0000')
+diff --git a/tryton.cfg b/tryton.cfg
+index dbe44d2..529bcc8 100644
+--- a/tryton.cfg
++++ b/tryton.cfg
+@@ -6,3 +6,4 @@ depends:
+     stock
+ xml:
+     message.xml
++    configuration.xml
 diff --git a/view/configuration_form.xml b/view/configuration_form.xml
 new file mode 100644
 index 0000000..46c5ac5
 --- /dev/null
-+++ b/trytond/trytond/modules/product_cost_fifo/view/configuration_form.xml
++++ b/view/configuration_form.xml
 @@ -0,0 +1,8 @@
 +<?xml version="1.0"?>
 +<!-- The COPYRIGHT file at the top level of this repository contains the full
