@@ -129,7 +129,7 @@ Index: /trytond/trytond/modules/account_invoice_stock/stock.py
 +        UoM = pool.get('product.uom')
 +        amount, quantity = 0, 0
 +        for line in self.invoice_lines:
-+            if line.invoice.state in {'posted', 'paid'}:
++            if line.invoice and line.invoice.state in {'posted', 'paid'}:
 +                amount += line.amount
 +                quantity += UoM.compute_qty(
 +                    line.unit, line.quantity, self.uom)
