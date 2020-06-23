@@ -24,7 +24,6 @@ index 06b209f..48f9eb6 100644
 +        configuration.Configuration,
 +        configuration.ConfigurationExcludeLocations,
          module='product_cost_fifo', type_='model')
-diff --git a/configuration.py b/configuration.py
 new file mode 100644
 index 0000000..9d761ed
 --- /dev/null
@@ -86,7 +85,6 @@ index 0000000..9d761ed
 +        migrate_property(
 +            'stock.configuration', field_names, cls, value_names,
 +            fields=fields)
-diff --git a/configuration.xml b/configuration.xml
 new file mode 100644
 index 0000000..d1a8c9a
 --- /dev/null
@@ -334,7 +332,6 @@ index dbe44d2..529bcc8 100644
  xml:
      message.xml
 +    configuration.xml
-diff --git a/view/configuration_form.xml b/view/configuration_form.xml
 new file mode 100644
 index 0000000..b6a45ed
 --- /dev/null
@@ -349,3 +346,21 @@ index 0000000..b6a45ed
 +        <field name="exclude_location"/>
 +    </xpath>
 +</data>
+diff --git a/production.py b/production.py
+index 867f0ea..3cd2295 100644
+--- a/trytond/trytond/modules/production/production.py
++++ b/trytond/trytond/modules/production/production.py
+@@ -514,8 +514,11 @@ class Production(Workflow, ModelSQL, ModelView):
+                 else:
+                     ratio = Decimal(1) / len(production.outputs)
+                 quantity = Decimal(str(output.quantity))
+-                unit_price = (
+-                    production.cost * ratio / quantity).quantize(digits)
++                if quantity:
++                    unit_price = (
++                        production.cost * ratio / quantity).quantize(digits)
++                else:
++                    unit_price = Decimal(0)
+                 if output.unit_price != unit_price:
+                     output.unit_price = unit_price
+                     moves.append(output)
