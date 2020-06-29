@@ -10,7 +10,6 @@ index 06b209f..48f9eb6 100644
 -from .move import *
 +from . import product
 +from . import move
-+from . import configuration
  
  
  def register():
@@ -21,160 +20,152 @@ index 06b209f..48f9eb6 100644
 +        product.Template,
 +        product.Product,
 +        move.Move,
-+        configuration.Configuration,
-+        configuration.ConfigurationExcludeLocations,
          module='product_cost_fifo', type_='model')
-diff --git a/configuration.py b/configuration.py
-new file mode 100644
-index 0000000..9d761ed
---- /dev/null
-+++ b/trytond/trytond/modules/product_cost_fifo/configuration.py
-@@ -0,0 +1,56 @@
-+# This file is part of Tryton.  The COPYRIGHT file at the top level of
-+# this repository contains the full copyright notices and license terms.
-+from trytond import backend
-+from trytond.model import fields, ModelSQL
-+from trytond.pool import Pool, PoolMeta
-+from trytond.pyson import Eval
-+from trytond.tools.multivalue import migrate_property
-+from trytond.modules.company.model import CompanyValueMixin
-+
-+__all__ = ['Configuration', 'ConfigurationExcludeLocations']
-+
-+
-+class Configuration(metaclass=PoolMeta):
-+    __name__ = 'stock.configuration'
-+
-+    exclude_location = fields.MultiValue(fields.Many2One(
-+            'stock.location', "Exclude Location",
-+            domain=[
-+                ('type', '=', 'warehouse'),
-+                ]))
-+
-+    @classmethod
-+    def multivalue_model(cls, field):
-+        if field == 'exclude_location':
-+            return Pool().get('stock.configuration.exclude_location')
-+        return super().multivalue_model(field)
-+
-+
-+class ConfigurationExcludeLocations(ModelSQL, CompanyValueMixin):
-+    "Configuration Exlcude Location"
-+    __name__ = 'stock.configuration.exclude_location'
-+
-+    exclude_location = fields.Many2One(
-+        'stock.location', "Exclude Location",
-+        domain=[
-+            ('type', '=', 'warehouse'),
-+            ])
-+
-+    @classmethod
-+    def __register__(cls, module_name):
-+        TableHandler = backend.get('TableHandler')
-+        exist = TableHandler.table_exist(cls._table)
-+
-+        super().__register__(module_name)
-+
-+        if not exist:
-+            cls._migrate_property([], [], [])
-+
-+    @classmethod
-+    def _migrate_property(cls, field_names, value_names, fields):
-+        field_names.extend('exclude_location')
-+        value_names.extend('exclude_location')
-+        fields.append('company')
-+        migrate_property(
-+            'stock.configuration', field_names, cls, value_names,
-+            fields=fields)
-diff --git a/configuration.xml b/configuration.xml
-new file mode 100644
-index 0000000..d1a8c9a
---- /dev/null
-+++ b/trytond/trytond/modules/product_cost_fifo/configuration.xml
-@@ -0,0 +1,12 @@
-+<?xml version="1.0"?>
-+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
-+this repository contains the full copyright notices and license terms. -->
-+<tryton>
-+    <data>
-+        <record model="ir.ui.view" id="stock_configuration_view_form">
-+            <field name="model">stock.configuration</field>
-+            <field name="inherit" ref="stock.stock_configuration_view_form"/>
-+            <field name="name">configuration_form</field>
-+        </record>
-+    </data>
-+</tryton>
 diff --git a/move.py b/move.py
-index 91a7b07..a7393dd 100644
+index 1d4bd63..b169ac9 100644
 --- a/trytond/trytond/modules/product_cost_fifo/move.py
 +++ b/trytond/trytond/modules/product_cost_fifo/move.py
-@@ -81,13 +81,15 @@ class Move(metaclass=PoolMeta):
-         to_save = []
-         for move, move_qty in fifo_moves:
-             consumed_qty += move_qty
--
--            with Transaction().set_context(date=move.effective_date):
--                move_unit_price = Currency.compute(
--                    move.currency, move.unit_price,
--                    self.company.currency, round=False)
--            move_unit_price = Uom.compute_price(move.uom, move_unit_price,
--                    move.product.default_uom)
-+            if move.from_location.type in {'supplier', 'production'}:
-+                with Transaction().set_context(date=move.effective_date):
-+                    move_unit_price = Currency.compute(
-+                        move.currency, move.unit_price,
-+                        self.company.currency, round=False)
-+                move_unit_price = Uom.compute_price(move.uom, move_unit_price,
-+                        move.product.default_uom)
-+            else:
-+                move_unit_price = move.cost_price or 0
-             cost_price += move_unit_price * Decimal(str(move_qty))
+@@ -60,6 +60,23 @@ class Move(metaclass=PoolMeta):
+             column, operator, value, expression)
+         return expression
  
-             move_qty = Uom.compute_qty(self.product.default_uom, move_qty,
++    def _compute_product_cost_price(self, direction):
++        pool = Pool()
++        Location = pool.get('stock.location')
++        Config = pool.get('stock.configuration')
++
++        configuration = Config(1)
++        location_ids = []
++
++        if configuration.warehouse:
++            locations = Location.search([
++                    ('parent', 'child_of', [configuration.warehouse]),
++                    ])
++            location_ids = list(set(x.id for x in locations))
++        with Transaction().set_context(locations=location_ids):
++            self = self.__class__(self.id)
++            return super()._compute_product_cost_price(direction)
++
+     def _update_fifo_out_product_cost_price(self):
+         '''
+         Update the product cost price of the given product on the move. Update
+@@ -121,6 +138,19 @@ class Move(metaclass=PoolMeta):
+             cost_price = average_cost_price
+         return cost_price, average_cost_price
+ 
++    def _get_last_cost_price(self):
++        pool = Pool()
++        Move = pool.get('stock.move')
++
++        move = None
++        domain = self.product._domain_fifo_moves()
++        moves = Move.search(domain, limit=1,
++            order=[('effective_date', 'DESC'), ('id', 'DESC')])
++        if moves:
++            move = moves[0]
++
++        return move.cost_price if move else 0
++
+     def _do(self):
+         cost_price = super(Move, self)._do()
+         if (self.from_location.type in ('supplier', 'production')
+@@ -138,6 +168,10 @@ class Move(metaclass=PoolMeta):
+                 self._update_fifo_out_product_cost_price())
+             if self.cost_price is None:
+                 self.cost_price = fifo_cost_price
++        elif (self.from_location.type == 'customer'
++                and self.to_location.type == 'storage'
++                and self.product.cost_price_method == 'fifo'):
++            cost_price = self._get_last_cost_price()
+         return cost_price
+ 
+     @classmethod
 diff --git a/product.py b/product.py
 index 9eaceac..8b5aa0a 100644
 --- a/trytond/trytond/modules/product_cost_fifo/product.py
 +++ b/trytond/trytond/modules/product_cost_fifo/product.py
-@@ -31,7 +31,7 @@ class Product(metaclass=PoolMeta):
+@@ -24,20 +24,51 @@ class Template(metaclass=PoolMeta):
+ class Product(metaclass=PoolMeta):
+     __name__ = 'product.product'
+ 
+-    def _get_available_fifo_moves(self, date=None, offset=0, limit=None):
++    def _domain_fifo_moves(self):
+         pool = Pool()
+-        Move = pool.get('stock.move')
++        Location = pool.get('stock.location')
++        Config = pool.get('stock.configuration')
++
++        configuration = Config(1)
+ 
          domain = [
              ('product', '=', self.id),
              self._domain_moves_cost(),
 -            ('from_location.type', 'in', ['supplier', 'production']),
-+            ('from_location.type', '!=', 'storage'),
-             ('to_location.type', '=', 'storage'),
-             ]
-         if not date:
-@@ -95,7 +95,11 @@ class Product(metaclass=PoolMeta):
-         Move = pool.get('stock.move')
-         Currency = pool.get('currency.currency')
-         Uom = pool.get('product.uom')
-+        Location = pool.get('stock.location')
-+        Config = pool.get('stock.configuration')
-+
-         digits = self.__class__.cost_price.digits
-+        config = Config(1)
- 
-         domain = [
-             ('product', '=', self.id),
-@@ -111,6 +115,17 @@ class Product(metaclass=PoolMeta):
-                     ],
-                 ],
+-            ('to_location.type', '=', 'storage'),
++            ['OR',
++                [
++                    ('to_location.type', '=', 'storage'),
++                    ('from_location.type', '!=', 'storage'),
++                    ],
++                [
++                    ('from_location.type', '=', 'storage'),
++                    ('to_location.type', '!=', 'storage'),
++                    ],
++                ],
              ]
 +
-+        if config.exclude_location:
++        if configuration.warehouse:
++            storage_locations = Location.search(['type', '=', 'storage'])
 +            locations = Location.search([
-+                    ('parent', 'child_of', [config.exclude_location]),
++                    ('parent', 'child_of', [configuration.warehouse]),
 +                    ])
-+            location_ids = list(set(x.id for x in locations))
++            location_ids = list(set(x.id for x in storage_locations) -
++                set(x.id for x in locations))
 +            domain.extend([
 +                    ('to_location.id', 'not in', location_ids),
 +                    ('from_location.id', 'not in', location_ids),
 +                    ])
++        return domain
 +
++    def _get_available_fifo_moves(self, date=None, offset=0, limit=None):
++        pool = Pool()
++        Move = pool.get('stock.move')
++
++        domain = self._domain_fifo_moves()
+         if not date:
+             domain.append(('fifo_quantity_available', '>', 0))
+         else:
+             domain.append(('effective_date', '<=', date))
++
+         return Move.search(
+             domain,
+             offset=offset, limit=limit,
+@@ -95,22 +126,9 @@ class Product(metaclass=PoolMeta):
+         Move = pool.get('stock.move')
+         Currency = pool.get('currency.currency')
+         Uom = pool.get('product.uom')
+-        digits = self.__class__.cost_price.digits
+ 
+-        domain = [
+-            ('product', '=', self.id),
+-            self._domain_moves_cost(),
+-            ['OR',
+-                [
+-                    ('to_location.type', '=', 'storage'),
+-                    ('from_location.type', '!=', 'storage'),
+-                    ],
+-                [
+-                    ('from_location.type', '=', 'storage'),
+-                    ('to_location.type', '!=', 'storage'),
+-                    ],
+-                ],
+-            ]
++        digits = self.__class__.cost_price.digits
++        domain = self._domain_fifo_moves()
          if start:
              domain.append(('effective_date', '>=', start))
          moves = Move.search(
-@@ -135,11 +150,10 @@ class Product(metaclass=PoolMeta):
+@@ -135,11 +153,10 @@ class Product(metaclass=PoolMeta):
                  quantity = Decimal(str(quantity))
  
          def in_move(move):
@@ -188,7 +179,7 @@ index 9eaceac..8b5aa0a 100644
  
          def compute_fifo_cost_price(quantity, date):
              fifo_moves = self.get_fifo_move(
-@@ -150,12 +164,15 @@ class Product(metaclass=PoolMeta):
+@@ -150,12 +167,15 @@ class Product(metaclass=PoolMeta):
              consumed_qty = 0
              for move, move_qty in fifo_moves:
                  consumed_qty += move_qty
@@ -210,7 +201,7 @@ index 9eaceac..8b5aa0a 100644
                  cost_price += unit_price * Decimal(str(move_qty))
              if consumed_qty:
                  return (cost_price / Decimal(str(consumed_qty))).quantize(
-@@ -163,7 +180,8 @@ class Product(metaclass=PoolMeta):
+@@ -163,7 +183,8 @@ class Product(metaclass=PoolMeta):
  
          current_moves = []
          current_out_qty = 0
@@ -220,7 +211,16 @@ index 9eaceac..8b5aa0a 100644
          for move in moves:
              if (current_moves
                      and current_moves[-1].effective_date
-@@ -202,12 +220,15 @@ class Product(metaclass=PoolMeta):
+@@ -189,7 +210,7 @@ class Product(metaclass=PoolMeta):
+                                         quantity + current_out_qty))
+                                 - (fifo_cost_price * current_out_qty))
+                             / quantity)
+-                    else:
++                    elif move.from_location.type != 'customer':
+                         cost_price = Decimal(0)
+                     current_cost_price = cost_price.quantize(
+                         Decimal(str(10.0 ** -digits[1])))
+@@ -202,12 +223,15 @@ class Product(metaclass=PoolMeta):
              if move.from_location.type == 'storage':
                  qty *= -1
              if in_move(move):
@@ -242,7 +242,7 @@ index 9eaceac..8b5aa0a 100644
                  if quantity + qty > 0 and quantity >= 0:
                      cost_price = (
                          (cost_price * quantity) + (unit_price * qty)
-@@ -216,7 +237,7 @@ class Product(metaclass=PoolMeta):
+@@ -216,7 +240,7 @@ class Product(metaclass=PoolMeta):
                      cost_price = unit_price
                  current_cost_price = cost_price.quantize(
                      Decimal(str(10.0 ** -digits[1])))
@@ -325,27 +325,3 @@ index f8b952f..d4f906d 100644
      >>> product.cost_price
 -    Decimal('99.9999')
 +    Decimal('100.0000')
-diff --git a/tryton.cfg b/tryton.cfg
-index dbe44d2..529bcc8 100644
---- a/trytond/trytond/modules/product_cost_fifo/tryton.cfg
-+++ b/trytond/trytond/modules/product_cost_fifo/tryton.cfg
-@@ -6,3 +6,4 @@ depends:
-     stock
- xml:
-     message.xml
-+    configuration.xml
-diff --git a/view/configuration_form.xml b/view/configuration_form.xml
-new file mode 100644
-index 0000000..b6a45ed
---- /dev/null
-+++ b/trytond/trytond/modules/product_cost_fifo/view/configuration_form.xml
-@@ -0,0 +1,9 @@
-+<?xml version="1.0"?>
-+<!-- The COPYRIGHT file at the top level of this repository contains the full
-+     copyright notices and license terms. -->
-+<data>
-+    <xpath expr="/form/field[@name='shipment_internal_transit']" position="after">
-+        <label name="exclude_location"/>
-+        <field name="exclude_location"/>
-+    </xpath>
-+</data>
