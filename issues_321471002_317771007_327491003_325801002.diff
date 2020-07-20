@@ -91,7 +91,7 @@ index 1d4bd63..67dbd0c 100644
                  and self.product.cost_price_method == 'fifo'):
              cost_price = self._compute_product_cost_price('in')
 diff --git a/product.py b/product.py
-index 9eaceac..43d124e 100644
+index 9eaceac..fdb3040 100644
 --- a/trytond/trytond/modules/product_cost_fifo/product.py
 +++ b/trytond/trytond/modules/product_cost_fifo/product.py
 @@ -7,6 +7,8 @@ from trytond.config import config
@@ -204,7 +204,7 @@ index 9eaceac..43d124e 100644
  
          def compute_fifo_cost_price(quantity, date):
              fifo_moves = self.get_fifo_move(
-@@ -150,20 +197,14 @@ class Product(metaclass=PoolMeta):
+@@ -150,16 +197,9 @@ class Product(metaclass=PoolMeta):
              consumed_qty = 0
              for move, move_qty in fifo_moves:
                  consumed_qty += move_qty
@@ -223,12 +223,15 @@ index 9eaceac..43d124e 100644
  
          current_moves = []
          current_out_qty = 0
-         current_cost_price = cost_price
-+        #for move in moves:
-         for move in moves:
-             if (current_moves
-                     and current_moves[-1].effective_date
-@@ -190,59 +231,46 @@ class Product(metaclass=PoolMeta):
+@@ -183,40 +223,32 @@ class Product(metaclass=PoolMeta):
+                             m for m in out_moves
+                             if m.cost_price != fifo_cost_price],
+                         dict(cost_price=fifo_cost_price))
+-                    if quantity:
++                    if quantity > 0 and quantity + current_out_qty >= 0:
+                         cost_price = (
+                             ((current_cost_price * (
+                                         quantity + current_out_qty))
                                  - (fifo_cost_price * current_out_qty))
                              / quantity)
                      else:
@@ -262,55 +265,21 @@ index 9eaceac..43d124e 100644
 -                current_cost_price = cost_price.quantize(
 -                    Decimal(str(10.0 ** -digits[1])))
 -            else:
--                current_out_qty += -qty
--            quantity += qty
 +                current_cost_price = round_price(cost_price)
 +            elif out_move(move):
-+                current_out_qty += qty
-+            quantity += -qty if out_move(move) else qty
++                qty *= -1
+                 current_out_qty += -qty
+             quantity += qty
  
-         Move.write([
-                 m for m in filter(in_move, current_moves)
-                 if m.cost_price != current_cost_price],
-             dict(cost_price=current_cost_price))
- 
--        out_moves = list(filter(out_move, current_moves))
--        if out_moves:
--            fifo_cost_price = compute_fifo_cost_price(
--                current_out_qty, current_moves[-1].effective_date)
--            if fifo_cost_price is None:
--                fifo_cost_price = current_cost_price
--            Move.write([
--                    m for m in out_moves
--                    if m.cost_price != fifo_cost_price],
--                dict(cost_price=fifo_cost_price))
--            if quantity:
--                cost_price = (
--                    ((current_cost_price * (
--                                quantity + current_out_qty))
--                        - (fifo_cost_price * current_out_qty))
--                    / quantity)
+@@ -241,8 +273,4 @@ class Product(metaclass=PoolMeta):
+                                 quantity + current_out_qty))
+                         - (fifo_cost_price * current_out_qty))
+                     / quantity)
 -            else:
 -                cost_price = Decimal(0)
 -            current_cost_price = cost_price.quantize(
 -                Decimal(str(10.0 ** -digits[1])))
 -        return current_cost_price
-+        #out_moves = list(filter(out_move, current_moves))
-+        #if out_moves:
-+        #    fifo_cost_price = compute_fifo_cost_price(
-+        #        current_out_qty, current_moves[-1].effective_date)
-+        #    if fifo_cost_price is None:
-+        #        fifo_cost_price = current_cost_price
-+        #    Move.write([
-+        #            m for m in out_moves
-+        #            if m.cost_price != fifo_cost_price],
-+        #        dict(cost_price=fifo_cost_price))
-+        #    if quantity:
-+        #        cost_price = (
-+        #            ((current_cost_price * (
-+        #                        quantity + current_out_qty))
-+        #                - (fifo_cost_price * current_out_qty))
-+        #            / quantity)
 +        return cost_price
 diff --git a/tests/scenario_product_cost_fifo_recompute_cost_price.rst b/tests/scenario_product_cost_fifo_recompute_cost_price.rst
 index f8b952f..d4f906d 100644
