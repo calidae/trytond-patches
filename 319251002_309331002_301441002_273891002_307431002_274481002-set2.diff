@@ -408,6 +408,24 @@ diff --git a/production.py b/production.py
 index 431fe37..7506453 100644
 --- a/trytond/trytond/modules/production/production.py
 +++ b/trytond/trytond/modules/production/production.py
+@@ -423,7 +423,7 @@ class Production(Workflow, ModelSQL, ModelView):
+                     move.production_output = self
+                     move.unit_price = Decimal(0)
+                     move.save()
+-            self._set_move_planned_date()
++            self._set_move_planned_date([self])
+             return
+ 
+         factor = self.bom.compute_factor(self.product, self.quantity, self.uom)
+@@ -445,7 +445,7 @@ class Production(Workflow, ModelSQL, ModelView):
+                 move.production_output = self
+                 move.unit_price = Decimal(0)
+                 move.save()
+-        self._set_move_planned_date()
++        self._set_move_planned_date([self])
+ 
+     @classmethod
+     def set_cost(cls, productions):
 @@ -506,15 +506,13 @@ class Production(Workflow, ModelSQL, ModelView):
                  values['number'] = Sequence.get_id(
                      config.production_sequence.id)
