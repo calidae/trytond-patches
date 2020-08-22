@@ -1,0 +1,476 @@
+diff --git a/trytond/model/modelstorage.py b/trytond/model/modelstorage.py
+index d7fc46ad..8bd4c3a6 100644
+--- a/trytond/trytond/model/modelstorage.py
++++ b/trytond/trytond/model/modelstorage.py
+@@ -1258,6 +1258,14 @@ class ModelStorage(Model):
+                 if hasattr(field, 'selection') and field.selection:
+                     if isinstance(field.selection, (tuple, list)):
+                         test = set(dict(field.selection).keys())
++                        instance_sel_func = False
++                    else:
++                        sel_func = getattr(cls, field.selection)
++                        instance_sel_func = is_instance_method(
++                            cls, field.selection)
++                        if not instance_sel_func:
++                            test = sel_func()
++                            test = set(dict(test))
+                     for record in records:
+                         value = getattr(record, field_name)
+                         if field._type == 'reference':
+@@ -1265,12 +1273,8 @@ class ModelStorage(Model):
+                                 value = value.__class__.__name__
+                             elif value:
+                                 value, _ = value.split(',')
+-                        if not isinstance(field.selection, (tuple, list)):
+-                            sel_func = getattr(cls, field.selection)
+-                            if not is_instance_method(cls, field.selection):
+-                                test = sel_func()
+-                            else:
+-                                test = sel_func(record)
++                        if instance_sel_func:
++                            test = sel_func(record)
+                             test = set(dict(test))
+                         # None and '' are equivalent
+                         if '' in test or None in test:
+@@ -1636,10 +1640,12 @@ class ModelStorage(Model):
+     def save(cls, records):
+         while records:
+             latter = []
+-            values = {}
+-            save_values = {}
+             to_create = []
+             to_write = []
++            to_create_save_values = []
++            to_write_save_values = []
++            to_create_values = []
++            to_write_values = []
+             first = next(iter(records))
+             transaction = first._transaction
+             user = first._user
+@@ -1650,12 +1656,16 @@ class ModelStorage(Model):
+                         or context != record._context):
+                     latter.append(record)
+                     continue
+-                save_values[record] = record._save_values
+-                values[record] = record._values
+-                record._values = None
++                save_values = record._save_values
+                 if record.id is None or record.id < 0:
++                    to_create_save_values.append(save_values)
++                    to_create_values.append(record._values)
++                    record._values = None
+                     to_create.append(record)
+-                elif save_values[record]:
++                elif save_values:
++                    to_write_save_values.append(save_values)
++                    to_write_values.append(record._values)
++                    record._values = None
+                     to_write.append(record)
+             transaction = Transaction()
+             try:
+@@ -1664,17 +1674,20 @@ class ModelStorage(Model):
+                         transaction.reset_context(), \
+                         transaction.set_context(context):
+                     if to_create:
+-                        news = cls.create([save_values[r] for r in to_create])
++                        news = cls.create(to_create_save_values)
+                         for record, new in zip(to_create, news):
+                             record._ids.remove(record.id)
+                             record._id = new.id
+                             record._ids.append(record.id)
+                     if to_write:
+                         cls.write(*sum(
+-                                (([r], save_values[r]) for r in to_write), ()))
++                                (([r], v) for r, v in zip(
++                                    to_write, to_write_save_values)), ()))
+             except:
+-                for record in to_create + to_write:
+-                    record._values = values[record]
++                for record, values in zip(to_create, to_create_values):
++                    record._values = values
++                for record, values in zip(to_write, to_write_values):
++                    record._values = values
+                 raise
+             for record in to_create + to_write:
+                 record._init_values = None
+diff --git a/shipment.py b/shipment.py
+index 6ef998f..8f1626b 100644
+--- a/trytond/trytond/modules/stock_supply/shipment.py
++++ b/trytond/trytond/modules/stock_supply/shipment.py
+@@ -81,6 +81,8 @@ class ShipmentInternal(ModelSQL, ModelView):
+             # Create a list of moves to create
+             moves = {}
+             for location in id2location.values():
++                loc_prov_location = location.provisioning_location
++                loc_over_location = location.overflowing_location
+                 for product_id in product_ids:
+                     qty = current_qties.get((location.id, product_id), 0)
+                     op = product2op.get((location.id, product_id))
+@@ -90,13 +92,12 @@ class ShipmentInternal(ModelSQL, ModelView):
+                         prov_location = op.provisioning_location
+                         over_location = op.overflowing_location
+                     elif (location
+-                            and (location.provisioning_location
+-                                or location.overflowing_location)):
++                            and (loc_prov_location or loc_over_location)):
+                         target_qty = 0
+-                        min_qty = 0 if location.provisioning_location else None
+-                        max_qty = 0 if location.overflowing_location else None
+-                        prov_location = location.provisioning_location
+-                        over_location = location.overflowing_location
++                        min_qty = 0 if loc_prov_location else None
++                        max_qty = 0 if loc_over_location else None
++                        prov_location = loc_prov_location
++                        over_location = loc_over_location
+                     else:
+                         continue
+ 
+diff --git a/move.py b/move.py
+index 3576b4e..fa717b3 100644
+--- a/trytond/trytond/modules/stock/move.py
++++ b/trytond/trytond/modules/stock/move.py
+@@ -1362,29 +1362,40 @@ class Move(Workflow, ModelSQL, ModelView):
+             # Generate a set of locations without childs and a dict
+             # giving the parent of each location.
+             leafs = set([l.id for l in locations])
+-            parent = {}
++            parents = {}
+             for location in locations:
+                 if not location.parent or location.parent.flat_childs:
+                     continue
+                 if location.parent.id in leafs:
+                     leafs.remove(location.parent.id)
+-                parent[location.id] = location.parent.id
++                # Search for the first ancestor in location_ids to make the
++                # propagation of quantites faster
++                parent = location.parent
++                while parent:
++                    parents[location.id] = parent.id
++                    if parent.id in location_ids:
++                        break
++                    parent = parent.parent
++
+             locations = set((l.id for l in locations))
+             while leafs:
+-                for l in leafs:
+-                    locations.remove(l)
+-                    if l not in parent:
++                for leaf in leafs:
++                    locations.remove(leaf)
++                    if leaf not in parents:
+                         continue
++                    parent = parents[leaf]
+                     for key in keys:
+-                        parent_key = (parent[l],) + key
+-                        quantities.setdefault(parent_key, 0)
+-                        quantities[parent_key] += quantities.get((l,) + key, 0)
++                        parent_key = (parent,) + key
++                        quantity = quantities.get((leaf,) + key, 0)
++                        quantities[parent_key] = (
++                            quantities.get(parent_key, 0) + quantity)
++
+                 next_leafs = set(locations)
+                 for l in locations:
+-                    if l not in parent:
++                    if l not in parents:
+                         continue
+-                    if parent[l] in next_leafs and parent[l] in locations:
+-                        next_leafs.remove(parent[l])
++                    if parents[l] in next_leafs and parents[l] in locations:
++                        next_leafs.remove(parents[l])
+                 leafs = next_leafs
+ 
+             # clean result
+diff --git a/tests/test_stock.py b/tests/test_stock.py
+index e0eccab..616328d 100644
+--- a/trytond/trytond/modules/stock/tests/test_stock.py
++++ b/trytond/trytond/modules/stock/tests/test_stock.py
+@@ -392,12 +392,12 @@ class StockTestCase(ModuleTestCase):
+                     }])
+         storage2, = Location.create([{
+                     'name': 'Storage 1.1',
+-                    'type': 'view',
++                    'type': 'storage',
+                     'parent': storage1.id,
+                     }])
+         storage3, = Location.create([{
+                     'name': 'Storage 2',
+-                    'type': 'view',
++                    'type': 'storage',
+                     'parent': storage.id,
+                     }])
+         company = create_company()
+@@ -409,7 +409,7 @@ class StockTestCase(ModuleTestCase):
+                         'uom': unit.id,
+                         'quantity': 1,
+                         'from_location': lost_found.id,
+-                        'to_location': storage.id,
++                        'to_location': storage2.id,
+                         'planned_date': today,
+                         'effective_date': today,
+                         'company': company.id,
+@@ -418,7 +418,7 @@ class StockTestCase(ModuleTestCase):
+                         'uom': unit.id,
+                         'quantity': 1,
+                         'from_location': input_.id,
+-                        'to_location': storage.id,
++                        'to_location': storage3.id,
+                         'planned_date': today,
+                         'effective_date': today,
+                         'company': company.id,
+diff --git a/CHANGELOG b/CHANGELOG
+index f5314a8..7eea449 100644
+--- a/trytond/trytond/modules/stock_forecast/CHANGELOG
++++ b/trytond/trytond/modules/stock_forecast/CHANGELOG
+@@ -1,3 +1,6 @@
++Version 5.2.3 - 2020-08-20
++* Use move's origin as link to forecast lines
++
+ Version 5.2.2 - 2020-04-04
+ * Bug fixes (see mercurial logs for details)
+ 
+diff --git a/__init__.py b/__init__.py
+index 59f23c7..0dc3999 100644
+--- a/trytond/trytond/modules/stock_forecast/__init__.py
++++ b/trytond/trytond/modules/stock_forecast/__init__.py
+@@ -2,17 +2,17 @@
+ # this repository contains the full copyright notices and license terms.
+ 
+ from trytond.pool import Pool
+-from .forecast import *
++from . import forecast
+ 
+ 
+ def register():
+     Pool.register(
+-        Forecast,
+-        ForecastLine,
+-        ForecastLineMove,
+-        ForecastCompleteAsk,
+-        ForecastCompleteChoose,
++        forecast.Move,
++        forecast.Forecast,
++        forecast.ForecastLine,
++        forecast.ForecastCompleteAsk,
++        forecast.ForecastCompleteChoose,
+         module='stock_forecast', type_='model')
+     Pool.register(
+-        ForecastComplete,
++        forecast.ForecastComplete,
+         module='stock_forecast', type_='wizard')
+diff --git a/forecast.py b/forecast.py
+index 93d63d5..3f92c93 100644
+--- a/trytond/trytond/modules/stock_forecast/forecast.py
++++ b/trytond/trytond/modules/stock_forecast/forecast.py
+@@ -15,12 +15,12 @@ from trytond.model.exceptions import AccessError
+ from trytond.wizard import Wizard, StateView, StateTransition, Button
+ from trytond.pyson import Not, Equal, Eval, Or, Bool, If
+ from trytond.transaction import Transaction
+-from trytond.pool import Pool
++from trytond.pool import Pool, PoolMeta
+ from trytond.tools import reduce_ids, grouped_slice
+ 
+ from .exceptions import ForecastValidationError
+ 
+-__all__ = ['Forecast', 'ForecastLine', 'ForecastLineMove',
++__all__ = ['Forecast', 'Move', 'ForecastLine'
+     'ForecastCompleteAsk', 'ForecastCompleteChoose', 'ForecastComplete']
+ 
+ STATES = {
+@@ -232,20 +232,24 @@ class Forecast(Workflow, ModelSQL, ModelView):
+     def create_moves(forecasts):
+         'Create stock moves for the forecast ids'
+         pool = Pool()
+-        Line = pool.get('stock.forecast.line')
++        Move = pool.get('stock.move')
+         to_save = []
+         for forecast in forecasts:
+             if forecast.state == 'done':
+                 for line in forecast.lines:
+-                    line.moves += tuple(line.get_moves())
+-                    to_save.append(line)
+-        Line.save(to_save)
++                    to_save += line.get_moves()
++        Move.save(to_save)
+ 
+     @staticmethod
+     def delete_moves(forecasts):
+         'Delete stock moves for the forecast ids'
+-        Line = Pool().get('stock.forecast.line')
+-        Line.delete_moves([l for f in forecasts for l in f.lines])
++        pool = Pool()
++        Move = pool.get('stock.move')
++
++        Move.delete(Move.search([
++                    ('origin.forecast', 'in',
++                        [x.id for x in forecasts], 'stock.forecast.line'),
++                    ]))
+ 
+ 
+ class ForecastLine(ModelSQL, ModelView):
+@@ -283,8 +287,7 @@ class ForecastLine(ModelSQL, ModelView):
+         "Minimal Qty", digits=(16, Eval('unit_digits', 2)), required=True,
+         domain=[('minimal_quantity', '<=', Eval('quantity'))],
+         states=_states, depends=['unit_digits', 'quantity'] + _depends)
+-    moves = fields.Many2Many('stock.forecast.line-stock.move',
+-        'line', 'move', 'Moves', readonly=True)
++    moves = fields.One2Many('stock.move', 'origin', 'Moves', readonly=True)
+     forecast = fields.Many2One(
+         'stock.forecast', 'Forecast', required=True, ondelete='CASCADE',
+         states={
+@@ -369,12 +372,11 @@ class ForecastLine(ModelSQL, ModelView):
+         Location = pool.get('stock.location')
+         Uom = pool.get('product.uom')
+         Forecast = pool.get('stock.forecast')
+-        LineMove = pool.get('stock.forecast.line-stock.move')
++        ForecastLine = pool.get('stock.forecast.line')
+ 
+         move = Move.__table__()
+         location_from = Location.__table__()
+         location_to = Location.__table__()
+-        line_move = LineMove.__table__()
+ 
+         result = dict((x.id, 0) for x in lines)
+         key = lambda line: line.forecast.id
+@@ -389,8 +391,6 @@ class ForecastLine(ModelSQL, ModelView):
+                         condition=move.from_location == location_from.id
+                         ).join(location_to,
+                         condition=move.to_location == location_to.id
+-                        ).join(line_move, 'LEFT',
+-                        condition=move.id == line_move.move
+                         ).select(move.product, Sum(move.internal_quantity),
+                         where=red_sql
+                         & (location_from.left >= forecast.warehouse.left)
+@@ -398,11 +398,14 @@ class ForecastLine(ModelSQL, ModelView):
+                         & (location_to.left >= forecast.destination.left)
+                         & (location_to.right <= forecast.destination.right)
+                         & (move.state != 'cancel')
++                        & (
++                            (move.origin == Null)
++                            | (~move.origin.like(ForecastLine.__name__ + ',%'))
++                            )
+                         & (Coalesce(move.effective_date, move.planned_date)
+                             >= forecast.from_date)
+                         & (Coalesce(move.effective_date, move.planned_date)
+-                            <= forecast.to_date)
+-                        & (line_move.id == Null),
++                            <= forecast.to_date),
+                         group_by=move.product))
+                 for product_id, quantity in cursor.fetchall():
+                     line = product2line[product_id]
+@@ -461,15 +464,10 @@ class ForecastLine(ModelSQL, ModelView):
+             move.company = self.forecast.company
+             move.currency = self.forecast.company.currency
+             move.unit_price = unit_price
++            move.origin = self
+             moves.append(move)
+         return moves
+ 
+-    @classmethod
+-    def delete_moves(cls, lines):
+-        'Delete stock moves of the forecast line'
+-        Move = Pool().get('stock.move')
+-        Move.delete([m for l in lines for m in l.moves])
+-
+     def distribute(self, delta, qty):
+         'Distribute qty over delta'
+         range_delta = list(range(delta))
+@@ -498,16 +496,6 @@ class ForecastLine(ModelSQL, ModelView):
+         return a
+ 
+ 
+-class ForecastLineMove(ModelSQL):
+-    'ForecastLine - Move'
+-    __name__ = 'stock.forecast.line-stock.move'
+-    _table = 'forecast_line_stock_move_rel'
+-    line = fields.Many2One('stock.forecast.line', 'Forecast Line',
+-            ondelete='CASCADE', select=True, required=True)
+-    move = fields.Many2One('stock.move', 'Move', ondelete='CASCADE',
+-            select=True, required=True)
+-
+-
+ class ForecastCompleteAsk(ModelView):
+     'Complete Forecast'
+     __name__ = 'stock.forecast.complete.ask'
+@@ -629,3 +617,11 @@ class ForecastComplete(Wizard):
+ 
+         ForecastLine.save(to_save)
+         return 'end'
++
++
++class Move(metaclass=PoolMeta):
++    __name__ = 'stock.move'
++
++    @classmethod
++    def _get_origin(cls):
++        return super()._get_origin() + ['stock.forecast.line']
+diff --git a/production.py b/production.py
+index 431fe37..7506453 100644
+--- a/trytond/trytond/modules/production/production.py
++++ b/trytond/trytond/modules/production/production.py
+@@ -506,15 +506,13 @@ class Production(Workflow, ModelSQL, ModelView):
+                 values['number'] = Sequence.get_id(
+                     config.production_sequence.id)
+         productions = super(Production, cls).create(vlist)
+-        for production in productions:
+-            production._set_move_planned_date()
++        cls._set_move_planned_date(productions)
+         return productions
+ 
+     @classmethod
+     def write(cls, *args):
+         super(Production, cls).write(*args)
+-        for production in sum(args[::2], []):
+-            production._set_move_planned_date()
++        cls._set_move_planned_date(sum(args[::2], []))
+ 
+     @classmethod
+     def copy(cls, productions, default=None):
+@@ -529,20 +527,36 @@ class Production(Workflow, ModelSQL, ModelView):
+         "Return the planned dates for input and output moves"
+         return self.planned_start_date, self.planned_date
+ 
+-    def _set_move_planned_date(self):
++    @classmethod
++    def _set_move_planned_date(cls, productions):
+         "Set planned date of moves for the shipments"
+         pool = Pool()
+         Move = pool.get('stock.move')
+-        dates = self._get_move_planned_date()
+-        input_date, output_date = dates
+-        Move.write([m for m in self.inputs
+-                if m.state not in ('assigned', 'done', 'cancel')], {
+-                'planned_date': input_date,
+-                })
+-        Move.write([m for m in self.outputs
+-                if m.state not in ('assigned', 'done', 'cancel')], {
+-                'planned_date': output_date,
+-                })
++
++        grouped = {}
++        for production in productions:
++            dates = production._get_move_planned_date()
++            input_date, output_date = dates
++            grouped.setdefault(input_date, [])
++            grouped.setdefault(output_date, [])
++            for move in production.inputs:
++                if (move.state not in ('assigned', 'done', 'cancel')
++                        and move.planned_date != input_date):
++                    grouped[input_date].append(move)
++
++            for move in production.outputs:
++                if (move.state not in ('assigned', 'done', 'cancel')
++                        and move.planned_date != output_date):
++                    grouped[output_date].append(move)
++
++        to_write = []
++        for planned_date, moves in grouped.items():
++            if moves:
++                to_write.append(moves)
++                to_write.append({'planned_date': planned_date})
++        if to_write:
++            Move.write(*to_write)
++
+ 
+     @classmethod
+     @ModelView.button
