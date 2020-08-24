@@ -81,3 +81,4 @@ cost_price_in_productions_without_inputs.diff # [production]
 #fifo_cost_price_formula.diff  # [product_cost_fio] change formula to avoid minus zero cost_price
 issues_321471002_317771007_327491003_325801002_321611002.diff # [product_cost_fifo, sale, stock] take care on inventory moves
 issue7280.diff # [account_invoice_stock] + [account_stock_landed_cost] Update unit price of stock moves based on posted invoice lines
+#319251002_309331002_301441002_273891002_307431002_274481002-set2.diff # [trytond, production, stock, stock_supply, stock_forecast] Improve speed on some stock movements
