@@ -1,0 +1,22 @@
+diff --git a/currency.py b/currency.py
+index 999b981..0c4159d 100644
+--- a/trytond/trytond/modules/currency/currency.py
++++ b/trytond/trytond/modules/currency/currency.py
+@@ -112,7 +112,7 @@ class Currency(DeactivableMixin, ModelSQL, ModelView):
+         Date = Pool().get('ir.date')
+
+         res = {}
+-        date = Transaction().context.get('date', Date.today())
++        date = Transaction().context.get('date') or Date.today()
+         for currency in currencies:
+             rates = Rate.search([
+                     ('currency', '=', currency.id),
+@@ -163,7 +163,7 @@ class Currency(DeactivableMixin, ModelSQL, ModelView):
+             else:
+                 return amount
+         if (not from_currency.rate) or (not to_currency.rate):
+-            date = Transaction().context.get('date', Date.today())
++            date = Transaction().context.get('date') or Date.today()
+             if not from_currency.rate:
+                 name = from_currency.name
+             else:
