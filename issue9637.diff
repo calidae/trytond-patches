@@ -1,16 +1,18 @@
 diff --git a/production.py b/production.py
-index 867f0ea..c0ed28b 100644
+index 0e7cd86..3aab16d 100644
 --- a/trytond/trytond/modules/production/production.py
 +++ b/trytond/trytond/modules/production/production.py
-@@ -10,7 +10,7 @@ from trytond.wizard import Wizard, StateTransition, StateView, Button
+@@ -10,8 +10,8 @@ from trytond.wizard import Wizard, StateTransition, StateView, Button
  from trytond.pyson import Eval, Bool, If, Id
  from trytond.pool import Pool
  from trytond.transaction import Transaction
 -
+-from trytond.modules.product import price_digits
 +from collections import defaultdict
- from trytond.modules.product import price_digits
-
++from trytond.modules.product import price_digits, round_price
+ 
  from .exceptions import CostError
+ 
 @@ -487,7 +487,37 @@ class Production(Workflow, ModelSQL, ModelView):
          for production in productions:
              sum_ = Decimal(0)
