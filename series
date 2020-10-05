@@ -84,4 +84,6 @@ issue7280.diff # [account_invoice_stock] + [account_stock_landed_cost] Update un
 issue9616.diff # [analytic_invoice] Analytic move is not created when closing an asset
 
 issue9603.diff # [currency] get today when date in the context is None
+issue9637.diff # [production] production: Keep cost of unused input products
 
+fifo_quantity_round.diff # [product_cost_fifo] Round fifo_quantity before save, to avoid problems when compare with quantity
